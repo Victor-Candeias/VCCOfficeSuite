@@ -1,0 +1,43 @@
+<Window x:Class="Vcc.Office.Shell.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VCC Office" Width="1280" Height="800" MinWidth="640" MinHeight="480"
+        Background="{DynamicResource WindowBackground}" Foreground="{DynamicResource PrimaryText}">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Padding="24,18" Background="{DynamicResource PanelBackground}">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Content="Alternar tema" Padding="14,8" Click="ToggleTheme_Click" />
+        <StackPanel>
+          <TextBlock Text="VCC Office" FontSize="24" FontWeight="SemiBold" />
+          <TextBlock Text="Core Shell · operação local" Foreground="{DynamicResource SecondaryText}" Margin="0,4,0,0" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+    <StatusBar DockPanel.Dock="Bottom">
+      <StatusBarItem><TextBlock x:Name="StatusText" Text="Pronto · offline" /></StatusBarItem>
+    </StatusBar>
+    <Grid Margin="32">
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+      <StackPanel Grid.Row="0" Margin="0,0,0,24">
+        <TextBlock Text="Launcher" FontSize="30" FontWeight="SemiBold" />
+        <TextBlock Text="Escolha uma aplicação ou configure o ambiente de trabalho." FontSize="15" Foreground="{DynamicResource SecondaryText}" Margin="0,8,0,0" />
+      </StackPanel>
+      <ItemsControl Grid.Row="1" ItemsSource="{Binding LauncherItems}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Width="250" Height="150" Margin="0,0,16,16" Padding="18" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Click="LauncherItem_Click">
+              <StackPanel>
+                <Border Width="42" Height="42" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,0,16">
+                  <TextBlock Text="{Binding Glyph}" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}" Margin="0,6,0,0" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Grid>
+  </DockPanel>
+</Window>

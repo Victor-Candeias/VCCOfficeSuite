@@ -1,0 +1,11 @@
+<Application x:Class="Vcc.Office.Shell.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Application.Resources>
+    <SolidColorBrush x:Key="WindowBackground" Color="#F7F8FA" />
+    <SolidColorBrush x:Key="PanelBackground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PrimaryText" Color="#17202A" />
+    <SolidColorBrush x:Key="SecondaryText" Color="#5E6B78" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#1769AA" />
+  </Application.Resources>
+</Application>

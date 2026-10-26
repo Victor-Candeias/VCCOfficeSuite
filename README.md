@@ -12149,3 +12149,21 @@ Build .NET/Node, lint, testes unitários, análise de dependências e licenças,
 9. Calendar/contacts: protocolos e conectores após estabilizar Mail.
 
 **Conclusão:** construir primeiro uma suite utilizável e estável com Core + Writer + Sheets + Slides, com compatibilidade Office mensurável e sem promessas de fidelidade universal. Acrescentar Notes, Data e Mail como módulos independentes, sem comprometer o funcionamento offline dos editores.
+# VCC Office
+
+Fundação inicial do VCC Office Core Shell, construída para Windows com .NET 10 e WPF.
+
+## Core Shell
+
+O shell arranca offline, apresenta um Launcher modular em PT-PT, permite alternar entre tema claro e escuro e guarda o estado localmente em `%LOCALAPPDATA%\VCC Office\shell-state.json`. A persistência usa ficheiro temporário e backup para recuperar de corrupção do estado principal.
+
+## Compilar e validar
+
+```powershell
+dotnet restore VCC.Office.sln --ignore-failed-sources
+dotnet build VCC.Office.sln --configuration Release
+dotnet run --project tests\Vcc.Office.CoreShell.Tests\Vcc.Office.CoreShell.Tests.csproj --configuration Release
+dotnet run --project src\Vcc.Office.Shell\Vcc.Office.Shell.csproj --configuration Release
+```
+
+O executável WPF é a primeira entrega do shell. A integração WebView2 e os módulos Writer, Sheets e Slides serão entregues nos respetivos work-items.
