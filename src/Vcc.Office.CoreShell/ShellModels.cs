@@ -59,6 +59,19 @@ public static class WindowLayoutPolicy
     public const double MaximumWidth = 10000;
     public const double MaximumHeight = 10000;
 
+    public static ValidationResult Validate(WindowLayout layout)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        var errors = new List<string>();
+        if (!double.IsFinite(layout.Width) || layout.Width is < MinimumWidth or > MaximumWidth)
+            errors.Add("A largura da janela deve estar entre 640 e 10000.");
+        if (!double.IsFinite(layout.Height) || layout.Height is < MinimumHeight or > MaximumHeight)
+            errors.Add("A altura da janela deve estar entre 480 e 10000.");
+        if (!double.IsFinite(layout.Left) || !double.IsFinite(layout.Top))
+            errors.Add("A posição da janela deve ser finita.");
+        return new ValidationResult(errors);
+    }
+
     public static WindowLayout Normalize(
         WindowLayout layout,
         double workAreaLeft = 0,
@@ -152,12 +165,7 @@ public static class ShellStateValidator
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(state.SchemaVersion)) errors.Add("A versão do esquema é obrigatória.");
         errors.AddRange(ThemePolicy.Validate(state.Theme).Errors);
-        if (!double.IsFinite(state.Window.Width) || state.Window.Width is < WindowLayoutPolicy.MinimumWidth or > WindowLayoutPolicy.MaximumWidth)
-            errors.Add("A largura da janela deve estar entre 640 e 10000.");
-        if (!double.IsFinite(state.Window.Height) || state.Window.Height is < WindowLayoutPolicy.MinimumHeight or > WindowLayoutPolicy.MaximumHeight)
-            errors.Add("A altura da janela deve estar entre 480 e 10000.");
-        if (!double.IsFinite(state.Window.Left) || !double.IsFinite(state.Window.Top))
-            errors.Add("A posição da janela deve ser finita.");
+        errors.AddRange(WindowLayoutPolicy.Validate(state.Window).Errors);
         errors.AddRange(LauncherPolicy.Validate(state.Launcher).Errors);
         errors.AddRange(RibbonPolicy.Validate(state.Ribbon).Errors);
         errors.AddRange(NavigationPolicy.Validate(state.Navigation).Errors);

@@ -27,14 +27,39 @@ public static class LauncherPolicy
         var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in items)
         {
+            if (item is null)
+            {
+                errors.Add("Cada módulo do Launcher é obrigatório.");
+                continue;
+            }
+
             if (string.IsNullOrWhiteSpace(item.Id) || string.IsNullOrWhiteSpace(item.Title))
                 errors.Add("Cada módulo deve ter ID e título.");
             if (string.IsNullOrWhiteSpace(item.Description)) errors.Add("Cada módulo deve ter descrição.");
             if (string.IsNullOrWhiteSpace(item.Glyph)) errors.Add("Cada módulo deve ter um identificador visual.");
-            if (!string.IsNullOrWhiteSpace(item.Id) && !ids.Add(item.Id))
+
+            ValidateField(item.Id, "ID", LauncherContract.MaxIdLength, errors);
+            ValidateField(item.Title, "título", LauncherContract.MaxTitleLength, errors);
+            ValidateField(item.Description, "descrição", LauncherContract.MaxDescriptionLength, errors);
+            ValidateField(item.Glyph, "identificador visual", LauncherContract.MaxGlyphLength, errors);
+
+            if (!string.IsNullOrWhiteSpace(item.Id) && !ids.Add(item.Id.Trim()))
                 errors.Add($"Já existe um módulo com o ID '{item.Id}'.");
         }
 
         return new ValidationResult(errors);
+    }
+
+    public static ValidationResult Validate(IReadOnlyList<LauncherItemDto> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        return Validate(items.Select(item => item?.ToModel()).ToArray()!);
+    }
+
+    private static void ValidateField(string? value, string name, int maximum, ICollection<string> errors)
+    {
+        if (value is null) return;
+        if (value != value.Trim()) errors.Add($"O {name} não pode começar ou terminar com espaços.");
+        if (value.Length > maximum) errors.Add($"O {name} não pode exceder {maximum} caracteres.");
     }
 }

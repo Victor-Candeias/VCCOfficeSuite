@@ -8,7 +8,7 @@ public static class ShortcutPolicy
 {
     private static readonly string[] Modifiers = ["Ctrl", "Alt", "Shift", "Win"];
 
-    public static string Normalize(string gesture)
+    public static string Normalize(string? gesture)
     {
         if (string.IsNullOrWhiteSpace(gesture)) return string.Empty;
 
@@ -27,15 +27,16 @@ public static class ShortcutPolicy
         return string.Join('+', modifierParts.Append(key));
     }
 
-    public static bool IsValid(string gesture)
+    public static bool IsValid(string? gesture)
     {
-        var normalized = Normalize(gesture);
-        if (normalized.Length == 0) return false;
+        if (string.IsNullOrWhiteSpace(gesture)) return false;
 
-        var parts = normalized.Split('+');
+        var parts = gesture.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 1) return false;
         if (!parts[..^1].Any()) return false;
-        return parts[^1] is not ("CTRL" or "ALT" or "SHIFT" or "WIN") && parts[^1].Length <= 20;
+        if (!parts[..^1].All(part => Modifiers.Contains(part, StringComparer.OrdinalIgnoreCase))) return false;
+        var key = parts[^1].ToUpperInvariant();
+        return key is not ("CTRL" or "ALT" or "SHIFT" or "WIN") && key.Length <= 20;
     }
 }
 
@@ -55,8 +56,14 @@ public static class ShortcutCatalog
                 continue;
             }
 
+            if (pair.Key != pair.Key.Trim() || pair.Key.Length > ShortcutContract.MaxCommandIdLength)
+            {
+                errors.Add($"O comando '{pair.Key}' tem um identificador inválido.");
+                continue;
+            }
+
             var normalized = ShortcutPolicy.Normalize(pair.Value);
-            if (!ShortcutPolicy.IsValid(normalized))
+            if (pair.Value is null || pair.Value.Length > ShortcutContract.MaxGestureLength || !ShortcutPolicy.IsValid(normalized))
             {
                 errors.Add($"O atalho de '{pair.Key}' não é válido.");
                 continue;
@@ -65,6 +72,31 @@ public static class ShortcutCatalog
             if (!gestures.Add(normalized)) errors.Add($"O atalho '{normalized}' está atribuído a mais do que um comando.");
         }
 
+        return new ValidationResult(errors);
+    }
+
+    public static ValidationResult Validate(IReadOnlyList<ShortcutBindingDto> bindings)
+    {
+        ArgumentNullException.ThrowIfNull(bindings);
+        var errors = new List<string>();
+        var commandIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var shortcuts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var binding in bindings)
+        {
+            if (binding is null)
+            {
+                errors.Add("Cada associação de atalho é obrigatória.");
+                continue;
+            }
+
+            if (!commandIds.Add(binding.CommandId?.Trim() ?? string.Empty))
+                errors.Add($"O comando '{binding.CommandId}' está repetido.");
+            else
+                shortcuts[binding.CommandId ?? string.Empty] = binding.Gesture;
+        }
+
+        errors.AddRange(Validate(shortcuts).Errors);
         return new ValidationResult(errors);
     }
 

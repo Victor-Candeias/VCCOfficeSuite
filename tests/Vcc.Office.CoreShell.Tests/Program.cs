@@ -12,6 +12,11 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("atalhos são normalizados e resolvidos", ResolvesShortcuts)
     ,("atalhos duplicados são rejeitados", RejectsConflictingShortcuts)
     ,("Launcher valida e persiste configuração", ConfiguresLauncher)
+    ,("contrato DTO do Launcher é convertido e validado", ValidatesLauncherContract)
+    ,("contrato DTO da janela é convertido e validado", ValidatesWindowContract)
+    ,("contrato DTO do Ribbon é convertido e validado", ValidatesRibbonContract)
+    ,("contrato DTO de atalhos é convertido e validado", ValidatesShortcutContract)
+    ,("contrato DTO de tema é convertido e validado", ValidatesThemeContract)
     ,("janela valida e persiste configuração", ConfiguresWindow)
     ,("Ribbon valida e persiste configuração", ConfiguresRibbon)
     ,("atalhos configuram e persistem", ConfiguresShortcuts)
@@ -102,6 +107,100 @@ static async Task ConfiguresLauncher()
     try { await service.ConfigureLauncherAsync(ShellState.Default.Launcher.Append(item with { Id = "writer" })); }
     catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
     throw new InvalidOperationException("Um ID duplicado de Launcher foi aceite.");
+}
+
+static Task ValidatesLauncherContract()
+{
+    var dto = new LauncherItemDto("calendar", "VCC Calendar", "Calendário local", "C");
+    var model = dto.ToModel();
+    if (model != dto.ToModel() || LauncherItemDto.FromModel(model) != dto)
+        throw new InvalidOperationException("A conversão do DTO do Launcher perdeu dados.");
+    if (!LauncherPolicy.Validate([dto]).IsValid)
+        throw new InvalidOperationException("Um DTO válido do Launcher foi rejeitado.");
+
+    var tooLongTitle = dto with { Title = new string('x', LauncherContract.MaxTitleLength + 1) };
+    if (LauncherPolicy.Validate([tooLongTitle]).IsValid)
+        throw new InvalidOperationException("Um título acima do limite foi aceite.");
+
+    var padded = dto with { Id = " calendar " };
+    if (LauncherPolicy.Validate([padded, dto]).IsValid)
+        throw new InvalidOperationException("IDs equivalentes com espaços foram aceites.");
+    return Task.CompletedTask;
+}
+
+static Task ValidatesWindowContract()
+{
+    var dto = new WindowLayoutDto(1024, 720, 100, 80, true);
+    var model = dto.ToModel();
+    if (WindowLayoutDto.FromModel(model) != dto)
+        throw new InvalidOperationException("A conversão do DTO da janela perdeu dados.");
+    if (!WindowLayoutPolicy.Validate(model).IsValid)
+        throw new InvalidOperationException("Um layout válido foi rejeitado.");
+
+    var invalid = dto with { Width = WindowLayoutPolicy.MinimumWidth - 1 };
+    if (WindowLayoutPolicy.Validate(invalid.ToModel()).IsValid)
+        throw new InvalidOperationException("Uma largura abaixo do limite foi aceite.");
+
+    var nonFinite = dto with { Top = double.NaN };
+    if (WindowLayoutPolicy.Validate(nonFinite.ToModel()).IsValid)
+        throw new InvalidOperationException("Uma posição não finita foi aceite.");
+    return Task.CompletedTask;
+}
+
+static Task ValidatesRibbonContract()
+{
+    var command = new RibbonCommandDto("comment", "Comentário", "Adicionar comentário", "C");
+    var dto = new RibbonTabDto("review", "Revisão", [command]);
+    var model = dto.ToModel();
+    var roundTrip = RibbonTabDto.FromModel(model);
+    if (roundTrip.Id != dto.Id || roundTrip.Title != dto.Title ||
+        roundTrip.Commands.Count != 1 || roundTrip.Commands[0] != command)
+        throw new InvalidOperationException("A conversão do DTO do Ribbon perdeu dados.");
+    if (!RibbonPolicy.Validate([dto]).IsValid)
+        throw new InvalidOperationException("Um DTO válido do Ribbon foi rejeitado.");
+
+    var tooLong = dto with { Title = new string('x', RibbonContract.MaxTitleLength + 1) };
+    if (RibbonPolicy.Validate([tooLong]).IsValid)
+        throw new InvalidOperationException("Um título de separador acima do limite foi aceite.");
+
+    var duplicatedCommand = dto with
+    {
+        Commands = [command, command with { Title = "Outra ação" }]
+    };
+    if (RibbonPolicy.Validate([duplicatedCommand]).IsValid)
+        throw new InvalidOperationException("Comandos com o mesmo ID foram aceites.");
+    return Task.CompletedTask;
+}
+
+static Task ValidatesShortcutContract()
+{
+    var dto = new ShortcutBindingDto("open-launcher", "ctrl + shift + l");
+    if (ShortcutBindingDto.FromPair(dto.ToPair()) != dto)
+        throw new InvalidOperationException("A conversão do DTO de atalho perdeu dados.");
+    if (!ShortcutCatalog.Validate([dto]).IsValid)
+        throw new InvalidOperationException("Um DTO de atalho válido foi rejeitado.");
+    if (ShortcutPolicy.Normalize(dto.Gesture) != "Ctrl+Shift+L")
+        throw new InvalidOperationException("A normalização do DTO de atalho falhou.");
+
+    if (ShortcutPolicy.IsValid("Ctrl+Unknown+K"))
+        throw new InvalidOperationException("Um token desconhecido foi aceite no atalho.");
+    if (ShortcutCatalog.Validate([dto, dto with { Gesture = "Alt+L" }]).IsValid)
+        throw new InvalidOperationException("Comandos repetidos no DTO foram aceites.");
+    return Task.CompletedTask;
+}
+
+static Task ValidatesThemeContract()
+{
+    var dto = new ThemeSelectionDto("dark");
+    if (!ThemePolicy.Validate(dto).IsValid || dto.ToModel() != ThemeMode.Dark)
+        throw new InvalidOperationException("Um DTO de tema válido foi rejeitado.");
+    if (ThemeSelectionDto.FromModel(ThemeMode.Light).Mode != "Light")
+        throw new InvalidOperationException("A conversão do tema não preservou o modo.");
+    if (ThemePolicy.Validate(new ThemeSelectionDto("unknown")).IsValid)
+        throw new InvalidOperationException("Um tema desconhecido foi aceite.");
+    try { _ = new ThemeSelectionDto("unknown").ToModel(); }
+    catch (ArgumentException) { return Task.CompletedTask; }
+    throw new InvalidOperationException("A conversão de tema inválido não falhou.");
 }
 
 static async Task ConfiguresWindow()

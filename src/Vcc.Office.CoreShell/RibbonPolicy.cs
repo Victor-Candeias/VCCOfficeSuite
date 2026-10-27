@@ -42,22 +42,81 @@ public static class RibbonPolicy
         var commandIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var tab in tabs)
         {
+            if (tab is null)
+            {
+                errors.Add("Cada separador do Ribbon é obrigatório.");
+                continue;
+            }
+
             if (string.IsNullOrWhiteSpace(tab.Id) || string.IsNullOrWhiteSpace(tab.Title))
                 errors.Add("Cada separador do Ribbon deve ter ID e título.");
-            if (!string.IsNullOrWhiteSpace(tab.Id) && !tabIds.Add(tab.Id))
+            ValidateField(tab.Id, "ID do separador", RibbonContract.MaxIdLength, errors);
+            ValidateField(tab.Title, "título do separador", RibbonContract.MaxTitleLength, errors);
+            if (!string.IsNullOrWhiteSpace(tab.Id) && !tabIds.Add(tab.Id.Trim()))
                 errors.Add($"Já existe um separador com o ID '{tab.Id}'.");
+            if (tab.Commands is null)
+            {
+                errors.Add($"O separador '{tab.Title}' deve conter comandos.");
+                continue;
+            }
             if (tab.Commands.Count == 0) errors.Add($"O separador '{tab.Title}' deve conter pelo menos um comando.");
 
             foreach (var command in tab.Commands)
             {
+                if (command is null)
+                {
+                    errors.Add("Cada comando do Ribbon é obrigatório.");
+                    continue;
+                }
+
                 if (string.IsNullOrWhiteSpace(command.Id) || string.IsNullOrWhiteSpace(command.Title))
                     errors.Add("Cada comando do Ribbon deve ter ID e título.");
                 if (string.IsNullOrWhiteSpace(command.Glyph)) errors.Add("Cada comando do Ribbon deve ter um ícone.");
-                if (!string.IsNullOrWhiteSpace(command.Id) && !commandIds.Add(command.Id))
+                ValidateField(command.Id, "ID do comando", RibbonContract.MaxIdLength, errors);
+                ValidateField(command.Title, "título do comando", RibbonContract.MaxTitleLength, errors);
+                ValidateField(command.Description, "descrição do comando", RibbonContract.MaxDescriptionLength, errors);
+                ValidateField(command.Glyph, "ícone do comando", RibbonContract.MaxGlyphLength, errors);
+                if (!string.IsNullOrWhiteSpace(command.Id) && !commandIds.Add(command.Id.Trim()))
                     errors.Add($"Já existe um comando com o ID '{command.Id}'.");
             }
         }
 
         return new ValidationResult(errors);
+    }
+
+    public static ValidationResult Validate(IReadOnlyList<RibbonTabDto> tabs)
+    {
+        ArgumentNullException.ThrowIfNull(tabs);
+        var errors = new List<string>();
+        foreach (var tab in tabs)
+        {
+            if (tab is null)
+            {
+                errors.Add("Cada separador do Ribbon é obrigatório.");
+                continue;
+            }
+
+            if (tab.Commands is null)
+            {
+                errors.Add($"O separador '{tab.Title}' deve conter comandos.");
+                continue;
+            }
+
+            if (tab.Commands.Any(command => command is null))
+            {
+                errors.Add("Cada comando do Ribbon é obrigatório.");
+                continue;
+            }
+        }
+
+        if (errors.Count > 0) return new ValidationResult(errors);
+        return Validate(tabs.Select(tab => tab.ToModel()).ToArray());
+    }
+
+    private static void ValidateField(string? value, string name, int maximum, ICollection<string> errors)
+    {
+        if (value is null) return;
+        if (value != value.Trim()) errors.Add($"O {name} não pode começar ou terminar com espaços.");
+        if (value.Length > maximum) errors.Add($"O {name} não pode exceder {maximum} caracteres.");
     }
 }
