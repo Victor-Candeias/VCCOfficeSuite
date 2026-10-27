@@ -32,6 +32,12 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("SQLite aplica migrações e persiste definições", PersistsDatabaseSetting)
     ,("ficheiros são escritos atomicamente", WritesAtomicFiles)
     ,("autosave cria snapshot recuperável", CreatesRecoverySnapshot)
+    ,("Core Integration valida e consulta contratos", ValidatesCoreIntegration)
+    ,("WebView2 bridge aplica origem e método autorizados", ValidatesBridgeSecurity)
+    ,("Core Integration persiste estado completo", PersistsCoreIntegration)
+    ,("Core Integration recupera estado e expõe estados de interface", LoadsCoreIntegration)
+    ,("Core Delivery valida CI/CD, instalação, atualização e testes", ValidatesCoreDelivery)
+    ,("telemetria local remove dados sensíveis", ProtectsTelemetry)
 };
 
 foreach (var test in tests)
@@ -504,6 +510,84 @@ static async Task CreatesRecoverySnapshot()
     var restored = await recovery.ReadSnapshotAsync(session);
     if (session.Status != "pending" || Encoding.UTF8.GetString(restored) != "rascunho")
         throw new InvalidOperationException("O snapshot de recuperação não pode ser restaurado.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ValidatesCoreIntegration()
+{
+    var service = new CoreIntegrationService();
+    await service.ConfigurePluginAsync(new PluginContractDto("writer", "VCC Writer", "1.0", "Vcc.Writer"));
+    await service.ConfigureEventAsync(new EventDefinitionDto("document.saved", "Documento guardado", "object"));
+    if (service.Query<PluginContract>("writer").Count != 1 || service.Query<EventDefinition>("saved").Count != 1)
+        throw new InvalidOperationException("A consulta de Core Integration não devolveu os contratos esperados.");
+    try { await service.ConfigurePluginAsync(new PluginContractDto("writer", "Duplicado", "1.0", "Vcc.Writer")); }
+    catch (ArgumentException) { return; }
+    throw new InvalidOperationException("Um ID duplicado foi aceite.");
+}
+
+static Task ValidatesBridgeSecurity()
+{
+    var service = new CoreIntegrationService();
+    service.ConfigureBridgeAsync(new WebViewBridgeDto("shell", "https://office.local", ["open", "save"])).GetAwaiter().GetResult();
+    if (!service.HandleBridgeRequest(new BridgeRequest("shell", "https://office.local", "save", "{}" )).Accepted ||
+        service.HandleBridgeRequest(new BridgeRequest("shell", "https://evil.local", "save", "{}")).Accepted ||
+        service.HandleBridgeRequest(new BridgeRequest("shell", "https://office.local", "delete", "{}")).Accepted)
+        throw new InvalidOperationException("A política do bridge aceitou uma origem ou método não autorizado.");
+    return Task.CompletedTask;
+}
+
+static async Task PersistsCoreIntegration()
+{
+    var directory = CreateTestDirectory();
+    var service = new CoreIntegrationService(Path.Combine(directory, "integration.json"));
+    await service.ConfigureWorkspaceAsync(new WorkspaceDefinitionDto("default", "Principal", directory));
+    await service.ConfigurePermissionAsync(new PermissionGrantDto("writer-save", "writer", "document", ["save"]));
+    await service.SaveAsync();
+    var json = await File.ReadAllTextAsync(Path.Combine(directory, "integration.json"));
+    if (!json.Contains("writer-save", StringComparison.Ordinal) || !json.Contains("default", StringComparison.Ordinal))
+        throw new InvalidOperationException("O estado de Core Integration não foi persistido.");
+    if (!service.HasPermission("writer", "document", "save")) throw new InvalidOperationException("A permissão persistida não foi reconhecida.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task LoadsCoreIntegration()
+{
+    var directory = CreateTestDirectory();
+    var path = Path.Combine(directory, "integration.json");
+    var original = new CoreIntegrationService(path);
+    await original.ConfigurePluginAsync(new PluginContractDto("writer", "VCC Writer", "1.0", "Vcc.Writer"));
+    var restored = new CoreIntegrationService(path);
+    await restored.LoadAsync();
+    if (restored.Query<PluginContract>().Count != 1 || restored.GetState("writer") != IntegrationItemState.Ready || restored.GetState("missing") != IntegrationItemState.Draft)
+        throw new InvalidOperationException("O estado de Core Integration não foi recuperado corretamente.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ValidatesCoreDelivery()
+{
+    var directory = CreateTestDirectory();
+    var service = new CoreDeliveryService(Path.Combine(directory, "delivery.json"));
+    await service.ConfigureCiCdAsync(new CiCdDefinitionDto("build", "Build local", "dotnet build", directory));
+    await service.ConfigureInstallationAsync(new InstallationDefinitionDto("install", "VCC Office", "1.0", directory));
+    await service.ConfigureUpdateAsync(new UpdateDefinitionDto("update", "VCC Office", "1.0", "1.1", "offline-cache"));
+    await service.ConfigureTestAsync(new TestDefinitionDto("smoke", "Smoke", "dotnet test", directory));
+    if (service.GetState("build") != DeliveryItemState.Ready) throw new InvalidOperationException("O estado do pipeline CI/CD não ficou pronto.");
+    try { await service.ConfigureCiCdAsync(new CiCdDefinitionDto("bad", "", "", "relative")); }
+    catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
+    throw new InvalidOperationException("Uma definição de CI/CD inválida foi aceite.");
+}
+
+static async Task ProtectsTelemetry()
+{
+    var directory = CreateTestDirectory();
+    var service = new CoreDeliveryService(Path.Combine(directory, "delivery.json"));
+    await service.RecordTelemetryAsync("build.finished", new Dictionary<string, string>
+    {
+        ["duration_ms"] = "12", ["token"] = "must-not-be-written", ["result"] = "success"
+    });
+    var json = await File.ReadAllTextAsync(Path.Combine(directory, "delivery.json"));
+    if (json.Contains("must-not-be-written", StringComparison.Ordinal) || !json.Contains("build.finished", StringComparison.Ordinal))
+        throw new InvalidOperationException("A telemetria local não filtrou dados sensíveis corretamente.");
     Directory.Delete(directory, recursive: true);
 }
 

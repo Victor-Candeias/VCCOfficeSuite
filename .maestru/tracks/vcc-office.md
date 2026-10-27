@@ -78,46 +78,46 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0058 | Construir interface e estados de SQLite | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0059 | Construir interface e estados de migrações | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0060 | Construir interface e estados de ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0061 | Entregar Core Integration | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0062 | Contratos de plugins — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0063 | Eventos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0064 | Webview2 bridge — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0065 | Permissões — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0066 | Criar e configurar contratos de plugins | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0067 | Criar e configurar eventos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0068 | Criar e configurar WebView2 bridge | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0069 | Criar e configurar permissões | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0070 | Criar e configurar workspace | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0071 | Consultar e navegar contratos de plugins | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0072 | Consultar e navegar eventos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0073 | Consultar e navegar WebView2 bridge | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0074 | Consultar e navegar permissões | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0075 | Consultar e navegar workspace | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0076 | Definir contratos, DTOs e validação de contratos de plugins | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0077 | Definir contratos, DTOs e validação de eventos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0078 | Definir contratos, DTOs e validação de WebView2 bridge | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0079 | Definir contratos, DTOs e validação de permissões | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0080 | Definir contratos, DTOs e validação de workspace | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0081 | Implementar lógica e persistência de contratos de plugins | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0082 | Implementar lógica e persistência de eventos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0083 | Implementar lógica e persistência de WebView2 bridge | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0084 | Implementar lógica e persistência de permissões | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0085 | Implementar lógica e persistência de workspace | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0086 | Construir interface e estados de contratos de plugins | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0087 | Construir interface e estados de eventos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0088 | Construir interface e estados de WebView2 bridge | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0089 | Construir interface e estados de permissões | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0090 | Construir interface e estados de workspace | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0091 | Entregar Core Delivery | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0092 | Ci/cd — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0093 | Instalação — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0094 | Atualização — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0095 | Telemetria local — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0096 | Criar e configurar CI/CD | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0097 | Criar e configurar instalação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0098 | Criar e configurar atualização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0099 | Criar e configurar telemetria local | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0100 | Criar e configurar testes | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0061 | Entregar Core Integration | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0062 | Contratos de plugins — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0063 | Eventos — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0064 | Webview2 bridge — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0065 | Permissões — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0066 | Criar e configurar contratos de plugins | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0067 | Criar e configurar eventos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0068 | Criar e configurar WebView2 bridge | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0069 | Criar e configurar permissões | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0070 | Criar e configurar workspace | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0071 | Consultar e navegar contratos de plugins | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0072 | Consultar e navegar eventos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0073 | Consultar e navegar WebView2 bridge | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0074 | Consultar e navegar permissões | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0075 | Consultar e navegar workspace | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0076 | Definir contratos, DTOs e validação de contratos de plugins | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0077 | Definir contratos, DTOs e validação de eventos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0078 | Definir contratos, DTOs e validação de WebView2 bridge | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0079 | Definir contratos, DTOs e validação de permissões | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0080 | Definir contratos, DTOs e validação de workspace | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0081 | Implementar lógica e persistência de contratos de plugins | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0082 | Implementar lógica e persistência de eventos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0083 | Implementar lógica e persistência de WebView2 bridge | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0084 | Implementar lógica e persistência de permissões | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0085 | Implementar lógica e persistência de workspace | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0086 | Construir interface e estados de contratos de plugins | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0087 | Construir interface e estados de eventos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0088 | Construir interface e estados de WebView2 bridge | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0089 | Construir interface e estados de permissões | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0090 | Construir interface e estados de workspace | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0091 | Entregar Core Delivery | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0092 | Ci/cd — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0093 | Instalação — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0094 | Atualização — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0095 | Telemetria local — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0096 | Criar e configurar CI/CD | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0097 | Criar e configurar instalação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0098 | Criar e configurar atualização | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0099 | Criar e configurar telemetria local | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0100 | Criar e configurar testes | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0101 | Criar e configurar licenças | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0102 | Consultar e navegar CI/CD | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0103 | Consultar e navegar instalação | backlog | 2026-10-26 | developer | medium |  |  |  |
