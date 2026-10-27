@@ -150,26 +150,16 @@ public static class ShellStateValidator
         ArgumentNullException.ThrowIfNull(state);
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(state.SchemaVersion)) errors.Add("A versão do esquema é obrigatória.");
+        errors.AddRange(ThemePolicy.Validate(state.Theme).Errors);
         if (!double.IsFinite(state.Window.Width) || state.Window.Width is < WindowLayoutPolicy.MinimumWidth or > WindowLayoutPolicy.MaximumWidth)
             errors.Add("A largura da janela deve estar entre 640 e 10000.");
         if (!double.IsFinite(state.Window.Height) || state.Window.Height is < WindowLayoutPolicy.MinimumHeight or > WindowLayoutPolicy.MaximumHeight)
             errors.Add("A altura da janela deve estar entre 480 e 10000.");
         if (!double.IsFinite(state.Window.Left) || !double.IsFinite(state.Window.Top))
             errors.Add("A posição da janela deve ser finita.");
-        if (state.Launcher.Count == 0) errors.Add("O Launcher deve conter pelo menos um módulo.");
-        if (state.Launcher.Any(item => string.IsNullOrWhiteSpace(item.Id) || string.IsNullOrWhiteSpace(item.Title)))
-            errors.Add("Cada item do Launcher deve ter ID e título.");
-        if (state.Ribbon is null || state.Ribbon.Count == 0) errors.Add("O Ribbon deve conter pelo menos um separador.");
-        else
-        {
-            if (state.Ribbon.Any(tab => string.IsNullOrWhiteSpace(tab.Id) || string.IsNullOrWhiteSpace(tab.Title)))
-                errors.Add("Cada separador do Ribbon deve ter ID e título.");
-            if (state.Ribbon.SelectMany(tab => tab.Commands).Any(command =>
-                    string.IsNullOrWhiteSpace(command.Id) || string.IsNullOrWhiteSpace(command.Title)))
-                errors.Add("Cada comando do Ribbon deve ter ID e título.");
-        }
-        if (state.Shortcuts.Any(pair => string.IsNullOrWhiteSpace(pair.Key) || string.IsNullOrWhiteSpace(pair.Value)))
-            errors.Add("Os atalhos devem ter comando e combinação definidos.");
+        errors.AddRange(LauncherPolicy.Validate(state.Launcher).Errors);
+        errors.AddRange(RibbonPolicy.Validate(state.Ribbon).Errors);
+        errors.AddRange(ShortcutCatalog.Validate(state.Shortcuts).Errors);
         return new ValidationResult(errors);
     }
 }

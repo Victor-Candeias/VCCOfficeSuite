@@ -22,12 +22,12 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0002 | Launcher — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0003 | Janelas — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0004 | Ribbon — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0005 | Atalhos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0006 | Criar e configurar Launcher | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0007 | Criar e configurar janelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0008 | Criar e configurar Ribbon | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0009 | Criar e configurar atalhos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0010 | Criar e configurar temas | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0005 | Atalhos — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0006 | Criar e configurar Launcher | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0007 | Criar e configurar janelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0008 | Criar e configurar Ribbon | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0009 | Criar e configurar atalhos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0010 | Criar e configurar temas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0011 | Criar e configurar acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0012 | Criar e configurar navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0013 | Consultar e navegar Launcher | backlog | 2026-10-26 | developer | medium |  |  |  |

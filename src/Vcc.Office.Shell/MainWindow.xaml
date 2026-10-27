@@ -8,7 +8,7 @@
         MinHeight="480"
         WindowState="Normal"
         Background="{DynamicResource WindowBackground}"
-        Foreground="{DynamicResource PrimaryText}">
+        Foreground="{DynamicResource PrimaryText}" PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
 
@@ -84,6 +84,26 @@
             <StackPanel>
 
                 <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            Content="_Configurar tema"
+                            Click="ConfigureTheme_Click"
+                            AutomationProperties.Name="Configurar tema"
+                            Margin="0,0,8,0"/>
+                    <Button DockPanel.Dock="Right"
+                            Content="_Configurar atalhos"
+                            Click="ConfigureShortcuts_Click"
+                            AutomationProperties.Name="Configurar atalhos"
+                            Margin="0,0,8,0"/>
+                    <Button DockPanel.Dock="Right"
+                            Content="_Configurar Ribbon"
+                            Click="ConfigureRibbon_Click"
+                            AutomationProperties.Name="Configurar Ribbon"
+                            Margin="0,0,8,0"/>
+                    <Button DockPanel.Dock="Right"
+                            Content="_Configurar janela"
+                            Click="ConfigureWindow_Click"
+                            AutomationProperties.Name="Configurar janela"
+                            Margin="0,0,8,0"/>
                     <Button DockPanel.Dock="Right"
                             Content="Tema Escuro"
                             Click="ToggleTheme_Click"
@@ -174,9 +194,15 @@
             <StackPanel Grid.Row="0"
                         Margin="0,0,0,24">
 
-                <TextBlock Text="Launcher"
-                           FontSize="30"
-                           FontWeight="SemiBold"/>
+                <DockPanel LastChildFill="False">
+                    <Button DockPanel.Dock="Right"
+                            Content="_Configurar Launcher"
+                            Click="ConfigureLauncher_Click"
+                            AutomationProperties.Name="Configurar Launcher"/>
+                    <TextBlock Text="Launcher"
+                               FontSize="30"
+                               FontWeight="SemiBold"/>
+                </DockPanel>
 
                 <TextBlock
                     Text="Escolha uma aplicação ou configure o ambiente de trabalho."
