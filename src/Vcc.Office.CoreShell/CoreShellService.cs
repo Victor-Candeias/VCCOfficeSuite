@@ -1,28 +1,28 @@
 namespace Vcc.Office.CoreShell;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public sealed class CoreShellService
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="stateStore"></param>
     public CoreShellService(ShellStateStore stateStore) => StateStore = stateStore;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public ShellStateStore StateStore { get; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public ShellState State { get; private set; } = ShellState.Default;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
@@ -30,7 +30,7 @@ public sealed class CoreShellService
         => State = await StateStore.LoadAsync(cancellationToken);
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="update"></param>
     /// <param name="cancellationToken"></param>
@@ -61,6 +61,18 @@ public sealed class CoreShellService
         return UpdateAsync(state => state with { Launcher = launcher, LastSection = "launcher" }, cancellationToken);
     }
 
+    /// <summary>Valida e persiste módulos recebidos pelo contrato do Launcher.</summary>
+    public Task ConfigureLauncherAsync(
+        IEnumerable<LauncherItemDto> items,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        var launcher = items.Select(item => item is null
+            ? throw new ArgumentException("Cada módulo do Launcher é obrigatório.", nameof(items))
+            : item.ToModel()).ToArray();
+        return ConfigureLauncherAsync(launcher, cancellationToken);
+    }
+
     /// <summary>Regista o módulo consultado no Launcher depois de o validar.</summary>
     public Task NavigateLauncherAsync(string itemId, CancellationToken cancellationToken = default)
     {
@@ -79,6 +91,15 @@ public sealed class CoreShellService
         WindowLayout layout,
         CancellationToken cancellationToken = default)
         => UpdateAsync(state => state with { Window = layout, LastSection = "window" }, cancellationToken);
+
+    /// <summary>Valida e persiste o layout recebido pelo contrato da janela.</summary>
+    public Task ConfigureWindowAsync(
+        WindowLayoutDto layout,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        return ConfigureWindowAsync(layout.ToModel(), cancellationToken);
+    }
 
     /// <summary>Executa e persiste uma ação de navegação da janela.</summary>
     public Task NavigateWindowAsync(
@@ -106,6 +127,18 @@ public sealed class CoreShellService
         var validation = RibbonPolicy.Validate(ribbon);
         if (!validation.IsValid) throw new ArgumentException(string.Join(" ", validation.Errors), nameof(tabs));
         return UpdateAsync(state => state with { Ribbon = ribbon, LastSection = "ribbon" }, cancellationToken);
+    }
+
+    /// <summary>Valida e persiste separadores recebidos pelo contrato do Ribbon.</summary>
+    public Task ConfigureRibbonAsync(
+        IEnumerable<RibbonTabDto> tabs,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(tabs);
+        var ribbon = tabs.Select(tab => tab is null
+            ? throw new ArgumentException("Cada separador do Ribbon é obrigatório.", nameof(tabs))
+            : tab.ToModel()).ToArray();
+        return ConfigureRibbonAsync(ribbon, cancellationToken);
     }
 
     /// <summary>Regista o separador ou comando consultado no Ribbon.</summary>
@@ -154,12 +187,22 @@ public sealed class CoreShellService
         bool highContrast,
         bool reducedMotion,
         CancellationToken cancellationToken = default)
-        => UpdateAsync(state => state with
+        => ConfigureAccessibilityAsync(new AccessibilityPreferencesDto(highContrast, reducedMotion), cancellationToken);
+
+    /// <summary>Valida e persiste um contrato de preferências de acessibilidade.</summary>
+    public Task ConfigureAccessibilityAsync(
+        AccessibilityPreferencesDto preferences,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        var settings = preferences.ToModel();
+        return UpdateAsync(state => state with
         {
-            HighContrast = highContrast,
-            ReducedMotion = reducedMotion,
-            LastSection = "accessibility"
+            HighContrast = settings.HighContrast,
+            ReducedMotion = settings.ReducedMotion,
+            LastSection = AccessibilityContract.SectionName
         }, cancellationToken);
+    }
 
     /// <summary>Persiste as opções de foco e ciclo da navegação.</summary>
     public Task ConfigureNavigationAsync(
@@ -170,5 +213,14 @@ public sealed class CoreShellService
         var validation = NavigationPolicy.Validate(navigation);
         if (!validation.IsValid) throw new ArgumentException(string.Join(" ", validation.Errors), nameof(navigation));
         return UpdateAsync(state => state with { Navigation = navigation, LastSection = "navigation" }, cancellationToken);
+    }
+
+    /// <summary>Valida e persiste a configuração de navegação recebida por DTO.</summary>
+    public Task ConfigureNavigationAsync(
+        NavigationSettingsDto navigation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(navigation);
+        return ConfigureNavigationAsync(navigation.ToModel(), cancellationToken);
     }
 }

@@ -17,6 +17,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("contrato DTO do Ribbon é convertido e validado", ValidatesRibbonContract)
     ,("contrato DTO de atalhos é convertido e validado", ValidatesShortcutContract)
     ,("contrato DTO de tema é convertido e validado", ValidatesThemeContract)
+    ,("contrato DTO de acessibilidade é convertido e validado", ValidatesAccessibilityContract)
+    ,("contrato DTO de navegação é convertido e validado", ValidatesNavigationContract)
     ,("janela valida e persiste configuração", ConfiguresWindow)
     ,("Ribbon valida e persiste configuração", ConfiguresRibbon)
     ,("atalhos configuram e persistem", ConfiguresShortcuts)
@@ -103,6 +105,11 @@ static async Task ConfiguresLauncher()
     var loaded = await store.LoadAsync();
     if (loaded.Launcher.Count != 5 || loaded.Launcher[^1] != item || loaded.LastSection != "launcher")
         throw new InvalidOperationException("A configuração do Launcher não foi persistida.");
+
+    await service.ConfigureLauncherAsync(ShellState.Default.Launcher.Select(LauncherItemDto.FromModel));
+    loaded = await store.LoadAsync();
+    if (loaded.Launcher.Count != ShellState.Default.Launcher.Count)
+        throw new InvalidOperationException("O contrato DTO do Launcher não foi persistido.");
 
     try { await service.ConfigureLauncherAsync(ShellState.Default.Launcher.Append(item with { Id = "writer" })); }
     catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
@@ -203,6 +210,33 @@ static Task ValidatesThemeContract()
     throw new InvalidOperationException("A conversão de tema inválido não falhou.");
 }
 
+static Task ValidatesAccessibilityContract()
+{
+    var dto = new AccessibilityPreferencesDto(true, false);
+    var model = dto.ToModel();
+    if (AccessibilityPreferencesDto.FromModel(model) != dto || !model.HighContrast || model.ReducedMotion)
+        throw new InvalidOperationException("A conversão do DTO de acessibilidade perdeu dados.");
+    if (!AccessibilityPolicy.Validate(dto).IsValid)
+        throw new InvalidOperationException("Um DTO de acessibilidade válido foi rejeitado.");
+
+    try { _ = AccessibilityPolicy.Validate((AccessibilityPreferencesDto)null!); }
+    catch (ArgumentNullException) { return Task.CompletedTask; }
+    throw new InvalidOperationException("Um DTO de acessibilidade nulo foi aceite.");
+}
+
+static Task ValidatesNavigationContract()
+{
+    var dto = new NavigationSettingsDto(NavigationFocusTarget.Ribbon, true);
+    if (NavigationSettingsDto.FromModel(dto.ToModel()) != dto || !NavigationPolicy.Validate(dto).IsValid)
+        throw new InvalidOperationException("A conversão do DTO de navegação falhou.");
+
+    if (NavigationPolicy.Validate(new NavigationSettingsDto((NavigationFocusTarget)99, false)).IsValid)
+        throw new InvalidOperationException("Um foco inicial inválido foi aceite pelo DTO.");
+    try { _ = new NavigationSettingsDto((NavigationFocusTarget)99, false).ToModel(); }
+    catch (ArgumentException) { return Task.CompletedTask; }
+    throw new InvalidOperationException("A conversão de navegação inválida não falhou.");
+}
+
 static async Task ConfiguresWindow()
 {
     var directory = CreateTestDirectory();
@@ -214,6 +248,11 @@ static async Task ConfiguresWindow()
     var loaded = await store.LoadAsync();
     if (loaded.Window != layout || loaded.LastSection != "window")
         throw new InvalidOperationException("A configuração da janela não foi persistida.");
+
+    await service.ConfigureWindowAsync(WindowLayoutDto.FromModel(layout));
+    loaded = await store.LoadAsync();
+    if (loaded.Window != layout)
+        throw new InvalidOperationException("O contrato DTO da janela não foi persistido.");
 
     try { await service.ConfigureWindowAsync(new WindowLayout(100, 100, 0, 0, false)); }
     catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
@@ -233,6 +272,11 @@ static async Task ConfiguresRibbon()
     if (loaded.Ribbon.Count != 3 || loadedTab.Id != tab.Id || loadedTab.Title != tab.Title ||
         loadedTab.Commands.Count != 1 || loadedTab.Commands[0].Id != tab.Commands[0].Id || loaded.LastSection != "ribbon")
         throw new InvalidOperationException("A configuração do Ribbon não foi persistida.");
+
+    await service.ConfigureRibbonAsync(ShellState.Default.Ribbon.Select(RibbonTabDto.FromModel));
+    loaded = await store.LoadAsync();
+    if (loaded.Ribbon.Count != ShellState.Default.Ribbon.Count)
+        throw new InvalidOperationException("O contrato DTO do Ribbon não foi persistido.");
 
     try { await service.ConfigureRibbonAsync(ShellState.Default.Ribbon.Append(tab with { Id = "home" })); }
     catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
@@ -294,6 +338,10 @@ static async Task ConfiguresAccessibility()
         throw new InvalidOperationException("As preferências de acessibilidade não foram persistidas.");
     if (!ShellStateValidator.Validate(loaded).IsValid)
         throw new InvalidOperationException("O estado com acessibilidade configurada não é válido.");
+    await service.ConfigureAccessibilityAsync(new AccessibilityPreferencesDto(false, true));
+    loaded = await store.LoadAsync();
+    if (loaded.HighContrast || !loaded.ReducedMotion || loaded.LastSection != AccessibilityContract.SectionName)
+        throw new InvalidOperationException("O DTO de acessibilidade não foi persistido.");
     Directory.Delete(directory, recursive: true);
 }
 
@@ -308,6 +356,11 @@ static async Task ConfiguresNavigation()
     if (loaded.Navigation.InitialFocus != NavigationFocusTarget.Ribbon || !loaded.Navigation.WrapFocus ||
         loaded.LastSection != "navigation")
         throw new InvalidOperationException("As preferências de navegação não foram persistidas.");
+
+    await service.ConfigureNavigationAsync(new NavigationSettingsDto(NavigationFocusTarget.Launcher, false));
+    loaded = await store.LoadAsync();
+    if (loaded.Navigation != NavigationSettings.Default)
+        throw new InvalidOperationException("O contrato DTO de navegação não foi persistido.");
 
     try { await service.ConfigureNavigationAsync(new NavigationSettings((NavigationFocusTarget)99, false)); }
     catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }

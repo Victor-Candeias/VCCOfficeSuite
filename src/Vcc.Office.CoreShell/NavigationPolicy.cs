@@ -20,4 +20,10 @@ public static class NavigationPolicy
             ? ValidationResult.Valid
             : new ValidationResult(["O foco inicial de navegação não é válido."]);
     }
+
+    public static ValidationResult Validate(NavigationSettingsDto settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return Validate(new NavigationSettings(settings.InitialFocus, settings.WrapFocus));
+    }
 }
