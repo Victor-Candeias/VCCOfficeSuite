@@ -7,6 +7,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Vcc.Office.CoreShell\Vcc.Office.CoreShell.csproj" />
   </ItemGroup>
 </Project>

@@ -58,26 +58,26 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0038 | Criar e configurar ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0039 | Criar e configurar autosave | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0040 | Criar e configurar recuperação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0041 | Criar e configurar pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0042 | Consultar e navegar SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0043 | Consultar e navegar migrações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0044 | Consultar e navegar ficheiros | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0045 | Consultar e navegar autosave | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0046 | Definir contratos, DTOs e validação de SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0047 | Definir contratos, DTOs e validação de migrações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0048 | Definir contratos, DTOs e validação de ficheiros | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0049 | Definir contratos, DTOs e validação de autosave | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0050 | Definir contratos, DTOs e validação de recuperação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0051 | Definir contratos, DTOs e validação de pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0052 | Implementar lógica e persistência de SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0053 | Implementar lógica e persistência de migrações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0054 | Implementar lógica e persistência de ficheiros | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0055 | Implementar lógica e persistência de autosave | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0056 | Implementar lógica e persistência de recuperação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0057 | Implementar lógica e persistência de pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0058 | Construir interface e estados de SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0059 | Construir interface e estados de migrações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0060 | Construir interface e estados de ficheiros | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0041 | Criar e configurar pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0042 | Consultar e navegar SQLite | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0043 | Consultar e navegar migrações | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0044 | Consultar e navegar ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0045 | Consultar e navegar autosave | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0046 | Definir contratos, DTOs e validação de SQLite | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0047 | Definir contratos, DTOs e validação de migrações | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0048 | Definir contratos, DTOs e validação de ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0049 | Definir contratos, DTOs e validação de autosave | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0050 | Definir contratos, DTOs e validação de recuperação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0051 | Definir contratos, DTOs e validação de pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0052 | Implementar lógica e persistência de SQLite | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0053 | Implementar lógica e persistência de migrações | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0054 | Implementar lógica e persistência de ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0055 | Implementar lógica e persistência de autosave | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0056 | Implementar lógica e persistência de recuperação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0057 | Implementar lógica e persistência de pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0058 | Construir interface e estados de SQLite | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0059 | Construir interface e estados de migrações | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0060 | Construir interface e estados de ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0061 | Entregar Core Integration | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0062 | Contratos de plugins — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0063 | Eventos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
