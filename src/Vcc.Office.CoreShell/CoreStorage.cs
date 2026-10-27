@@ -22,6 +22,17 @@ public sealed class MigrationRunner
         CREATE TABLE IF NOT EXISTS app_settings (key TEXT NOT NULL PRIMARY KEY, value_json TEXT NOT NULL, updated_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS recovery_sessions (id TEXT NOT NULL PRIMARY KEY, module TEXT NOT NULL, source_path TEXT NOT NULL, snapshot_path TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS ix_recovery_sessions_status ON recovery_sessions(status);
+        """),
+        (2, """
+        CREATE TABLE IF NOT EXISTS data_tables (name TEXT NOT NULL PRIMARY KEY, display_name TEXT NOT NULL, created_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS data_columns (table_name TEXT NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, nullable INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(table_name, name), FOREIGN KEY(table_name) REFERENCES data_tables(name) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS data_relations (name TEXT NOT NULL PRIMARY KEY, parent_table TEXT NOT NULL, parent_column TEXT NOT NULL, child_table TEXT NOT NULL, child_column TEXT NOT NULL, FOREIGN KEY(parent_table) REFERENCES data_tables(name) ON DELETE CASCADE, FOREIGN KEY(child_table) REFERENCES data_tables(name) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS data_saved_queries (name TEXT NOT NULL PRIMARY KEY, sql TEXT NOT NULL, created_at TEXT NOT NULL);
+        """),
+        (3, """
+        CREATE TABLE IF NOT EXISTS data_forms (name TEXT NOT NULL PRIMARY KEY, table_name TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS data_form_fields (form_name TEXT NOT NULL, name TEXT NOT NULL, label TEXT NOT NULL, type TEXT NOT NULL, required INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(form_name, name), FOREIGN KEY(form_name) REFERENCES data_forms(name) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS data_reports (name TEXT NOT NULL PRIMARY KEY, display_name TEXT NOT NULL, query_sql TEXT NOT NULL, created_at TEXT NOT NULL);
         """)
     ];
 

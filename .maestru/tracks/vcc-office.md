@@ -318,106 +318,106 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0298 | Implementar lógica e persistência de envio SMTP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0299 | Implementar lógica e persistência de pastas e pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0300 | Implementar lógica e persistência de anexos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0301 | Implementar lógica e persistência de composição | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0302 | Implementar lógica e persistência de modo offline | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0303 | Implementar lógica e persistência de segurança | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0304 | Construir interface e estados de contas e autenticação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0305 | Construir interface e estados de sincronização IMAP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0306 | Entregar VCC Data | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0307 | Modelo sqlite — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0308 | Editor de tabelas — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0309 | Relações — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0310 | Consultas sql — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0311 | Formulários — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0312 | Criar e configurar modelo SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0313 | Criar e configurar editor de tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0314 | Criar e configurar relações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0315 | Criar e configurar consultas SQL | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0316 | Criar e configurar formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0317 | Criar e configurar importação CSV | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0318 | Criar e configurar relatórios | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0319 | Criar e configurar backup | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0320 | Consultar e navegar modelo SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0321 | Consultar e navegar editor de tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0322 | Consultar e navegar relações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0323 | Consultar e navegar consultas SQL | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0324 | Consultar e navegar formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0325 | Definir contratos, DTOs e validação de modelo SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0326 | Definir contratos, DTOs e validação de editor de tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0327 | Definir contratos, DTOs e validação de relações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0328 | Definir contratos, DTOs e validação de consultas SQL | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0329 | Definir contratos, DTOs e validação de formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0330 | Definir contratos, DTOs e validação de importação CSV | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0331 | Definir contratos, DTOs e validação de relatórios | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0332 | Definir contratos, DTOs e validação de backup | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0333 | Implementar lógica e persistência de modelo SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0334 | Implementar lógica e persistência de editor de tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0335 | Implementar lógica e persistência de relações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0336 | Implementar lógica e persistência de consultas SQL | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0337 | Implementar lógica e persistência de formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0338 | Implementar lógica e persistência de importação CSV | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0339 | Implementar lógica e persistência de relatórios | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0340 | Implementar lógica e persistência de backup | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0341 | Construir interface e estados de modelo SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0342 | Construir interface e estados de editor de tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0343 | Construir interface e estados de relações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0344 | Construir interface e estados de consultas SQL | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0345 | Construir interface e estados de formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0346 | Entregar VCC Notes | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0347 | Cadernos e secções — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0348 | Editor de páginas — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0349 | Anexos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0350 | Etiquetas — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0351 | Criar e configurar cadernos e secções | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0352 | Criar e configurar editor de páginas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0353 | Criar e configurar anexos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0354 | Criar e configurar etiquetas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0355 | Criar e configurar pesquisa FTS | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0356 | Criar e configurar exportação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0357 | Consultar e navegar cadernos e secções | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0358 | Consultar e navegar editor de páginas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0359 | Definir contratos, DTOs e validação de cadernos e secções | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0360 | Definir contratos, DTOs e validação de editor de páginas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0361 | Definir contratos, DTOs e validação de anexos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0362 | Definir contratos, DTOs e validação de etiquetas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0363 | Definir contratos, DTOs e validação de pesquisa FTS | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0364 | Definir contratos, DTOs e validação de exportação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0365 | Implementar lógica e persistência de cadernos e secções | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0366 | Entregar VCC PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0367 | Renderização — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0368 | Navegação — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0369 | Anotações — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0370 | Formulários — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0371 | Juntar e dividir — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0372 | Criar e configurar renderização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0373 | Criar e configurar navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0374 | Criar e configurar anotações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0375 | Criar e configurar formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0376 | Criar e configurar juntar e dividir | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0377 | Criar e configurar assinaturas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0378 | Criar e configurar OCR | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0379 | Criar e configurar PDF/A e exportação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0380 | Consultar e navegar renderização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0381 | Consultar e navegar navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0382 | Consultar e navegar anotações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0383 | Consultar e navegar formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0384 | Consultar e navegar juntar e dividir | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0385 | Definir contratos, DTOs e validação de renderização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0386 | Definir contratos, DTOs e validação de navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0387 | Definir contratos, DTOs e validação de anotações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0388 | Definir contratos, DTOs e validação de formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0389 | Definir contratos, DTOs e validação de juntar e dividir | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0390 | Definir contratos, DTOs e validação de assinaturas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0391 | Definir contratos, DTOs e validação de OCR | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0392 | Definir contratos, DTOs e validação de PDF/A e exportação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0393 | Implementar lógica e persistência de renderização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0394 | Implementar lógica e persistência de navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0395 | Implementar lógica e persistência de anotações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0396 | Implementar lógica e persistência de formulários | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0397 | Implementar lógica e persistência de juntar e dividir | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0398 | Implementar lógica e persistência de assinaturas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0399 | Implementar lógica e persistência de OCR | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0400 | Implementar lógica e persistência de PDF/A e exportação | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0301 | Implementar lógica e persistência de composição | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0302 | Implementar lógica e persistência de modo offline | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0303 | Implementar lógica e persistência de segurança | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0304 | Construir interface e estados de contas e autenticação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0305 | Construir interface e estados de sincronização IMAP | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0306 | Entregar VCC Data | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0307 | Modelo sqlite — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0308 | Editor de tabelas — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0309 | Relações — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0310 | Consultas sql — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0311 | Formulários — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0312 | Criar e configurar modelo SQLite | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0313 | Criar e configurar editor de tabelas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0314 | Criar e configurar relações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0315 | Criar e configurar consultas SQL | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0316 | Criar e configurar formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0317 | Criar e configurar importação CSV | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0318 | Criar e configurar relatórios | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0319 | Criar e configurar backup | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0320 | Consultar e navegar modelo SQLite | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0321 | Consultar e navegar editor de tabelas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0322 | Consultar e navegar relações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0323 | Consultar e navegar consultas SQL | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0324 | Consultar e navegar formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0325 | Definir contratos, DTOs e validação de modelo SQLite | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0326 | Definir contratos, DTOs e validação de editor de tabelas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0327 | Definir contratos, DTOs e validação de relações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0328 | Definir contratos, DTOs e validação de consultas SQL | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0329 | Definir contratos, DTOs e validação de formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0330 | Definir contratos, DTOs e validação de importação CSV | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0331 | Definir contratos, DTOs e validação de relatórios | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0332 | Definir contratos, DTOs e validação de backup | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0333 | Implementar lógica e persistência de modelo SQLite | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0334 | Implementar lógica e persistência de editor de tabelas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0335 | Implementar lógica e persistência de relações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0336 | Implementar lógica e persistência de consultas SQL | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0337 | Implementar lógica e persistência de formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0338 | Implementar lógica e persistência de importação CSV | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0339 | Implementar lógica e persistência de relatórios | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0340 | Implementar lógica e persistência de backup | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0341 | Construir interface e estados de modelo SQLite | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0342 | Construir interface e estados de editor de tabelas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0343 | Construir interface e estados de relações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0344 | Construir interface e estados de consultas SQL | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0345 | Construir interface e estados de formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0346 | Entregar VCC Notes | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0347 | Cadernos e secções — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0348 | Editor de páginas — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0349 | Anexos — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0350 | Etiquetas — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0351 | Criar e configurar cadernos e secções | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0352 | Criar e configurar editor de páginas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0353 | Criar e configurar anexos | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0354 | Criar e configurar etiquetas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0355 | Criar e configurar pesquisa FTS | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0356 | Criar e configurar exportação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0357 | Consultar e navegar cadernos e secções | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0358 | Consultar e navegar editor de páginas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0359 | Definir contratos, DTOs e validação de cadernos e secções | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0360 | Definir contratos, DTOs e validação de editor de páginas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0361 | Definir contratos, DTOs e validação de anexos | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0362 | Definir contratos, DTOs e validação de etiquetas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0363 | Definir contratos, DTOs e validação de pesquisa FTS | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0364 | Definir contratos, DTOs e validação de exportação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0365 | Implementar lógica e persistência de cadernos e secções | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0366 | Entregar VCC PDF | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0367 | Renderização — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0368 | Navegação — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0369 | Anotações — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0370 | Formulários — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0371 | Juntar e dividir — capacidade 1 | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0372 | Criar e configurar renderização | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0373 | Criar e configurar navegação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0374 | Criar e configurar anotações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0375 | Criar e configurar formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0376 | Criar e configurar juntar e dividir | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0377 | Criar e configurar assinaturas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0378 | Criar e configurar OCR | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0379 | Criar e configurar PDF/A e exportação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0380 | Consultar e navegar renderização | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0381 | Consultar e navegar navegação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0382 | Consultar e navegar anotações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0383 | Consultar e navegar formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0384 | Consultar e navegar juntar e dividir | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0385 | Definir contratos, DTOs e validação de renderização | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0386 | Definir contratos, DTOs e validação de navegação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0387 | Definir contratos, DTOs e validação de anotações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0388 | Definir contratos, DTOs e validação de formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0389 | Definir contratos, DTOs e validação de juntar e dividir | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0390 | Definir contratos, DTOs e validação de assinaturas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0391 | Definir contratos, DTOs e validação de OCR | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0392 | Definir contratos, DTOs e validação de PDF/A e exportação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0393 | Implementar lógica e persistência de renderização | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0394 | Implementar lógica e persistência de navegação | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0395 | Implementar lógica e persistência de anotações | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0396 | Implementar lógica e persistência de formulários | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0397 | Implementar lógica e persistência de juntar e dividir | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0398 | Implementar lógica e persistência de assinaturas | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0399 | Implementar lógica e persistência de OCR | in-progress | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0400 | Implementar lógica e persistência de PDF/A e exportação | in-progress | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0401 | Construir interface e estados de renderização | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0402 | Construir interface e estados de navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0403 | Construir interface e estados de anotações | backlog | 2026-10-26 | developer | medium |  |  |  |

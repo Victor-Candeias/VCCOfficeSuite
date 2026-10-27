@@ -45,6 +45,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Sheets seleciona, recalcula, copia e limpa intervalos", ExercisesSheetRanges)
     ,("Sheets exporta PDF e Slides cria, apresenta e persiste", ExercisesSlides)
     ,("Slides aplica transições e exporta pacotes; Mail compõe, envia e pesquisa", ExercisesSlidesAndMail)
+    ,("Data cria tabelas, importa CSV, consulta e exporta", ExercisesData)
+    ,("Data guarda formulários e executa relatórios", ExercisesDataFormsAndReports)
 };
 
 foreach (var test in tests)
@@ -724,6 +726,49 @@ static async Task ExercisesSlidesAndMail()
     await restored.LoadAsync();
     if (restored.Messages.Count != 1 || restored.Messages[0].Attachments?.Count != 1) throw new InvalidOperationException("A persistência de Mail falhou.");
     Directory.Delete(directory, recursive: true);
+}
+
+static async Task ExercisesData()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var service = new VccDataService(new CoreDatabase(StoragePaths.ForLocalApplication(directory)));
+        await service.CreateTableAsync(new DataTableDefinition("contacts", "Contactos", [new("id", "INTEGER", false), new("name", "TEXT", false)]));
+        await service.InsertRowAsync("contacts", new Dictionary<string, object?> { ["id"] = 1, ["name"] = "Ana, VCC" });
+        if (await service.ImportCsvAsync("contacts", "id,name\n2,Bruno\n") != 1) throw new InvalidOperationException("A importação CSV falhou.");
+        var result = await service.QueryAsync("SELECT id, name FROM contacts ORDER BY id");
+        if (result.Rows.Count != 2 || result.Rows[1]["name"]?.ToString() != "Bruno") throw new InvalidOperationException("A consulta de dados falhou.");
+        if (! (await service.ExportCsvAsync("SELECT name FROM contacts ORDER BY id")).Contains("Ana, VCC", StringComparison.Ordinal)) throw new InvalidOperationException("A exportação CSV falhou.");
+        await service.CreateRelationAsync(new DataRelationDefinition("contact_self", "contacts", "id", "contacts", "id"));
+    }
+    finally { Directory.Delete(directory, true); }
+}
+
+static async Task ExercisesDataFormsAndReports()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var service = new VccDataService(new CoreDatabase(StoragePaths.ForLocalApplication(directory)));
+        await service.CreateTableAsync(new DataTableDefinition("sales", "Vendas", [new("id", "INTEGER", false), new("total", "REAL", false), new("customer", "TEXT", false)]));
+        var form = new DataFormDefinition("sale_form", "sales", "Nova venda", [new("id", "ID", "INTEGER"), new("total", "Total", "REAL", true), new("customer", "Cliente", "TEXT", true)]);
+        await service.CreateFormAsync(form);
+        var stored = (await service.ListFormsAsync()).Single();
+        await service.SubmitFormAsync(stored, new Dictionary<string, object?> { ["id"] = 1, ["total"] = 12.5, ["customer"] = "Ana" });
+        await service.CreateReportAsync(new DataReportDefinition("sales_report", "Vendas", "SELECT customer, total FROM sales ORDER BY id"));
+        var result = await service.RunReportAsync((await service.ListReportsAsync()).Single());
+        if (result.Rows.Count != 1 || result.Rows[0]["customer"]?.ToString() != "Ana") throw new InvalidOperationException("O relatório não devolveu os dados esperados.");
+        await AssertThrows<ArgumentException>(() => service.SubmitFormAsync(stored, new Dictionary<string, object?> { ["id"] = 2, ["total"] = null, ["customer"] = "" }));
+    }
+    finally { Directory.Delete(directory, true); }
+}
+
+static async Task AssertThrows<TException>(Func<Task> action) where TException : Exception
+{
+    try { await action(); }
+    catch (TException) { return; }
+    throw new InvalidOperationException($"Era esperada a exceção {typeof(TException).Name}.");
 }
 
 static string CreateTestDirectory()

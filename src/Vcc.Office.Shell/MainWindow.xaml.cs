@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -15,6 +16,8 @@ namespace Vcc.Office.Shell;
 public partial class MainWindow : Window
 {
     private readonly CoreShellService _shell;
+    private readonly VccDataService _data;
+    private readonly Dictionary<string, TextBox> _formInputs = new(StringComparer.OrdinalIgnoreCase);
     private bool _darkTheme;
     private CoreThemeMode _themeMode = CoreThemeMode.System;
     private bool _stateReady;
@@ -26,6 +29,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         var statePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VCC Office", "shell-state.json");
         _shell = new CoreShellService(new ShellStateStore(statePath));
+        _data = new VccDataService(new CoreDatabase(StoragePaths.ForLocalApplication()));
         DataContext = this;
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
@@ -48,6 +52,144 @@ public partial class MainWindow : Window
         ApplyTheme(_themeMode);
         _stateReady = true;
         _ = Dispatcher.BeginInvoke(ApplyNavigationFocus, DispatcherPriority.Input);
+        await RefreshDataTablesAsync();
+        await RefreshDataFormsAndReportsAsync();
+    }
+
+    private async Task RefreshDataTablesAsync()
+    {
+        try
+        {
+            DataTablesList.ItemsSource = await _data.ListTablesAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"VCC Data indisponível · {ex.Message}";
+        }
+    }
+
+    private async Task RefreshDataFormsAndReportsAsync()
+    {
+        try
+        {
+            DataFormsList.ItemsSource = await _data.ListFormsAsync();
+            DataReportsList.ItemsSource = await _data.ListReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Formulários e relatórios indisponíveis · {ex.Message}";
+        }
+    }
+
+    private void DataFormsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        DataFormFieldsPanel.Children.Clear();
+        _formInputs.Clear();
+        if (DataFormsList.SelectedItem is not DataFormDefinition form) return;
+        foreach (var field in form.Fields)
+        {
+            var input = new TextBox { Margin = new Thickness(0, 4, 0, 10), ToolTip = field.Required ? "Campo obrigatório" : null };
+            _formInputs[field.Name] = input;
+            var label = new TextBlock { Text = field.Required ? $"{field.Label} *" : field.Label };
+            DataFormFieldsPanel.Children.Add(label);
+            DataFormFieldsPanel.Children.Add(input);
+        }
+    }
+
+    private async void SubmitDataForm_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataFormsList.SelectedItem is not DataFormDefinition form)
+        {
+            StatusText.Text = "Selecione um formulário.";
+            return;
+        }
+        try
+        {
+            var values = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var field in form.Fields)
+            {
+                var text = _formInputs[field.Name].Text.Trim();
+                values[field.Name] = field.Type switch
+                {
+                    "INTEGER" when long.TryParse(text, out var integer) => integer,
+                    "REAL" when double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var real) => real,
+                    "INTEGER" or "REAL" => throw new ArgumentException($"O campo «{field.Label}» tem um valor inválido."),
+                    _ => text
+                };
+            }
+            await _data.SubmitFormAsync(form, values);
+            StatusText.Text = $"Formulário «{form.DisplayName}» guardado · offline";
+        }
+        catch (Exception ex) { StatusText.Text = $"Formulário inválido · {ex.Message}"; }
+    }
+
+    private void DataReportsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataReportsList.SelectedItem is DataReportDefinition report) StatusText.Text = $"Relatório selecionado · {report.DisplayName}";
+    }
+
+    private async void RunDataReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataReportsList.SelectedItem is not DataReportDefinition report)
+        {
+            StatusText.Text = "Selecione um relatório.";
+            return;
+        }
+        try
+        {
+            var result = await _data.RunReportAsync(report);
+            SetDataGridItems(DataReportResultsGrid, result);
+            StatusText.Text = $"Relatório «{report.DisplayName}» · {result.Rows.Count} registos · offline";
+        }
+        catch (Exception ex) { StatusText.Text = $"Relatório inválido · {ex.Message}"; }
+    }
+
+    private static void SetDataGridItems(DataGrid grid, DataQueryResult result)
+    {
+        var table = new DataTable();
+        foreach (var column in result.Columns) table.Columns.Add(column);
+        foreach (var row in result.Rows) table.Rows.Add(result.Columns.Select(column => row[column] ?? DBNull.Value).ToArray());
+        grid.ItemsSource = table.DefaultView;
+    }
+
+    private void OpenData_Click(object sender, RoutedEventArgs e)
+    {
+        LauncherView.Visibility = Visibility.Collapsed;
+        DataPanel.Visibility = Visibility.Visible;
+        StatusText.Text = "VCC Data · offline";
+        DataQueryBox.Focus();
+    }
+
+    private void CloseData_Click(object sender, RoutedEventArgs e)
+    {
+        DataPanel.Visibility = Visibility.Collapsed;
+        LauncherView.Visibility = Visibility.Visible;
+        StatusText.Text = "Launcher · offline";
+        ConfigureLauncherButton.Focus();
+    }
+
+    private async void DataTablesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataTablesList.SelectedItem is not DataTableDefinition table) return;
+        DataQueryBox.Text = $"SELECT * FROM \"{table.Name.Replace("\"", "\"\"", StringComparison.Ordinal)}\" LIMIT 100";
+        await ExecuteDataQueryAsync();
+    }
+
+    private async void ExecuteDataQuery_Click(object sender, RoutedEventArgs e) => await ExecuteDataQueryAsync();
+
+    private async Task ExecuteDataQueryAsync()
+    {
+        try
+        {
+            var result = await _data.QueryAsync(DataQueryBox.Text);
+            SetDataGridItems(DataResultsGrid, result);
+            StatusText.Text = $"VCC Data · {result.Rows.Count} registos · offline";
+        }
+        catch (Exception ex)
+        {
+            DataResultsGrid.ItemsSource = null;
+            StatusText.Text = $"Consulta inválida · {ex.Message}";
+        }
     }
 
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)

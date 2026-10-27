@@ -252,6 +252,11 @@
                             Click="ConfigureLauncher_Click"
                             x:Name="ConfigureLauncherButton"
                             AutomationProperties.Name="Configurar Launcher"/>
+                    <Button DockPanel.Dock="Right"
+                            Content="_VCC Data"
+                            Click="OpenData_Click"
+                            AutomationProperties.Name="Abrir VCC Data"
+                            Margin="0,0,8,0"/>
                     <TextBlock Text="Launcher"
                                FontSize="30"
                                FontWeight="SemiBold"/>
@@ -286,6 +291,7 @@
 
             <!-- Aplicações -->
             <ScrollViewer Grid.Row="1"
+                          x:Name="LauncherView"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
 
@@ -353,6 +359,92 @@
                 </ItemsControl>
 
             </ScrollViewer>
+
+            <Border Grid.Row="1"
+                    x:Name="DataPanel"
+                    Visibility="Collapsed"
+                    Background="{DynamicResource PanelBackground}"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,16">
+                        <Button DockPanel.Dock="Right"
+                                Content="_Voltar ao Launcher"
+                                Click="CloseData_Click"
+                                AutomationProperties.Name="Voltar ao Launcher"/>
+                        <StackPanel>
+                            <TextBlock Text="VCC Data" FontSize="24" FontWeight="SemiBold"/>
+                            <TextBlock Text="Modelo SQLite e consultas locais"
+                                       Foreground="{DynamicResource SecondaryText}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel Grid.Row="1" LastChildFill="False" Margin="0,0,0,16">
+                        <Button DockPanel.Dock="Right"
+                                Content="_Executar consulta"
+                                Click="ExecuteDataQuery_Click"
+                                AutomationProperties.Name="Executar consulta SQL"/>
+                        <TextBox x:Name="DataQueryBox"
+                                 MinWidth="520"
+                                 Text="SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+                                 AutomationProperties.Name="Consulta SQL do VCC Data"
+                                 ToolTip="Apenas consultas SELECT, WITH ou EXPLAIN"/>
+                    </DockPanel>
+                    <TabControl Grid.Row="2">
+                      <TabItem Header="Dados">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <GroupBox Grid.Column="0" Header="Tabelas" Padding="8">
+                            <ListBox x:Name="DataTablesList"
+                                     DisplayMemberPath="Name"
+                                     SelectionChanged="DataTablesList_SelectionChanged"
+                                     AutomationProperties.Name="Tabelas do VCC Data"/>
+                        </GroupBox>
+                        <DataGrid Grid.Column="2"
+                                  x:Name="DataResultsGrid"
+                                  AutoGenerateColumns="True"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  AutomationProperties.Name="Resultados do VCC Data"/>
+                    </Grid>
+                      </TabItem>
+                      <TabItem Header="Formulários e relatórios">
+                        <Grid Margin="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="320"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Formulário" FontWeight="SemiBold"/>
+                                <ComboBox x:Name="DataFormsList" DisplayMemberPath="DisplayName" SelectionChanged="DataFormsList_SelectionChanged" AutomationProperties.Name="Formulários do VCC Data" Margin="0,6,0,12"/>
+                                <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="DataFormFieldsPanel"/>
+                                </ScrollViewer>
+                                <Button Content="_Guardar formulário" Click="SubmitDataForm_Click" AutomationProperties.Name="Guardar formulário" Margin="0,12,0,0"/>
+                                <Separator Margin="0,20,0,12"/>
+                                <TextBlock Text="Relatório" FontWeight="SemiBold"/>
+                                <ComboBox x:Name="DataReportsList" DisplayMemberPath="DisplayName" SelectionChanged="DataReportsList_SelectionChanged" AutomationProperties.Name="Relatórios do VCC Data" Margin="0,6,0,8"/>
+                                <Button Content="_Executar relatório" Click="RunDataReport_Click" AutomationProperties.Name="Executar relatório"/>
+                            </StackPanel>
+                            <DataGrid Grid.Column="2" x:Name="DataReportResultsGrid" AutoGenerateColumns="True" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" AutomationProperties.Name="Resultados do relatório"/>
+                        </Grid>
+                      </TabItem>
+                    </TabControl>
+                </Grid>
+            </Border>
 
         </Grid>
 
