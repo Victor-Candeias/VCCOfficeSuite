@@ -18,10 +18,10 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 <!-- maestru:work-items-list -->
 | ID | Title | Status | Created | Owner | Priority | Completed | Template | Spec |
 |---|---|---|---|---|---|---|---|---|
-| VCC-0001 | Entregar Core Shell | in-progress | 2026-10-26 | developer | medium |  |  | [VCC-0001](../specs/vcc-office/vcc-0001-core-shell-spec.md) |
-| VCC-0002 | Launcher — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0003 | Janelas — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0004 | Ribbon — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0001 | Entregar Core Shell | done | 2026-10-26 | developer | medium | 2026-10-27 |  | [VCC-0001](../specs/vcc-office/vcc-0001-core-shell-spec.md) |
+| VCC-0002 | Launcher — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0003 | Janelas — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0004 | Ribbon — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0005 | Atalhos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0006 | Criar e configurar Launcher | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0007 | Criar e configurar janelas | backlog | 2026-10-26 | developer | medium |  |  |  |

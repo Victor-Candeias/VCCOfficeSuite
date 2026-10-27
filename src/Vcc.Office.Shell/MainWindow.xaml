@@ -6,7 +6,7 @@
         Height="800"
         MinWidth="640"
         MinHeight="480"
-        WindowState="Maximized"
+        WindowState="Normal"
         Background="{DynamicResource WindowBackground}"
         Foreground="{DynamicResource PrimaryText}">
 
@@ -70,6 +70,8 @@
             </Setter>
         </Style>
 
+        <SolidColorBrush x:Key="DividerBrush" Color="#D1D5DB"/>
+
     </Window.Resources>
 
     <DockPanel>
@@ -79,24 +81,77 @@
                 Padding="24,18"
                 Background="{DynamicResource PanelBackground}">
 
-            <DockPanel>
+            <StackPanel>
 
-                <Button DockPanel.Dock="Right"
-                        Content="Tema Escuro"
-                        Click="ToggleTheme_Click"
-                        Name="ToggleThemeButton"/>
+                <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            Content="Tema Escuro"
+                            Click="ToggleTheme_Click"
+                            Name="ToggleThemeButton"/>
 
-                <StackPanel>
-                    <TextBlock Text="VCC Office"
-                               FontSize="24"
-                               FontWeight="SemiBold"/>
+                    <StackPanel>
+                        <TextBlock Text="VCC Office"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"/>
 
-                    <TextBlock Text="Core Shell · operação local"
-                               Foreground="{DynamicResource SecondaryText}"
-                               Margin="0,4,0,0"/>
-                </StackPanel>
+                        <TextBlock Text="Core Shell · operação local"
+                                   Foreground="{DynamicResource SecondaryText}"
+                                   Margin="0,4,0,0"/>
+                    </StackPanel>
+                </DockPanel>
 
-            </DockPanel>
+                <Border Margin="0,18,0,0"
+                        Padding="0,12,0,0"
+                        BorderBrush="{DynamicResource DividerBrush}"
+                        BorderThickness="0,1,0,0">
+                    <StackPanel>
+                        <ItemsControl ItemsSource="{Binding RibbonTabs}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Title}"
+                                            Tag="{Binding}"
+                                            Click="RibbonTab_Click"
+                                            Margin="0,0,8,8"
+                                            Padding="12,6"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <ItemsControl ItemsSource="{Binding RibbonCommands}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Tag="{Binding}"
+                                            Click="RibbonCommand_Click"
+                                            Width="96"
+                                            Height="62"
+                                            Margin="0,0,8,0"
+                                            Padding="6">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Glyph}"
+                                                       FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Title}"
+                                                       HorizontalAlignment="Center"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
         </Border>
 
         <!-- Barra de estado -->

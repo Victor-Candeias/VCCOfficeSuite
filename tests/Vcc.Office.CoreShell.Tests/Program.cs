@@ -4,7 +4,9 @@ using Vcc.Office.CoreShell;
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
+    ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
+    ("layout de janela é normalizado", NormalizesWindowLayout),
     ("estado é guardado e recuperado", PersistsAndRecoversState),
     ("estado corrompido recupera do backup", RecoversFromBackup)
 };
@@ -31,6 +33,32 @@ static Task RejectsInvalidState()
     return Task.CompletedTask;
 }
 
+static Task ValidatesDefaultRibbon()
+{
+    if (ShellState.Default.Ribbon.Count != 2 || ShellState.Default.Ribbon.SelectMany(tab => tab.Commands).Count() != 5)
+        throw new InvalidOperationException("O Ribbon predefinido não contém os separadores e comandos esperados.");
+    if (!ShellStateValidator.Validate(ShellState.Default).IsValid)
+        throw new InvalidOperationException("O Ribbon predefinido não é válido.");
+    return Task.CompletedTask;
+}
+
+static Task NormalizesWindowLayout()
+{
+    var normalized = WindowLayoutPolicy.Normalize(
+        new WindowLayout(100, double.NaN, -2000, 2000, true),
+        workAreaLeft: 0,
+        workAreaTop: 0,
+        workAreaWidth: 1920,
+        workAreaHeight: 1080);
+
+    if (normalized.Width != WindowLayoutPolicy.MinimumWidth || normalized.Height != WindowLayout.Default.Height)
+        throw new InvalidOperationException("As dimensões inválidas não foram normalizadas.");
+    if (normalized.Left < -normalized.Width + 48 || normalized.Top > 1080 - 48)
+        throw new InvalidOperationException("A posição normalizada deixou a janela inacessível.");
+    if (!normalized.IsMaximized) throw new InvalidOperationException("O estado maximizado não foi preservado.");
+    return Task.CompletedTask;
+}
+
 static async Task PersistsAndRecoversState()
 {
     var directory = CreateTestDirectory();
@@ -38,7 +66,8 @@ static async Task PersistsAndRecoversState()
     var state = ShellState.Default with { Theme = ThemeMode.Dark, LastSection = "settings" };
     await store.SaveAsync(state);
     var loaded = await store.LoadAsync();
-    if (loaded.Theme != ThemeMode.Dark || loaded.LastSection != "settings") throw new InvalidOperationException("O estado recuperado não corresponde ao guardado.");
+    if (loaded.Theme != ThemeMode.Dark || loaded.LastSection != "settings" || loaded.Ribbon.Count != 2)
+        throw new InvalidOperationException("O estado recuperado não corresponde ao guardado.");
     Directory.Delete(directory, recursive: true);
 }
 
