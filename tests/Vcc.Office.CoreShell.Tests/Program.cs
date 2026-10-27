@@ -1,4 +1,5 @@
 using Vcc.Office.CoreShell;
+using System.Text;
 
 /// <summary>
 var tests = new (string Name, Func<Task> Run)[]
@@ -28,6 +29,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Launcher é consultado e navegado", QueriesAndNavigatesLauncher)
     ,("janelas são consultadas e navegadas", NavigatesWindows)
     ,("Ribbon é consultado e navegado", QueriesAndNavigatesRibbon)
+    ,("SQLite aplica migrações e persiste definições", PersistsDatabaseSetting)
+    ,("ficheiros são escritos atomicamente", WritesAtomicFiles)
+    ,("autosave cria snapshot recuperável", CreatesRecoverySnapshot)
 };
 
 foreach (var test in tests)
@@ -464,6 +468,42 @@ static async Task RecoversFromBackup()
     await File.WriteAllTextAsync(store.StatePath, "{ invalid json");
     var loaded = await store.LoadAsync();
     if (loaded.Theme != ThemeMode.Light) throw new InvalidOperationException("O backup não foi usado após corrupção.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task PersistsDatabaseSetting()
+{
+    var directory = CreateTestDirectory();
+    var database = new CoreDatabase(new StoragePaths(directory));
+    await database.InitialiseAsync();
+    await database.SetSettingAsync("theme", "{\"mode\":\"dark\"}");
+    if (await database.GetSettingAsync("theme") != "{\"mode\":\"dark\"}")
+        throw new InvalidOperationException("A definição não foi persistida na base SQLite.");
+    await database.InitialiseAsync();
+    if (!File.Exists(database.DatabasePath)) throw new InvalidOperationException("A base SQLite não foi criada.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task WritesAtomicFiles()
+{
+    var directory = CreateTestDirectory();
+    var path = Path.Combine(directory, "nested", "document.bin");
+    var files = new AtomicFileStore();
+    await files.WriteAsync(path, "conteúdo local"u8.ToArray());
+    var content = await files.ReadAsync(path);
+    if (Encoding.UTF8.GetString(content) != "conteúdo local" || File.Exists(path + ".tmp"))
+        throw new InvalidOperationException("A gravação atómica não produziu o ficheiro esperado.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task CreatesRecoverySnapshot()
+{
+    var directory = CreateTestDirectory();
+    var recovery = new RecoveryStore(new StoragePaths(directory));
+    var session = await recovery.SaveSnapshotAsync("Writer", "documento.vcc", "rascunho"u8.ToArray());
+    var restored = await recovery.ReadSnapshotAsync(session);
+    if (session.Status != "pending" || Encoding.UTF8.GetString(restored) != "rascunho")
+        throw new InvalidOperationException("O snapshot de recuperação não pode ser restaurado.");
     Directory.Delete(directory, recursive: true);
 }
 

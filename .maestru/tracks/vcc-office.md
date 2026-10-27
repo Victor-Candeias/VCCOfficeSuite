@@ -43,21 +43,21 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0023 | Implementar lógica e persistência de Launcher | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0024 | Implementar lógica e persistência de janelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0025 | Implementar lógica e persistência de Ribbon | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0026 | Implementar lógica e persistência de atalhos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0027 | Implementar lógica e persistência de temas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0028 | Implementar lógica e persistência de acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0029 | Implementar lógica e persistência de navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0030 | Construir interface e estados de Launcher | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0031 | Entregar Core Storage | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0032 | Sqlite — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0033 | Migrações — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0034 | Ficheiros — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0035 | Autosave — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0036 | Criar e configurar SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0037 | Criar e configurar migrações | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0038 | Criar e configurar ficheiros | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0039 | Criar e configurar autosave | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0040 | Criar e configurar recuperação | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0026 | Implementar lógica e persistência de atalhos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0027 | Implementar lógica e persistência de temas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0028 | Implementar lógica e persistência de acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0029 | Implementar lógica e persistência de navegação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0030 | Construir interface e estados de Launcher | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0031 | Entregar Core Storage | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0032 | Sqlite — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0033 | Migrações — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0034 | Ficheiros — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0035 | Autosave — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0036 | Criar e configurar SQLite | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0037 | Criar e configurar migrações | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0038 | Criar e configurar ficheiros | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0039 | Criar e configurar autosave | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0040 | Criar e configurar recuperação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0041 | Criar e configurar pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0042 | Consultar e navegar SQLite | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0043 | Consultar e navegar migrações | backlog | 2026-10-26 | developer | medium |  |  |  |
