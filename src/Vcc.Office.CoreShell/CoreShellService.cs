@@ -61,6 +61,17 @@ public sealed class CoreShellService
         return UpdateAsync(state => state with { Launcher = launcher, LastSection = "launcher" }, cancellationToken);
     }
 
+    /// <summary>Regista o módulo consultado no Launcher depois de o validar.</summary>
+    public Task NavigateLauncherAsync(string itemId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(itemId))
+            throw new ArgumentException("Indique o módulo do Launcher.", nameof(itemId));
+        var item = State.Launcher.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, itemId.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (item is null) throw new ArgumentException("O módulo selecionado não existe no Launcher.", nameof(itemId));
+        return UpdateAsync(state => state with { LastSection = $"launcher:{item.Id}" }, cancellationToken);
+    }
+
     /// <summary>
     /// Guarda a configuração da janela depois de passar pela validação do estado.
     /// </summary>
@@ -68,6 +79,20 @@ public sealed class CoreShellService
         WindowLayout layout,
         CancellationToken cancellationToken = default)
         => UpdateAsync(state => state with { Window = layout, LastSection = "window" }, cancellationToken);
+
+    /// <summary>Executa e persiste uma ação de navegação da janela.</summary>
+    public Task NavigateWindowAsync(
+        WindowNavigationAction action,
+        double workAreaLeft,
+        double workAreaTop,
+        double workAreaWidth,
+        double workAreaHeight,
+        CancellationToken cancellationToken = default)
+    {
+        var layout = WindowNavigationPolicy.Apply(State.Window, action,
+            workAreaLeft, workAreaTop, workAreaWidth, workAreaHeight);
+        return UpdateAsync(state => state with { Window = layout, LastSection = $"window:{action}" }, cancellationToken);
+    }
 
     /// <summary>
     /// Substitui a configuração do Ribbon depois de validar separadores e comandos.
@@ -81,6 +106,21 @@ public sealed class CoreShellService
         var validation = RibbonPolicy.Validate(ribbon);
         if (!validation.IsValid) throw new ArgumentException(string.Join(" ", validation.Errors), nameof(tabs));
         return UpdateAsync(state => state with { Ribbon = ribbon, LastSection = "ribbon" }, cancellationToken);
+    }
+
+    /// <summary>Regista o separador ou comando consultado no Ribbon.</summary>
+    public Task NavigateRibbonAsync(string tabId, string? commandId = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tabId))
+            throw new ArgumentException("Indique o separador do Ribbon.", nameof(tabId));
+        var tab = State.Ribbon.FirstOrDefault(candidate =>
+            string.Equals(candidate.Id, tabId.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (tab is null) throw new ArgumentException("O separador selecionado não existe no Ribbon.", nameof(tabId));
+        if (!string.IsNullOrWhiteSpace(commandId) && !tab.Commands.Any(command =>
+                string.Equals(command.Id, commandId.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new ArgumentException("O comando selecionado não existe no separador.", nameof(commandId));
+        var suffix = string.IsNullOrWhiteSpace(commandId) ? tab.Id : $"{tab.Id}:{commandId.Trim()}";
+        return UpdateAsync(state => state with { LastSection = $"ribbon:{suffix}" }, cancellationToken);
     }
 
     /// <summary>
@@ -107,5 +147,28 @@ public sealed class CoreShellService
         var validation = ThemePolicy.Validate(theme);
         if (!validation.IsValid) throw new ArgumentException(string.Join(" ", validation.Errors), nameof(theme));
         return UpdateAsync(state => state with { Theme = theme, LastSection = "theme" }, cancellationToken);
+    }
+
+    /// <summary>Persiste as preferências de acessibilidade.</summary>
+    public Task ConfigureAccessibilityAsync(
+        bool highContrast,
+        bool reducedMotion,
+        CancellationToken cancellationToken = default)
+        => UpdateAsync(state => state with
+        {
+            HighContrast = highContrast,
+            ReducedMotion = reducedMotion,
+            LastSection = "accessibility"
+        }, cancellationToken);
+
+    /// <summary>Persiste as opções de foco e ciclo da navegação.</summary>
+    public Task ConfigureNavigationAsync(
+        NavigationSettings navigation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(navigation);
+        var validation = NavigationPolicy.Validate(navigation);
+        if (!validation.IsValid) throw new ArgumentException(string.Join(" ", validation.Errors), nameof(navigation));
+        return UpdateAsync(state => state with { Navigation = navigation, LastSection = "navigation" }, cancellationToken);
     }
 }

@@ -28,11 +28,11 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0008 | Criar e configurar Ribbon | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0009 | Criar e configurar atalhos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0010 | Criar e configurar temas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0011 | Criar e configurar acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0012 | Criar e configurar navegação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0013 | Consultar e navegar Launcher | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0014 | Consultar e navegar janelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0015 | Consultar e navegar Ribbon | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0011 | Criar e configurar acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  | [VCC-0011](../specs/vcc-office/vcc-0011-spec.md) |
+| VCC-0012 | Criar e configurar navegação | done | 2026-10-26 | developer | medium | 2026-10-27 |  | [VCC-0012](../specs/vcc-office/vcc-0012-spec.md) |
+| VCC-0013 | Consultar e navegar Launcher | done | 2026-10-26 | developer | medium | 2026-10-27 |  | [VCC-0013](../specs/vcc-office/vcc-0013-spec.md) |
+| VCC-0014 | Consultar e navegar janelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  | [VCC-0014](../specs/vcc-office/vcc-0014-spec.md) |
+| VCC-0015 | Consultar e navegar Ribbon | done | 2026-10-26 | developer | medium | 2026-10-27 |  | [VCC-0015](../specs/vcc-office/vcc-0015-spec.md) |
 | VCC-0016 | Definir contratos, DTOs e validação de Launcher | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0017 | Definir contratos, DTOs e validação de janelas | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0018 | Definir contratos, DTOs e validação de Ribbon | backlog | 2026-10-26 | developer | medium |  |  |  |

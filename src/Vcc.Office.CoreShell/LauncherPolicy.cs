@@ -5,6 +5,19 @@ namespace Vcc.Office.CoreShell;
 /// </summary>
 public static class LauncherPolicy
 {
+    public static IReadOnlyList<LauncherItem> Query(IEnumerable<LauncherItem> items, string? query)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        var source = items.ToArray();
+        var normalized = query?.Trim();
+        if (string.IsNullOrEmpty(normalized)) return source;
+
+        return source.Where(item =>
+            item.Id.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+            item.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+            item.Description.Contains(normalized, StringComparison.OrdinalIgnoreCase)).ToArray();
+    }
+
     public static ValidationResult Validate(IReadOnlyList<LauncherItem> items)
     {
         ArgumentNullException.ThrowIfNull(items);

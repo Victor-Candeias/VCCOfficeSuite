@@ -2,8 +2,11 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Vcc.Office.CoreShell;
 using CoreThemeMode = Vcc.Office.CoreShell.ThemeMode;
 
@@ -15,6 +18,8 @@ public partial class MainWindow : Window
     private bool _darkTheme;
     private CoreThemeMode _themeMode = CoreThemeMode.System;
     private bool _stateReady;
+    private IReadOnlyList<LauncherItem> _launcherCatalog = [];
+    private IReadOnlyList<RibbonTab> _ribbonCatalog = [];
 
     public MainWindow()
     {
@@ -34,12 +39,15 @@ public partial class MainWindow : Window
     {
         await _shell.InitialiseAsync();
         ApplyWindowLayout(_shell.State.Window);
-        foreach (var item in _shell.State.Launcher) LauncherItems.Add(item);
-        foreach (var tab in _shell.State.Ribbon) RibbonTabs.Add(tab);
+        _launcherCatalog = _shell.State.Launcher.ToArray();
+        RefreshLauncherItems();
+        _ribbonCatalog = _shell.State.Ribbon.ToArray();
+        RefreshRibbonItems();
         SelectRibbonTab(RibbonTabs.FirstOrDefault());
         _themeMode = _shell.State.Theme;
         ApplyTheme(_themeMode);
         _stateReady = true;
+        _ = Dispatcher.BeginInvoke(ApplyNavigationFocus, DispatcherPriority.Input);
     }
 
     private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -76,6 +84,17 @@ public partial class MainWindow : Window
         WindowState = normalized.IsMaximized ? WindowState.Maximized : WindowState.Normal;
     }
 
+    private void ApplyNavigationFocus()
+    {
+        KeyboardNavigation.SetTabNavigation(this, _shell.State.Navigation.WrapFocus
+            ? KeyboardNavigationMode.Cycle
+            : KeyboardNavigationMode.Continue);
+        var target = _shell.State.Navigation.InitialFocus == NavigationFocusTarget.Ribbon
+            ? ConfigureRibbonButton
+            : ConfigureLauncherButton;
+        target.Focus();
+    }
+
     private async void ToggleTheme_Click(object sender, RoutedEventArgs e)
     {
         _themeMode = _darkTheme ? CoreThemeMode.Light : CoreThemeMode.Dark;
@@ -90,17 +109,21 @@ public partial class MainWindow : Window
     {
         var dark = mode == CoreThemeMode.Dark;
         _darkTheme = dark;
-        Resources["WindowBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(dark ? "#202124" : "#F7F8FA"));
-        Resources["PanelBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(dark ? "#2B2D31" : "#FFFFFF"));
-        Resources["PrimaryText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(dark ? "#F5F7FA" : "#17202A"));
-        Resources["SecondaryText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(dark ? "#B7C0CA" : "#5E6B78"));
-        Resources["DividerBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(dark ? "#4A4F58" : "#D1D5DB"));
+        var highContrast = _shell.State.HighContrast;
+        Resources["WindowBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(highContrast ? "#000000" : dark ? "#202124" : "#F7F8FA"));
+        Resources["PanelBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(highContrast ? "#000000" : dark ? "#2B2D31" : "#FFFFFF"));
+        Resources["PrimaryText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(highContrast ? "#FFFFFF" : dark ? "#F5F7FA" : "#17202A"));
+        Resources["SecondaryText"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(highContrast ? "#FFFF00" : dark ? "#B7C0CA" : "#5E6B78"));
+        Resources["DividerBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(highContrast ? "#FFFFFF" : dark ? "#4A4F58" : "#D1D5DB"));
         if (ToggleThemeButton is not null) ToggleThemeButton.Content = dark ? "Tema Claro" : "Tema Escuro";
     }
 
-    private void RibbonTab_Click(object sender, RoutedEventArgs e)
+    private async void RibbonTab_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: RibbonTab tab }) SelectRibbonTab(tab);
+        if (sender is not Button { Tag: RibbonTab tab }) return;
+        SelectRibbonTab(tab);
+        try { await _shell.NavigateRibbonAsync(tab.Id); }
+        catch (ArgumentException ex) { StatusText.Text = ex.Message; }
     }
 
     private void SelectRibbonTab(RibbonTab? tab)
@@ -111,18 +134,69 @@ public partial class MainWindow : Window
         StatusText.Text = $"Ribbon · {tab.Title} · offline";
     }
 
-    private void RibbonCommand_Click(object sender, RoutedEventArgs e)
+    private async void RibbonCommand_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: RibbonCommand command }) return;
-        StatusText.Text = $"{command.Title}: disponível para integração modular · offline";
+        var tab = RibbonTabs.FirstOrDefault(candidate => candidate.Commands.Contains(command));
+        if (tab is null) return;
+        try
+        {
+            await _shell.NavigateRibbonAsync(tab.Id, command.Id);
+            StatusText.Text = $"{command.Title} selecionado · offline";
+        }
+        catch (ArgumentException ex) { StatusText.Text = ex.Message; }
     }
 
-    private void LauncherItem_Click(object sender, RoutedEventArgs e)
+    private void RibbonSearchBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshRibbonItems();
+
+    private void ClearRibbonSearch_Click(object sender, RoutedEventArgs e)
+    {
+        RibbonSearchBox.Clear();
+        RibbonSearchBox.Focus();
+    }
+
+    private void RefreshRibbonItems()
+    {
+        if (RibbonTabs is null) return;
+        var results = RibbonPolicy.Query(_ribbonCatalog, RibbonSearchBox?.Text);
+        RibbonTabs.Clear();
+        foreach (var tab in results) RibbonTabs.Add(tab);
+        RibbonResultsText.Text = $"{results.Count} de {_ribbonCatalog.Count} separadores";
+        SelectRibbonTab(RibbonTabs.FirstOrDefault());
+    }
+
+    private async void LauncherItem_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: LauncherItem item }) return;
-        StatusText.Text = item.Id == "settings"
-            ? "Definições do Core Shell disponíveis no próximo painel"
-            : $"{item.Title} está preparado para integração modular";
+        try
+        {
+            await _shell.NavigateLauncherAsync(item.Id);
+            StatusText.Text = item.Id == "settings"
+                ? "Definições do Core Shell disponíveis no próximo painel"
+                : $"{item.Title} selecionado · offline";
+        }
+        catch (ArgumentException ex)
+        {
+            StatusText.Text = ex.Message;
+        }
+    }
+
+    private void LauncherSearchBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshLauncherItems();
+
+    private void ClearLauncherSearch_Click(object sender, RoutedEventArgs e)
+    {
+        LauncherSearchBox.Clear();
+        LauncherSearchBox.Focus();
+    }
+
+    private void RefreshLauncherItems()
+    {
+        if (LauncherItems is null) return;
+        var results = LauncherPolicy.Query(_launcherCatalog, LauncherSearchBox?.Text);
+        LauncherItems.Clear();
+        foreach (var item in results) LauncherItems.Add(item);
+        if (LauncherResultsText is not null)
+            LauncherResultsText.Text = $"{results.Count} de {_launcherCatalog.Count} módulos";
     }
 
     private async void ConfigureLauncher_Click(object sender, RoutedEventArgs e)
@@ -161,7 +235,8 @@ public partial class MainWindow : Window
             {
                 var item = new LauncherItem(id.Text.Trim(), title.Text.Trim(), description.Text.Trim(), glyph.Text.Trim());
                 await _shell.ConfigureLauncherAsync(_shell.State.Launcher.Append(item));
-                LauncherItems.Add(item);
+                _launcherCatalog = _launcherCatalog.Append(item).ToArray();
+                RefreshLauncherItems();
                 dialog.DialogResult = true;
                 dialog.Close();
                 StatusText.Text = $"{item.Title} adicionado ao Launcher · offline";
@@ -240,6 +315,70 @@ public partial class MainWindow : Window
         dialog.ShowDialog();
     }
 
+    private void ConsultWindow_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Window
+        {
+            Title = "Consultar janela",
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Width = 430,
+            SizeToContent = SizeToContent.Height,
+            ResizeMode = ResizeMode.NoResize,
+            Background = (Brush)Resources["PanelBackground"],
+            Foreground = (Brush)Resources["PrimaryText"]
+        };
+        var stateText = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 16) };
+        AutomationProperties.SetName(stateText, "Estado atual da janela");
+        var panel = new StackPanel { Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = "Estado da janela", FontSize = 20, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 14) });
+        panel.Children.Add(stateText);
+        var actions = new StackPanel { Orientation = Orientation.Horizontal };
+        panel.Children.Add(actions);
+        dialog.Content = panel;
+
+        void RefreshState()
+        {
+            var current = WindowLayoutPolicy.Normalize(_shell.State.Window,
+                SystemParameters.WorkArea.Left, SystemParameters.WorkArea.Top,
+                SystemParameters.WorkArea.Width, SystemParameters.WorkArea.Height);
+            stateText.Text = $"Tamanho: {current.Width:0} × {current.Height:0}\n" +
+                             $"Posição: {current.Left:0}, {current.Top:0}\n" +
+                             $"Estado: {(current.IsMaximized ? "maximizada" : "normal")}";
+        }
+
+        foreach (var (label, action) in new[]
+        {
+            ("Maximizar", WindowNavigationAction.Maximize),
+            ("Restaurar", WindowNavigationAction.Restore),
+            ("Centrar", WindowNavigationAction.Center)
+        })
+        {
+            var button = new Button { Content = label, Margin = new Thickness(0, 0, 8, 0) };
+            AutomationProperties.SetName(button, label + " janela");
+            button.Click += async (_, _) =>
+            {
+                try
+                {
+                    await _shell.NavigateWindowAsync(action,
+                        SystemParameters.WorkArea.Left, SystemParameters.WorkArea.Top,
+                        SystemParameters.WorkArea.Width, SystemParameters.WorkArea.Height);
+                    ApplyWindowLayout(_shell.State.Window);
+                    RefreshState();
+                    StatusText.Text = $"Janela: {label.ToLowerInvariant()} · offline";
+                }
+                catch (ArgumentException ex)
+                {
+                    stateText.Text = ex.Message;
+                }
+            };
+            actions.Children.Add(button);
+        }
+
+        RefreshState();
+        dialog.ShowDialog();
+    }
+
     private async void ConfigureRibbon_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new Window
@@ -289,8 +428,8 @@ public partial class MainWindow : Window
                 }
 
                 await _shell.ConfigureRibbonAsync(tabs);
-                RibbonTabs.Clear();
-                foreach (var tab in _shell.State.Ribbon) RibbonTabs.Add(tab);
+                _ribbonCatalog = _shell.State.Ribbon.ToArray();
+                RefreshRibbonItems();
                 SelectRibbonTab(RibbonTabs.LastOrDefault());
                 dialog.DialogResult = true;
                 dialog.Close();
@@ -394,6 +533,119 @@ public partial class MainWindow : Window
             dialog.DialogResult = true;
             dialog.Close();
             StatusText.Text = $"Tema {ThemeLabel(mode).ToLowerInvariant()} ativo · offline";
+        };
+
+        dialog.ShowDialog();
+    }
+
+    private async void ConfigureAccessibility_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Window
+        {
+            Title = "Configurar acessibilidade",
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Width = 460,
+            SizeToContent = SizeToContent.Height,
+            ResizeMode = ResizeMode.NoResize,
+            Background = (Brush)Resources["PanelBackground"],
+            Foreground = (Brush)Resources["PrimaryText"]
+        };
+        var highContrast = new CheckBox
+        {
+            Content = "Ativar alto contraste",
+            IsChecked = _shell.State.HighContrast,
+            Margin = new Thickness(0, 4, 0, 10)
+        };
+        AutomationProperties.SetName(highContrast, "Ativar alto contraste");
+        var reducedMotion = new CheckBox
+        {
+            Content = "Reduzir movimento e transições",
+            IsChecked = _shell.State.ReducedMotion,
+            Margin = new Thickness(0, 4, 0, 14)
+        };
+        AutomationProperties.SetName(reducedMotion, "Reduzir movimento e transições");
+        var feedback = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.IndianRed, Margin = new Thickness(0, 0, 0, 10) };
+        var save = new Button { Content = "Guardar acessibilidade", IsDefault = true, HorizontalAlignment = HorizontalAlignment.Right };
+        var panel = new StackPanel { Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = "Preferências de acessibilidade", FontSize = 20, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 14) });
+        panel.Children.Add(highContrast);
+        panel.Children.Add(reducedMotion);
+        panel.Children.Add(feedback);
+        panel.Children.Add(save);
+        dialog.Content = panel;
+
+        save.Click += async (_, _) =>
+        {
+            try
+            {
+                await _shell.ConfigureAccessibilityAsync(highContrast.IsChecked == true, reducedMotion.IsChecked == true);
+                ApplyTheme(_themeMode);
+                dialog.DialogResult = true;
+                dialog.Close();
+                StatusText.Text = "Acessibilidade guardada · offline";
+            }
+            catch (ArgumentException ex)
+            {
+                feedback.Text = ex.Message;
+            }
+        };
+
+        dialog.ShowDialog();
+    }
+
+    private async void ConfigureNavigation_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Window
+        {
+            Title = "Configurar navegação",
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Width = 460,
+            SizeToContent = SizeToContent.Height,
+            ResizeMode = ResizeMode.NoResize,
+            Background = (Brush)Resources["PanelBackground"],
+            Foreground = (Brush)Resources["PrimaryText"]
+        };
+        var initialFocus = new ComboBox { Margin = new Thickness(0, 4, 0, 10) };
+        initialFocus.Items.Add(new ComboBoxItem { Content = "Launcher", Tag = NavigationFocusTarget.Launcher });
+        initialFocus.Items.Add(new ComboBoxItem { Content = "Ribbon", Tag = NavigationFocusTarget.Ribbon });
+        initialFocus.SelectedIndex = _shell.State.Navigation.InitialFocus == NavigationFocusTarget.Ribbon ? 1 : 0;
+        AutomationProperties.SetName(initialFocus, "Foco inicial de navegação");
+        var wrapFocus = new CheckBox
+        {
+            Content = "Repetir a navegação ao chegar ao último controlo",
+            IsChecked = _shell.State.Navigation.WrapFocus,
+            Margin = new Thickness(0, 4, 0, 14)
+        };
+        AutomationProperties.SetName(wrapFocus, "Repetir a navegação ao chegar ao último controlo");
+        var feedback = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.IndianRed, Margin = new Thickness(0, 0, 0, 10) };
+        var save = new Button { Content = "Guardar navegação", IsDefault = true, HorizontalAlignment = HorizontalAlignment.Right };
+        var panel = new StackPanel { Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = "Preferências de navegação", FontSize = 20, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 14) });
+        AddField(panel, "Começar foco em", initialFocus);
+        panel.Children.Add(wrapFocus);
+        panel.Children.Add(feedback);
+        panel.Children.Add(save);
+        dialog.Content = panel;
+
+        save.Click += async (_, _) =>
+        {
+            var focus = (initialFocus.SelectedItem as ComboBoxItem)?.Tag is NavigationFocusTarget selected
+                ? selected
+                : NavigationFocusTarget.Launcher;
+            try
+            {
+                await _shell.ConfigureNavigationAsync(new NavigationSettings(focus, wrapFocus.IsChecked == true));
+                ApplyNavigationFocus();
+                dialog.DialogResult = true;
+                dialog.Close();
+                StatusText.Text = "Navegação guardada · offline";
+            }
+            catch (ArgumentException ex)
+            {
+                feedback.Text = ex.Message;
+            }
         };
 
         dialog.ShowDialog();

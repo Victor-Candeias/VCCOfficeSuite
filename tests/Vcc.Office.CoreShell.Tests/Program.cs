@@ -16,6 +16,11 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Ribbon valida e persiste configuração", ConfiguresRibbon)
     ,("atalhos configuram e persistem", ConfiguresShortcuts)
     ,("tema configura e persiste", ConfiguresTheme)
+    ,("acessibilidade configura e persiste", ConfiguresAccessibility)
+    ,("navegação configura e persiste", ConfiguresNavigation)
+    ,("Launcher é consultado e navegado", QueriesAndNavigatesLauncher)
+    ,("janelas são consultadas e navegadas", NavigatesWindows)
+    ,("Ribbon é consultado e navegado", QueriesAndNavigatesRibbon)
 };
 
 foreach (var test in tests)
@@ -176,6 +181,97 @@ static async Task ConfiguresTheme()
     try { await service.ConfigureThemeAsync((ThemeMode)99); }
     catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
     throw new InvalidOperationException("Um modo de tema inválido foi aceite.");
+}
+
+static async Task ConfiguresAccessibility()
+{
+    var directory = CreateTestDirectory();
+    var store = new ShellStateStore(Path.Combine(directory, "shell.json"));
+    var service = new CoreShellService(store);
+    await service.ConfigureAccessibilityAsync(highContrast: true, reducedMotion: true);
+
+    var loaded = await store.LoadAsync();
+    if (!loaded.HighContrast || !loaded.ReducedMotion || loaded.LastSection != "accessibility")
+        throw new InvalidOperationException("As preferências de acessibilidade não foram persistidas.");
+    if (!ShellStateValidator.Validate(loaded).IsValid)
+        throw new InvalidOperationException("O estado com acessibilidade configurada não é válido.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ConfiguresNavigation()
+{
+    var directory = CreateTestDirectory();
+    var store = new ShellStateStore(Path.Combine(directory, "shell.json"));
+    var service = new CoreShellService(store);
+    await service.ConfigureNavigationAsync(new NavigationSettings(NavigationFocusTarget.Ribbon, true));
+
+    var loaded = await store.LoadAsync();
+    if (loaded.Navigation.InitialFocus != NavigationFocusTarget.Ribbon || !loaded.Navigation.WrapFocus ||
+        loaded.LastSection != "navigation")
+        throw new InvalidOperationException("As preferências de navegação não foram persistidas.");
+
+    try { await service.ConfigureNavigationAsync(new NavigationSettings((NavigationFocusTarget)99, false)); }
+    catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
+    throw new InvalidOperationException("Um foco inicial de navegação inválido foi aceite.");
+}
+
+static async Task QueriesAndNavigatesLauncher()
+{
+    var items = ShellState.Default.Launcher;
+    if (LauncherPolicy.Query(items, "texto").Count != 1 ||
+        LauncherPolicy.Query(items, "VCC").Count != 3 ||
+        LauncherPolicy.Query(items, "inexistente").Count != 0)
+        throw new InvalidOperationException("A consulta do Launcher devolveu resultados incorretos.");
+
+    var directory = CreateTestDirectory();
+    var service = new CoreShellService(new ShellStateStore(Path.Combine(directory, "shell.json")));
+    await service.InitialiseAsync();
+    await service.NavigateLauncherAsync("writer");
+    if (service.State.LastSection != "launcher:writer")
+        throw new InvalidOperationException("A navegação do Launcher não foi persistida.");
+
+    try { await service.NavigateLauncherAsync("missing"); }
+    catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
+    throw new InvalidOperationException("Um módulo inexistente foi aceite pelo Launcher.");
+}
+
+static async Task NavigatesWindows()
+{
+    var centered = WindowNavigationPolicy.Apply(
+        new WindowLayout(800, 600, 0, 0, false), WindowNavigationAction.Center, 0, 0, 1920, 1080);
+    if (centered.Left != 560 || centered.Top != 240 || centered.IsMaximized)
+        throw new InvalidOperationException("A janela não foi centrada corretamente.");
+
+    var directory = CreateTestDirectory();
+    var service = new CoreShellService(new ShellStateStore(Path.Combine(directory, "shell.json")));
+    await service.InitialiseAsync();
+    await service.NavigateWindowAsync(WindowNavigationAction.Maximize, 0, 0, 1920, 1080);
+    if (!service.State.Window.IsMaximized || service.State.LastSection != "window:Maximize")
+        throw new InvalidOperationException("A maximização da janela não foi persistida.");
+
+    try { await service.NavigateWindowAsync((WindowNavigationAction)99, 0, 0, 1920, 1080); }
+    catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
+    throw new InvalidOperationException("Uma ação inválida de janela foi aceite.");
+}
+
+static async Task QueriesAndNavigatesRibbon()
+{
+    var tabs = ShellState.Default.Ribbon;
+    if (RibbonPolicy.Query(tabs, "guardar").Count != 1 ||
+        RibbonPolicy.Query(tabs, "edit")[0].Commands.Count != 2 ||
+        RibbonPolicy.Query(tabs, "inexistente").Count != 0)
+        throw new InvalidOperationException("A consulta do Ribbon devolveu resultados incorretos.");
+
+    var directory = CreateTestDirectory();
+    var service = new CoreShellService(new ShellStateStore(Path.Combine(directory, "shell.json")));
+    await service.InitialiseAsync();
+    await service.NavigateRibbonAsync("home", "save");
+    if (service.State.LastSection != "ribbon:home:save")
+        throw new InvalidOperationException("A navegação do Ribbon não foi persistida.");
+
+    try { await service.NavigateRibbonAsync("missing"); }
+    catch (ArgumentException) { Directory.Delete(directory, recursive: true); return; }
+    throw new InvalidOperationException("Um separador inexistente foi aceite pelo Ribbon.");
 }
 
 static Task NormalizesWindowLayout()

@@ -5,6 +5,33 @@ namespace Vcc.Office.CoreShell;
 /// </summary>
 public static class RibbonPolicy
 {
+    public static IReadOnlyList<RibbonTab> Query(IReadOnlyList<RibbonTab> tabs, string? query)
+    {
+        ArgumentNullException.ThrowIfNull(tabs);
+        var normalized = query?.Trim();
+        if (string.IsNullOrEmpty(normalized)) return tabs;
+
+        return tabs
+            .Where(tab => tab.Id.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                         tab.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                         tab.Commands.Any(command =>
+                             command.Id.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                             command.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                             command.Description.Contains(normalized, StringComparison.OrdinalIgnoreCase)))
+            .Select(tab =>
+            {
+                var tabMatches = tab.Id.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                                  tab.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase);
+                var commands = tabMatches
+                    ? tab.Commands
+                    : tab.Commands.Where(command =>
+                        command.Id.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                        command.Title.Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
+                        command.Description.Contains(normalized, StringComparison.OrdinalIgnoreCase)).ToArray();
+                return tab with { Commands = commands };
+            }).ToArray();
+    }
+
     public static ValidationResult Validate(IReadOnlyList<RibbonTab> tabs)
     {
         ArgumentNullException.ThrowIfNull(tabs);

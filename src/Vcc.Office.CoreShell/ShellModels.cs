@@ -109,6 +109,7 @@ public sealed record ShellState(
     string LastSection)
 {
     public IReadOnlyList<RibbonTab> Ribbon { get; init; } = RibbonDefaults.Tabs;
+    public NavigationSettings Navigation { get; init; } = NavigationSettings.Default;
 
     public static ShellState Default => new(
         "1.0",
@@ -159,6 +160,7 @@ public static class ShellStateValidator
             errors.Add("A posição da janela deve ser finita.");
         errors.AddRange(LauncherPolicy.Validate(state.Launcher).Errors);
         errors.AddRange(RibbonPolicy.Validate(state.Ribbon).Errors);
+        errors.AddRange(NavigationPolicy.Validate(state.Navigation).Errors);
         errors.AddRange(ShortcutCatalog.Validate(state.Shortcuts).Errors);
         return new ValidationResult(errors);
     }
