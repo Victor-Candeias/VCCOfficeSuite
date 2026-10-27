@@ -1,5 +1,6 @@
 using Vcc.Office.CoreShell;
 
+/// <summary>
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
@@ -16,6 +17,7 @@ foreach (var test in tests)
 
 return 0;
 
+/// <summary>
 static Task AssertValid(ShellState state)
 {
     if (!ShellStateValidator.Validate(state).IsValid) throw new InvalidOperationException("O estado predefinido não é válido.");

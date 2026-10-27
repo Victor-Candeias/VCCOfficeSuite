@@ -1,43 +1,206 @@
 <Window x:Class="Vcc.Office.Shell.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="VCC Office" Width="1280" Height="800" MinWidth="640" MinHeight="480"
-        Background="{DynamicResource WindowBackground}" Foreground="{DynamicResource PrimaryText}">
-  <DockPanel>
-    <Border DockPanel.Dock="Top" Padding="24,18" Background="{DynamicResource PanelBackground}">
-      <DockPanel>
-        <Button DockPanel.Dock="Right" Content="Alternar tema" Padding="14,8" Click="ToggleTheme_Click" />
-        <StackPanel>
-          <TextBlock Text="VCC Office" FontSize="24" FontWeight="SemiBold" />
-          <TextBlock Text="Core Shell · operação local" Foreground="{DynamicResource SecondaryText}" Margin="0,4,0,0" />
-        </StackPanel>
-      </DockPanel>
-    </Border>
-    <StatusBar DockPanel.Dock="Bottom">
-      <StatusBarItem><TextBlock x:Name="StatusText" Text="Pronto · offline" /></StatusBarItem>
-    </StatusBar>
-    <Grid Margin="32">
-      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-      <StackPanel Grid.Row="0" Margin="0,0,0,24">
-        <TextBlock Text="Launcher" FontSize="30" FontWeight="SemiBold" />
-        <TextBlock Text="Escolha uma aplicação ou configure o ambiente de trabalho." FontSize="15" Foreground="{DynamicResource SecondaryText}" Margin="0,8,0,0" />
-      </StackPanel>
-      <ItemsControl Grid.Row="1" ItemsSource="{Binding LauncherItems}">
-        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Button Width="250" Height="150" Margin="0,0,16,16" Padding="18" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Click="LauncherItem_Click">
-              <StackPanel>
-                <Border Width="42" Height="42" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,0,16">
-                  <TextBlock Text="{Binding Glyph}" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
-                <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryText}" Margin="0,6,0,0" />
-              </StackPanel>
-            </Button>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </Grid>
-  </DockPanel>
+        Title="VCC Office"
+        Width="1280"
+        Height="800"
+        MinWidth="640"
+        MinHeight="480"
+        WindowState="Maximized"
+        Background="{DynamicResource WindowBackground}"
+        Foreground="{DynamicResource PrimaryText}">
+
+    <Window.Resources>
+
+        <!-- Estilo aplicado a todos os botões desta janela -->
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+
+                            <ContentPresenter
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                RecognizesAccessKey="True"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <!-- Hover -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="#D1D5DB"/>
+                            </Trigger>
+
+                            <!-- Pressionado -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                        Property="Background"
+                                        Value="#9CA3AF"/>
+                            </Trigger>
+
+                            <!-- Desativado -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+    <DockPanel>
+
+        <!-- Cabeçalho -->
+        <Border DockPanel.Dock="Top"
+                Padding="24,18"
+                Background="{DynamicResource PanelBackground}">
+
+            <DockPanel>
+
+                <Button DockPanel.Dock="Right"
+                        Content="Tema Escuro"
+                        Click="ToggleTheme_Click"
+                        Name="ToggleThemeButton"/>
+
+                <StackPanel>
+                    <TextBlock Text="VCC Office"
+                               FontSize="24"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="Core Shell · operação local"
+                               Foreground="{DynamicResource SecondaryText}"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+
+            </DockPanel>
+        </Border>
+
+        <!-- Barra de estado -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText"
+                           Text="Pronto · offline"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Conteúdo principal -->
+        <Grid Margin="32">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Título -->
+            <StackPanel Grid.Row="0"
+                        Margin="0,0,0,24">
+
+                <TextBlock Text="Launcher"
+                           FontSize="30"
+                           FontWeight="SemiBold"/>
+
+                <TextBlock
+                    Text="Escolha uma aplicação ou configure o ambiente de trabalho."
+                    FontSize="15"
+                    Foreground="{DynamicResource SecondaryText}"
+                    Margin="0,8,0,0"/>
+
+            </StackPanel>
+
+            <!-- Aplicações -->
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+
+                <ItemsControl ItemsSource="{Binding LauncherItems}">
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+
+                            <Button Width="250"
+                                    Height="150"
+                                    Margin="0,0,16,16"
+                                    Padding="18"
+                                    HorizontalContentAlignment="Left"
+                                    VerticalContentAlignment="Top"
+                                    Click="LauncherItem_Click">
+
+                                <StackPanel>
+
+                                    <!-- Ícone -->
+                                    <Border Width="42"
+                                            Height="42"
+                                            CornerRadius="8"
+                                            Background="{DynamicResource AccentBrush}"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,0,0,16">
+
+                                        <TextBlock
+                                            Text="{Binding Glyph}"
+                                            Foreground="White"
+                                            FontSize="20"
+                                            FontWeight="Bold"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+
+                                    </Border>
+
+                                    <!-- Nome -->
+                                    <TextBlock
+                                        Text="{Binding Title}"
+                                        FontSize="17"
+                                        FontWeight="SemiBold"/>
+
+                                    <!-- Descrição -->
+                                    <TextBlock
+                                        Text="{Binding Description}"
+                                        TextWrapping="Wrap"
+                                        Foreground="{DynamicResource SecondaryText}"
+                                        Margin="0,6,0,0"/>
+
+                                </StackPanel>
+
+                            </Button>
+
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                </ItemsControl>
+
+            </ScrollViewer>
+
+        </Grid>
+
+    </DockPanel>
+
 </Window>

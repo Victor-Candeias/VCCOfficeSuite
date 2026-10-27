@@ -44,6 +44,8 @@ public partial class MainWindow : Window
     {
         _darkTheme = !_darkTheme;
         ApplyTheme(_darkTheme);
+
+        ToggleThemeButton.Content = _darkTheme ? "Tema Claro" : "Tema Escuro";
         await _shell.UpdateAsync(state => state with { Theme = _darkTheme ? CoreThemeMode.Dark : CoreThemeMode.Light });
         StatusText.Text = _darkTheme ? "Tema escuro ativo · offline" : "Tema claro ativo · offline";
     }
