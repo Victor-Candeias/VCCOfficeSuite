@@ -38,6 +38,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Core Integration recupera estado e expõe estados de interface", LoadsCoreIntegration)
     ,("Core Delivery valida CI/CD, instalação, atualização e testes", ValidatesCoreDelivery)
     ,("telemetria local remove dados sensíveis", ProtectsTelemetry)
+    ,("licenças são validadas e consultadas", ValidatesLicensing)
+    ,("Writer cria, edita, navega e persiste documentos", ExercisesWriter)
+    ,("Writer exporta PDF e preserva acessibilidade", ExportsWriter)
 };
 
 foreach (var test in tests)
@@ -588,6 +591,48 @@ static async Task ProtectsTelemetry()
     var json = await File.ReadAllTextAsync(Path.Combine(directory, "delivery.json"));
     if (json.Contains("must-not-be-written", StringComparison.Ordinal) || !json.Contains("build.finished", StringComparison.Ordinal))
         throw new InvalidOperationException("A telemetria local não filtrou dados sensíveis corretamente.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ValidatesLicensing()
+{
+    var directory = CreateTestDirectory();
+    var service = new CoreDeliveryService(Path.Combine(directory, "delivery.json"));
+    await service.ConfigureLicenseAsync(new LicenseGrantDto("writer-license", "VCC Writer", "local-user", DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)), ["edit", "export-pdf"]));
+    if (!service.HasLicense("VCC Writer", "local-user", "export-pdf") || service.Query<LicenseGrant>("writer-license").Count != 1)
+        throw new InvalidOperationException("A licença não foi consultada ou validada corretamente.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ExercisesWriter()
+{
+    var directory = CreateTestDirectory();
+    var service = new VccWriterService(Path.Combine(directory, "writer.json"));
+    await service.CreateAsync("doc-1", "Documento de teste");
+    await service.SetRichTextAsync("doc-1", "Título\nConteúdo local");
+    await service.AddStyleAsync("doc-1", new WriterStyle("Heading", "Aptos Display", 18, true));
+    await service.AddTableAsync("doc-1", new WriterTable("table-1", ["Campo", "Valor"], [["Estado", "Pronto"]]));
+    await service.AddImageAsync("doc-1", new WriterImage("image-1", "logo.png", "Logótipo VCC"));
+    await service.AddReviewAsync("doc-1", new WriterReviewNote("review-1", 1, "Rever texto"));
+    if (service.GetState("doc-1") != WriterDocumentState.Ready || service.Query("Conteúdo").Count != 1 || service.Navigate("doc-1").Tables.Count != 1)
+        throw new InvalidOperationException("O fluxo de edição e navegação do Writer falhou.");
+    var restored = new VccWriterService(Path.Combine(directory, "writer.json"));
+    await restored.LoadAsync();
+    if (restored.Documents.Count != 1 || !restored.Documents[0].AccessibilityEnabled) throw new InvalidOperationException("O documento Writer não foi recuperado.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ExportsWriter()
+{
+    var directory = CreateTestDirectory();
+    var service = new VccWriterService();
+    await service.CreateAsync("doc-1", "PDF local");
+    await service.SetRichTextAsync("doc-1", "Conteúdo exportado");
+    await service.SetAccessibilityAsync("doc-1", true);
+    var pdf = Path.Combine(directory, "document.pdf");
+    await service.ExportPdfAsync("doc-1", pdf);
+    var bytes = await File.ReadAllBytesAsync(pdf);
+    if (Encoding.ASCII.GetString(bytes, 0, 8) != "%PDF-1.4") throw new InvalidOperationException("A exportação PDF não produziu um documento PDF.");
     Directory.Delete(directory, recursive: true);
 }
 

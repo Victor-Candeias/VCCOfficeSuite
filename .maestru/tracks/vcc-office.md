@@ -118,46 +118,46 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0098 | Criar e configurar atualização | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0099 | Criar e configurar telemetria local | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0100 | Criar e configurar testes | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0101 | Criar e configurar licenças | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0102 | Consultar e navegar CI/CD | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0103 | Consultar e navegar instalação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0104 | Consultar e navegar atualização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0105 | Definir contratos, DTOs e validação de CI/CD | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0106 | Definir contratos, DTOs e validação de instalação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0107 | Definir contratos, DTOs e validação de atualização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0108 | Definir contratos, DTOs e validação de telemetria local | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0109 | Definir contratos, DTOs e validação de testes | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0110 | Definir contratos, DTOs e validação de licenças | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0111 | Implementar lógica e persistência de CI/CD | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0112 | Implementar lógica e persistência de instalação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0113 | Implementar lógica e persistência de atualização | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0114 | Implementar lógica e persistência de telemetria local | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0115 | Implementar lógica e persistência de testes | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0116 | Entregar VCC Writer | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0117 | Edição rica — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0118 | Estilos e parágrafos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0119 | Tabelas e imagens — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0120 | Paginação e impressão — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0121 | Importação docx — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0122 | Criar e configurar edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0123 | Criar e configurar estilos e parágrafos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0124 | Criar e configurar tabelas e imagens | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0125 | Criar e configurar paginação e impressão | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0126 | Criar e configurar importação DOCX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0127 | Criar e configurar exportação PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0128 | Criar e configurar revisão e acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0129 | Consultar e navegar edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0130 | Consultar e navegar estilos e parágrafos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0131 | Consultar e navegar tabelas e imagens | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0132 | Consultar e navegar paginação e impressão | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0133 | Consultar e navegar importação DOCX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0134 | Consultar e navegar exportação PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0135 | Consultar e navegar revisão e acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0136 | Definir contratos, DTOs e validação de edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0137 | Definir contratos, DTOs e validação de estilos e parágrafos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0138 | Definir contratos, DTOs e validação de tabelas e imagens | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0139 | Definir contratos, DTOs e validação de paginação e impressão | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0140 | Definir contratos, DTOs e validação de importação DOCX | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0101 | Criar e configurar licenças | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0102 | Consultar e navegar CI/CD | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0103 | Consultar e navegar instalação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0104 | Consultar e navegar atualização | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0105 | Definir contratos, DTOs e validação de CI/CD | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0106 | Definir contratos, DTOs e validação de instalação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0107 | Definir contratos, DTOs e validação de atualização | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0108 | Definir contratos, DTOs e validação de telemetria local | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0109 | Definir contratos, DTOs e validação de testes | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0110 | Definir contratos, DTOs e validação de licenças | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0111 | Implementar lógica e persistência de CI/CD | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0112 | Implementar lógica e persistência de instalação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0113 | Implementar lógica e persistência de atualização | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0114 | Implementar lógica e persistência de telemetria local | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0115 | Implementar lógica e persistência de testes | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0116 | Entregar VCC Writer | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0117 | Edição rica — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0118 | Estilos e parágrafos — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0119 | Tabelas e imagens — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0120 | Paginação e impressão — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0121 | Importação docx — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0122 | Criar e configurar edição rica | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0123 | Criar e configurar estilos e parágrafos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0124 | Criar e configurar tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0125 | Criar e configurar paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0126 | Criar e configurar importação DOCX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0127 | Criar e configurar exportação PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0128 | Criar e configurar revisão e acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0129 | Consultar e navegar edição rica | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0130 | Consultar e navegar estilos e parágrafos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0131 | Consultar e navegar tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0132 | Consultar e navegar paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0133 | Consultar e navegar importação DOCX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0134 | Consultar e navegar exportação PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0135 | Consultar e navegar revisão e acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0136 | Definir contratos, DTOs e validação de edição rica | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0137 | Definir contratos, DTOs e validação de estilos e parágrafos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0138 | Definir contratos, DTOs e validação de tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0139 | Definir contratos, DTOs e validação de paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0140 | Definir contratos, DTOs e validação de importação DOCX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0141 | Definir contratos, DTOs e validação de exportação PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0142 | Definir contratos, DTOs e validação de revisão e acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0143 | Implementar lógica e persistência de edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
