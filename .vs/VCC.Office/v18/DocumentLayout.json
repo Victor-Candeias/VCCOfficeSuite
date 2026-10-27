@@ -1,12 +1,7 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\__GitPrivate\\VCCOfficeSuite\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{7A3F4E2B-5B9D-4B0E-9E44-2C4A1F8D7B02}|src\\Vcc.Office.Shell\\Vcc.Office.Shell.csproj|c:\\__gitprivate\\vccofficesuite\\src\\vcc.office.shell\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{7A3F4E2B-5B9D-4B0E-9E44-2C4A1F8D7B02}|src\\Vcc.Office.Shell\\Vcc.Office.Shell.csproj|solutionrelative:src\\vcc.office.shell\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -14,7 +9,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 37,
+          "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -163,18 +158,6 @@
             {
               "$type": "Bookmark",
               "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\__GitPrivate\\VCCOfficeSuite\\src\\Vcc.Office.Shell\\MainWindow.xaml",
-              "RelativeDocumentMoniker": "src\\Vcc.Office.Shell\\MainWindow.xaml",
-              "ToolTip": "C:\\__GitPrivate\\VCCOfficeSuite\\src\\Vcc.Office.Shell\\MainWindow.xaml",
-              "RelativeToolTip": "src\\Vcc.Office.Shell\\MainWindow.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-10-27T00:35:38.96Z",
-              "EditorCaption": ""
             }
           ]
         }

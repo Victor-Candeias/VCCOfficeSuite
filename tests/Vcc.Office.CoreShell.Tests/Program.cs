@@ -41,6 +41,10 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("licenças são validadas e consultadas", ValidatesLicensing)
     ,("Writer cria, edita, navega e persiste documentos", ExercisesWriter)
     ,("Writer exporta PDF e preserva acessibilidade", ExportsWriter)
+    ,("Sheets calcula, filtra, persiste e exporta CSV", ExercisesSheets)
+    ,("Sheets seleciona, recalcula, copia e limpa intervalos", ExercisesSheetRanges)
+    ,("Sheets exporta PDF e Slides cria, apresenta e persiste", ExercisesSlides)
+    ,("Slides aplica transições e exporta pacotes; Mail compõe, envia e pesquisa", ExercisesSlidesAndMail)
 };
 
 foreach (var test in tests)
@@ -633,6 +637,92 @@ static async Task ExportsWriter()
     await service.ExportPdfAsync("doc-1", pdf);
     var bytes = await File.ReadAllBytesAsync(pdf);
     if (Encoding.ASCII.GetString(bytes, 0, 8) != "%PDF-1.4") throw new InvalidOperationException("A exportação PDF não produziu um documento PDF.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ExercisesSheets()
+{
+    var directory = CreateTestDirectory();
+    var service = new VccSheetsService(Path.Combine(directory, "sheets.json"));
+    await service.CreateAsync("sheet-1", "Dados");
+    await service.SetValueAsync("sheet-1", "A1", "10");
+    await service.SetValueAsync("sheet-1", "A2", "20");
+    await service.SetFormulaAsync("sheet-1", "A3", "=SUM(A1:A2)");
+    await service.SetFormatAsync("sheet-1", "A3", "0.00");
+    await service.AddTableAsync("sheet-1", new SheetTable("table-1", new SheetRange(new SheetCellAddress(1, 1), new SheetCellAddress(3, 1))));
+    await service.SaveAsync();
+    if (service.GetValue("sheet-1", "A3") != "30" || service.Filter("sheet-1", new SheetRange(new SheetCellAddress(1, 1), new SheetCellAddress(3, 1)), "20").Count != 1)
+        throw new InvalidOperationException("O cálculo ou filtro do Sheets falhou.");
+    var csv = Path.Combine(directory, "dados.csv");
+    await service.ExportCsvAsync("sheet-1", csv);
+    if (!File.ReadAllText(csv).Contains("30", StringComparison.Ordinal)) throw new InvalidOperationException("A exportação CSV falhou.");
+    var restored = new VccSheetsService(Path.Combine(directory, "sheets.json"));
+    await restored.LoadAsync();
+    if (restored.GetValue("sheet-1", "A3") != "30") throw new InvalidOperationException("A persistência do Sheets falhou.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ExercisesSheetRanges()
+{
+    var service = new VccSheetsService();
+    await service.CreateAsync("sheet-1", "Operações");
+    await service.SetValueAsync("sheet-1", "A1", "5");
+    await service.SetFormulaAsync("sheet-1", "B1", "=A1+7");
+    var selection = service.Select("sheet-1", new SheetRange(new SheetCellAddress(1, 1), new SheetCellAddress(1, 2)), new SheetCellAddress(1, 2));
+    if (selection.ActiveCell.ToString() != "B1" || service.Recalculate("sheet-1")["B1"] != "12")
+        throw new InvalidOperationException("A seleção ou o recálculo do intervalo falhou.");
+    await service.CopyRangeAsync("sheet-1", selection.Range, new SheetCellAddress(2, 1));
+    if (service.GetValue("sheet-1", "B2") != "12") throw new InvalidOperationException("A cópia do intervalo falhou.");
+    await service.ClearRangeAsync("sheet-1", new SheetRange(new SheetCellAddress(2, 1), new SheetCellAddress(2, 2)));
+    if (service.GetValue("sheet-1", "B2") != "") throw new InvalidOperationException("A limpeza do intervalo falhou.");
+    try { service.Select("sheet-1", new SheetRange(new SheetCellAddress(2, 2), new SheetCellAddress(1, 1))); }
+    catch (ArgumentException) { return; }
+    throw new InvalidOperationException("Um intervalo invertido foi aceite.");
+}
+
+static async Task ExercisesSlides()
+{
+    var directory = CreateTestDirectory();
+    var service = new VccSlidesService(Path.Combine(directory, "slides.json"));
+    await service.CreateAsync("deck-1", "Apresentação VCC");
+    await service.AddObjectAsync("deck-1", 0, new SlideObject("title", SlideObjectKind.Text, 24, 24, 640, 80, "Olá VCC"));
+    await service.SetNotesAsync("deck-1", 0, "Notas do apresentador");
+    await service.SetThemeAsync("deck-1", new SlideTheme("Escuro", "#111827", "#F9FAFB"));
+    await service.NavigatePresentationAsync("deck-1", 0);
+    var html = Path.Combine(directory, "slides.html");
+    await service.ExportHtmlAsync("deck-1", html);
+    await service.SaveAsync();
+    var restored = new VccSlidesService(Path.Combine(directory, "slides.json"));
+    await restored.LoadAsync();
+    if (!File.ReadAllText(html).Contains("Ol&#225; VCC", StringComparison.Ordinal) || restored.Navigate("deck-1").Slides[0].Notes != "Notas do apresentador")
+        throw new InvalidOperationException("A apresentação não foi exportada ou persistida corretamente.");
+    var pdfService = new VccSheetsService();
+    await pdfService.CreateAsync("sheet-1", "Dados");
+    await pdfService.SetValueAsync("sheet-1", "A1", "42");
+    var pdf = Path.Combine(directory, "dados.pdf");
+    await pdfService.ExportPdfAsync("sheet-1", pdf);
+    if (!Encoding.ASCII.GetString(await File.ReadAllBytesAsync(pdf), 0, 8).Equals("%PDF-1.4", StringComparison.Ordinal)) throw new InvalidOperationException("A exportação PDF do Sheets falhou.");
+    Directory.Delete(directory, recursive: true);
+}
+
+static async Task ExercisesSlidesAndMail()
+{
+    var directory = CreateTestDirectory();
+    var slides = new VccSlidesService(Path.Combine(directory, "slides.json"));
+    await slides.CreateAsync("deck-1", "Demo");
+    await slides.SetTransitionAsync("deck-1", 0, new SlideTransition("push", 700));
+    var pptx = Path.Combine(directory, "demo.pptx");
+    await slides.ExportPptxAsync("deck-1", pptx);
+    if (!File.Exists(pptx) || new FileInfo(pptx).Length == 0) throw new InvalidOperationException("A exportação PPTX falhou.");
+    var mail = new VccMailService(Path.Combine(directory, "mail.json"));
+    await mail.ConfigureAccountAsync(new MailAccount("local", "user@example.com", "Utilizador", "imap.local", "smtp.local"));
+    await mail.ComposeAsync(new MailMessage("message-1", "local", "user@example.com", ["team@example.com"], "Assunto", "Mensagem offline"));
+    await mail.AddAttachmentAsync("message-1", new MailAttachment("file-1", "nota.txt", 12, "text/plain", "nota.txt"));
+    await mail.SendAsync("message-1");
+    if (mail.Search("offline", MailFolder.Sent).Count != 1 || !mail.Open("message-1").IsRead) throw new InvalidOperationException("O fluxo local de Mail falhou.");
+    var restored = new VccMailService(Path.Combine(directory, "mail.json"));
+    await restored.LoadAsync();
+    if (restored.Messages.Count != 1 || restored.Messages[0].Attachments?.Count != 1) throw new InvalidOperationException("A persistência de Mail falhou.");
     Directory.Delete(directory, recursive: true);
 }
 

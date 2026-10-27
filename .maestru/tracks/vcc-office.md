@@ -158,166 +158,166 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0138 | Definir contratos, DTOs e validação de tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0139 | Definir contratos, DTOs e validação de paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0140 | Definir contratos, DTOs e validação de importação DOCX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0141 | Definir contratos, DTOs e validação de exportação PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0142 | Definir contratos, DTOs e validação de revisão e acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0143 | Implementar lógica e persistência de edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0144 | Implementar lógica e persistência de estilos e parágrafos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0145 | Implementar lógica e persistência de tabelas e imagens | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0146 | Implementar lógica e persistência de paginação e impressão | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0147 | Implementar lógica e persistência de importação DOCX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0148 | Implementar lógica e persistência de exportação PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0149 | Implementar lógica e persistência de revisão e acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0150 | Construir interface e estados de edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0151 | Construir interface e estados de estilos e parágrafos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0152 | Construir interface e estados de tabelas e imagens | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0153 | Construir interface e estados de paginação e impressão | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0154 | Construir interface e estados de importação DOCX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0155 | Construir interface e estados de exportação PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0156 | Construir interface e estados de revisão e acessibilidade | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0157 | Criar testes unitários e fixtures para edição rica | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0158 | Criar testes unitários e fixtures para estilos e parágrafos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0159 | Criar testes unitários e fixtures para tabelas e imagens | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0160 | Criar testes unitários e fixtures para paginação e impressão | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0161 | Entregar VCC Sheets | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0162 | Grelha e seleção — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0163 | Fórmulas e referências — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0164 | Motor de cálculo — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0165 | Formatação — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0166 | Gráficos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0167 | Filtros e tabelas — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0168 | Importação xlsx — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0169 | Criar e configurar grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0170 | Criar e configurar fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0171 | Criar e configurar motor de cálculo | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0172 | Criar e configurar formatação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0173 | Criar e configurar gráficos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0174 | Criar e configurar filtros e tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0175 | Criar e configurar importação XLSX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0176 | Criar e configurar exportação CSV/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0177 | Criar e configurar desempenho | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0178 | Consultar e navegar grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0179 | Consultar e navegar fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0180 | Consultar e navegar motor de cálculo | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0181 | Consultar e navegar formatação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0182 | Consultar e navegar gráficos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0183 | Consultar e navegar filtros e tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0184 | Consultar e navegar importação XLSX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0185 | Consultar e navegar exportação CSV/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0186 | Consultar e navegar desempenho | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0187 | Editar e validar grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0188 | Definir contratos, DTOs e validação de grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0189 | Definir contratos, DTOs e validação de fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0190 | Definir contratos, DTOs e validação de motor de cálculo | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0191 | Definir contratos, DTOs e validação de formatação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0192 | Definir contratos, DTOs e validação de gráficos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0193 | Definir contratos, DTOs e validação de filtros e tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0194 | Definir contratos, DTOs e validação de importação XLSX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0195 | Definir contratos, DTOs e validação de exportação CSV/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0196 | Definir contratos, DTOs e validação de desempenho | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0197 | Implementar lógica e persistência de grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0198 | Implementar lógica e persistência de fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0199 | Implementar lógica e persistência de motor de cálculo | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0200 | Implementar lógica e persistência de formatação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0201 | Implementar lógica e persistência de gráficos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0202 | Implementar lógica e persistência de filtros e tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0203 | Implementar lógica e persistência de importação XLSX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0204 | Implementar lógica e persistência de exportação CSV/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0205 | Implementar lógica e persistência de desempenho | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0206 | Construir interface e estados de grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0207 | Construir interface e estados de fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0208 | Construir interface e estados de motor de cálculo | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0209 | Construir interface e estados de formatação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0210 | Construir interface e estados de gráficos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0211 | Construir interface e estados de filtros e tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0212 | Construir interface e estados de importação XLSX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0213 | Construir interface e estados de exportação CSV/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0214 | Construir interface e estados de desempenho | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0215 | Criar testes unitários e fixtures para grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0216 | Criar testes unitários e fixtures para fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0217 | Criar testes unitários e fixtures para motor de cálculo | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0218 | Criar testes unitários e fixtures para formatação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0219 | Criar testes unitários e fixtures para gráficos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0220 | Criar testes unitários e fixtures para filtros e tabelas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0221 | Criar testes unitários e fixtures para importação XLSX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0222 | Criar testes unitários e fixtures para exportação CSV/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0223 | Criar testes unitários e fixtures para desempenho | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0224 | Implementar testes de integração para grelha e seleção | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0225 | Implementar testes de integração para fórmulas e referências | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0226 | Entregar VCC Slides | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0227 | Canvas e objetos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0228 | Temas e layouts — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0229 | Texto e multimédia — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0230 | Notas — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0231 | Modo apresentação — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0232 | Criar e configurar canvas e objetos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0233 | Criar e configurar temas e layouts | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0234 | Criar e configurar texto e multimédia | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0235 | Criar e configurar notas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0236 | Criar e configurar modo apresentação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0237 | Criar e configurar transições | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0238 | Criar e configurar importação PPTX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0239 | Criar e configurar exportação PPTX/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0240 | Consultar e navegar canvas e objetos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0241 | Consultar e navegar temas e layouts | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0242 | Consultar e navegar texto e multimédia | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0243 | Consultar e navegar notas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0244 | Consultar e navegar modo apresentação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0245 | Consultar e navegar transições | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0246 | Definir contratos, DTOs e validação de canvas e objetos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0247 | Definir contratos, DTOs e validação de temas e layouts | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0248 | Definir contratos, DTOs e validação de texto e multimédia | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0249 | Definir contratos, DTOs e validação de notas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0250 | Definir contratos, DTOs e validação de modo apresentação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0251 | Definir contratos, DTOs e validação de transições | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0252 | Definir contratos, DTOs e validação de importação PPTX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0253 | Definir contratos, DTOs e validação de exportação PPTX/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0254 | Implementar lógica e persistência de canvas e objetos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0255 | Implementar lógica e persistência de temas e layouts | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0256 | Implementar lógica e persistência de texto e multimédia | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0257 | Implementar lógica e persistência de notas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0258 | Implementar lógica e persistência de modo apresentação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0259 | Implementar lógica e persistência de transições | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0260 | Implementar lógica e persistência de importação PPTX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0261 | Implementar lógica e persistência de exportação PPTX/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0262 | Construir interface e estados de canvas e objetos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0263 | Construir interface e estados de temas e layouts | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0264 | Construir interface e estados de texto e multimédia | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0265 | Construir interface e estados de notas | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0266 | Construir interface e estados de modo apresentação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0267 | Construir interface e estados de transições | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0268 | Construir interface e estados de importação PPTX | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0269 | Construir interface e estados de exportação PPTX/PDF | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0270 | Criar testes unitários e fixtures para canvas e objetos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0271 | Entregar VCC Mail | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0272 | Contas e autenticação — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0273 | Sincronização imap — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0274 | Envio smtp — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0275 | Pastas e pesquisa — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0276 | Anexos — capacidade 1 | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0277 | Criar e configurar contas e autenticação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0278 | Criar e configurar sincronização IMAP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0279 | Criar e configurar envio SMTP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0280 | Criar e configurar pastas e pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0281 | Criar e configurar anexos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0282 | Criar e configurar composição | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0283 | Criar e configurar modo offline | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0284 | Criar e configurar segurança | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0285 | Consultar e navegar contas e autenticação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0286 | Consultar e navegar sincronização IMAP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0287 | Consultar e navegar envio SMTP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0288 | Definir contratos, DTOs e validação de contas e autenticação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0289 | Definir contratos, DTOs e validação de sincronização IMAP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0290 | Definir contratos, DTOs e validação de envio SMTP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0291 | Definir contratos, DTOs e validação de pastas e pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0292 | Definir contratos, DTOs e validação de anexos | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0293 | Definir contratos, DTOs e validação de composição | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0294 | Definir contratos, DTOs e validação de modo offline | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0295 | Definir contratos, DTOs e validação de segurança | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0296 | Implementar lógica e persistência de contas e autenticação | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0297 | Implementar lógica e persistência de sincronização IMAP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0298 | Implementar lógica e persistência de envio SMTP | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0299 | Implementar lógica e persistência de pastas e pesquisa | backlog | 2026-10-26 | developer | medium |  |  |  |
-| VCC-0300 | Implementar lógica e persistência de anexos | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0141 | Definir contratos, DTOs e validação de exportação PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0142 | Definir contratos, DTOs e validação de revisão e acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0143 | Implementar lógica e persistência de edição rica | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0144 | Implementar lógica e persistência de estilos e parágrafos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0145 | Implementar lógica e persistência de tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0146 | Implementar lógica e persistência de paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0147 | Implementar lógica e persistência de importação DOCX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0148 | Implementar lógica e persistência de exportação PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0149 | Implementar lógica e persistência de revisão e acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0150 | Construir interface e estados de edição rica | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0151 | Construir interface e estados de estilos e parágrafos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0152 | Construir interface e estados de tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0153 | Construir interface e estados de paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0154 | Construir interface e estados de importação DOCX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0155 | Construir interface e estados de exportação PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0156 | Construir interface e estados de revisão e acessibilidade | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0157 | Criar testes unitários e fixtures para edição rica | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0158 | Criar testes unitários e fixtures para estilos e parágrafos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0159 | Criar testes unitários e fixtures para tabelas e imagens | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0160 | Criar testes unitários e fixtures para paginação e impressão | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0161 | Entregar VCC Sheets | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0162 | Grelha e seleção — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0163 | Fórmulas e referências — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0164 | Motor de cálculo — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0165 | Formatação — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0166 | Gráficos — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0167 | Filtros e tabelas — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0168 | Importação xlsx — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0169 | Criar e configurar grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0170 | Criar e configurar fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0171 | Criar e configurar motor de cálculo | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0172 | Criar e configurar formatação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0173 | Criar e configurar gráficos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0174 | Criar e configurar filtros e tabelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0175 | Criar e configurar importação XLSX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0176 | Criar e configurar exportação CSV/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0177 | Criar e configurar desempenho | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0178 | Consultar e navegar grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0179 | Consultar e navegar fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0180 | Consultar e navegar motor de cálculo | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0181 | Consultar e navegar formatação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0182 | Consultar e navegar gráficos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0183 | Consultar e navegar filtros e tabelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0184 | Consultar e navegar importação XLSX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0185 | Consultar e navegar exportação CSV/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0186 | Consultar e navegar desempenho | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0187 | Editar e validar grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0188 | Definir contratos, DTOs e validação de grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0189 | Definir contratos, DTOs e validação de fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0190 | Definir contratos, DTOs e validação de motor de cálculo | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0191 | Definir contratos, DTOs e validação de formatação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0192 | Definir contratos, DTOs e validação de gráficos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0193 | Definir contratos, DTOs e validação de filtros e tabelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0194 | Definir contratos, DTOs e validação de importação XLSX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0195 | Definir contratos, DTOs e validação de exportação CSV/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0196 | Definir contratos, DTOs e validação de desempenho | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0197 | Implementar lógica e persistência de grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0198 | Implementar lógica e persistência de fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0199 | Implementar lógica e persistência de motor de cálculo | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0200 | Implementar lógica e persistência de formatação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0201 | Implementar lógica e persistência de gráficos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0202 | Implementar lógica e persistência de filtros e tabelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0203 | Implementar lógica e persistência de importação XLSX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0204 | Implementar lógica e persistência de exportação CSV/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0205 | Implementar lógica e persistência de desempenho | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0206 | Construir interface e estados de grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0207 | Construir interface e estados de fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0208 | Construir interface e estados de motor de cálculo | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0209 | Construir interface e estados de formatação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0210 | Construir interface e estados de gráficos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0211 | Construir interface e estados de filtros e tabelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0212 | Construir interface e estados de importação XLSX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0213 | Construir interface e estados de exportação CSV/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0214 | Construir interface e estados de desempenho | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0215 | Criar testes unitários e fixtures para grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0216 | Criar testes unitários e fixtures para fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0217 | Criar testes unitários e fixtures para motor de cálculo | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0218 | Criar testes unitários e fixtures para formatação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0219 | Criar testes unitários e fixtures para gráficos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0220 | Criar testes unitários e fixtures para filtros e tabelas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0221 | Criar testes unitários e fixtures para importação XLSX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0222 | Criar testes unitários e fixtures para exportação CSV/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0223 | Criar testes unitários e fixtures para desempenho | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0224 | Implementar testes de integração para grelha e seleção | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0225 | Implementar testes de integração para fórmulas e referências | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0226 | Entregar VCC Slides | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0227 | Canvas e objetos — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0228 | Temas e layouts — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0229 | Texto e multimédia — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0230 | Notas — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0231 | Modo apresentação — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0232 | Criar e configurar canvas e objetos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0233 | Criar e configurar temas e layouts | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0234 | Criar e configurar texto e multimédia | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0235 | Criar e configurar notas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0236 | Criar e configurar modo apresentação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0237 | Criar e configurar transições | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0238 | Criar e configurar importação PPTX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0239 | Criar e configurar exportação PPTX/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0240 | Consultar e navegar canvas e objetos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0241 | Consultar e navegar temas e layouts | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0242 | Consultar e navegar texto e multimédia | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0243 | Consultar e navegar notas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0244 | Consultar e navegar modo apresentação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0245 | Consultar e navegar transições | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0246 | Definir contratos, DTOs e validação de canvas e objetos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0247 | Definir contratos, DTOs e validação de temas e layouts | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0248 | Definir contratos, DTOs e validação de texto e multimédia | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0249 | Definir contratos, DTOs e validação de notas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0250 | Definir contratos, DTOs e validação de modo apresentação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0251 | Definir contratos, DTOs e validação de transições | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0252 | Definir contratos, DTOs e validação de importação PPTX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0253 | Definir contratos, DTOs e validação de exportação PPTX/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0254 | Implementar lógica e persistência de canvas e objetos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0255 | Implementar lógica e persistência de temas e layouts | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0256 | Implementar lógica e persistência de texto e multimédia | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0257 | Implementar lógica e persistência de notas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0258 | Implementar lógica e persistência de modo apresentação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0259 | Implementar lógica e persistência de transições | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0260 | Implementar lógica e persistência de importação PPTX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0261 | Implementar lógica e persistência de exportação PPTX/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0262 | Construir interface e estados de canvas e objetos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0263 | Construir interface e estados de temas e layouts | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0264 | Construir interface e estados de texto e multimédia | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0265 | Construir interface e estados de notas | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0266 | Construir interface e estados de modo apresentação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0267 | Construir interface e estados de transições | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0268 | Construir interface e estados de importação PPTX | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0269 | Construir interface e estados de exportação PPTX/PDF | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0270 | Criar testes unitários e fixtures para canvas e objetos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0271 | Entregar VCC Mail | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0272 | Contas e autenticação — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0273 | Sincronização imap — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0274 | Envio smtp — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0275 | Pastas e pesquisa — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0276 | Anexos — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0277 | Criar e configurar contas e autenticação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0278 | Criar e configurar sincronização IMAP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0279 | Criar e configurar envio SMTP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0280 | Criar e configurar pastas e pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0281 | Criar e configurar anexos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0282 | Criar e configurar composição | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0283 | Criar e configurar modo offline | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0284 | Criar e configurar segurança | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0285 | Consultar e navegar contas e autenticação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0286 | Consultar e navegar sincronização IMAP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0287 | Consultar e navegar envio SMTP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0288 | Definir contratos, DTOs e validação de contas e autenticação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0289 | Definir contratos, DTOs e validação de sincronização IMAP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0290 | Definir contratos, DTOs e validação de envio SMTP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0291 | Definir contratos, DTOs e validação de pastas e pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0292 | Definir contratos, DTOs e validação de anexos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0293 | Definir contratos, DTOs e validação de composição | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0294 | Definir contratos, DTOs e validação de modo offline | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0295 | Definir contratos, DTOs e validação de segurança | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0296 | Implementar lógica e persistência de contas e autenticação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0297 | Implementar lógica e persistência de sincronização IMAP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0298 | Implementar lógica e persistência de envio SMTP | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0299 | Implementar lógica e persistência de pastas e pesquisa | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0300 | Implementar lógica e persistência de anexos | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0301 | Implementar lógica e persistência de composição | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0302 | Implementar lógica e persistência de modo offline | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0303 | Implementar lógica e persistência de segurança | backlog | 2026-10-26 | developer | medium |  |  |  |
