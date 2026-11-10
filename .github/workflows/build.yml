@@ -1,0 +1,77 @@
+name: Build Debug and Release
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  build:
+    name: Windows x64 - ${{ matrix.configuration }}
+    runs-on: windows-2025
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Obter o código
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Instalar o SDK .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar dependências
+        run: dotnet restore VCC.Office.sln
+
+      - name: Compilar a solução
+        run: >-
+          dotnet build VCC.Office.sln
+          --configuration ${{ matrix.configuration }}
+          --no-restore
+          --property:ContinuousIntegrationBuild=true
+
+      - name: Executar os testes
+        run: >-
+          dotnet run
+          --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj
+          --configuration ${{ matrix.configuration }}
+          --no-build
+          --no-restore
+
+      - name: Publicar a aplicação para Windows x64
+        run: >-
+          dotnet publish src/Vcc.Office.Shell/Vcc.Office.Shell.csproj
+          --configuration ${{ matrix.configuration }}
+          --runtime win-x64
+          --self-contained true
+          --property:ContinuousIntegrationBuild=true
+          --property:PublishTrimmed=false
+          --output artifacts/publish/${{ matrix.configuration }}
+
+      - name: Disponibilizar a aplicação
+        uses: actions/upload-artifact@v7
+        with:
+          name: VCCOfficeSuite-${{ matrix.configuration }}-win-x64
+          path: artifacts/publish/${{ matrix.configuration }}/
+          if-no-files-found: error
+          retention-days: 14

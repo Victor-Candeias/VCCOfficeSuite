@@ -12167,3 +12167,20 @@ dotnet run --project src\Vcc.Office.Shell\Vcc.Office.Shell.csproj --configuratio
 ```
 
 O executável WPF é a primeira entrega do shell. A integração WebView2 e os módulos Writer, Sheets e Slides serão entregues nos respetivos work-items.
+
+## Pipeline de build — Debug e Release
+
+O workflow [Build Debug and Release](.github/workflows/build.yml) executa-se em cada push, pull request e execução manual no GitHub Actions. Compila a solução em **Debug** e **Release**, em jobs independentes num runner Windows com o SDK .NET 10, e executa o programa de testes existente através de `dotnet run`.
+
+Depois de os testes passarem, cada job publica a aplicação para **Windows x64**, incluindo o runtime .NET e as dependências da aplicação. Os artefactos ficam disponíveis durante 14 dias na execução do workflow:
+
+- `VCCOfficeSuite-Debug-win-x64` — build de depuração, com símbolos.
+- `VCCOfficeSuite-Release-win-x64` — build otimizada de Release.
+
+Para executar manualmente, abrir **Actions → Build Debug and Release → Run workflow** e escolher a branch. Para utilizar uma build, descarregar o artefacto, extrair todo o conteúdo do ZIP e executar `Vcc.Office.Shell.exe`. Não é necessário instalar o runtime .NET separadamente.
+
+Para reproduzir a publicação localmente, substituir `Release` por `Debug` conforme necessário:
+
+```powershell
+dotnet publish src/Vcc.Office.Shell/Vcc.Office.Shell.csproj --configuration Release --runtime win-x64 --self-contained true --property:ContinuousIntegrationBuild=true --property:PublishTrimmed=false --output artifacts/publish/Release
+```

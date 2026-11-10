@@ -113,7 +113,7 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0093 | Instalação — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0094 | Atualização — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0095 | Telemetria local — capacidade 1 | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
-| VCC-0096 | Criar e configurar CI/CD | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
+| VCC-0096 | Criar e configurar CI/CD | done | 2026-10-26 | developer | medium | 2026-11-10 |  | [VCC-0096](../specs/vcc-office/vcc-0096-debug-release-build-spec.md) |
 | VCC-0097 | Criar e configurar instalação | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0098 | Criar e configurar atualização | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
 | VCC-0099 | Criar e configurar telemetria local | done | 2026-10-26 | developer | medium | 2026-10-27 |  |  |
