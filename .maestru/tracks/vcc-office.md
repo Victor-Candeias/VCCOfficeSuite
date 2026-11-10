@@ -828,4 +828,5 @@ Backlog Maestru importado da especificação técnica v2 e do CSV com 810 work i
 | VCC-0808 | Definir contratos, DTOs e validação de projetos | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0809 | Definir contratos, DTOs e validação de relatórios | backlog | 2026-10-26 | developer | medium |  |  |  |
 | VCC-0810 | Definir contratos, DTOs e validação de exportação | backlog | 2026-10-26 | developer | medium |  |  |  |
+| VCC-0811 | Construir o ecrã inicial conforme a referência do menu principal | done | 2026-11-10 | developer | high | 2026-11-10 |  | [VCC-0811](../specs/vcc-office/vcc-0811-main-menu-spec.md) |
 <!-- /maestru:work-items-list -->
