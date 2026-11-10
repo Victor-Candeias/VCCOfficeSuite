@@ -12184,3 +12184,11 @@ Para reproduzir a publicação localmente, substituir `Release` por `Debug` conf
 ```powershell
 dotnet publish src/Vcc.Office.Shell/Vcc.Office.Shell.csproj --configuration Release --runtime win-x64 --self-contained true --property:ContinuousIntegrationBuild=true --property:PublishTrimmed=false --output artifacts/publish/Release
 ```
+
+## Ecrã inicial — menu principal
+
+O arranque apresenta o novo ecrã inicial baseado em `Documents/MenuPrincipal.jpg` (issue #3). Inclui as 26 aplicações na barra lateral e em **Mais aplicações**, os 12 cartões de criação, a pesquisa global, filtros e modos de visualização de recentes, o espaço de trabalho, armazenamento local e dicas.
+
+Nesta fase, os atalhos de aplicações, criação e espaço de trabalho são apenas visuais e não executam operações. A pesquisa recebe foco através de **Ctrl+K**, o menu **Mais aplicações** pode ser aberto por teclado e fechado com **Esc**, e os controlos de janela mantêm o funcionamento normal. A grelha adapta-se à largura e as áreas têm scroll quando necessário.
+
+Os recentes apresentam um estado vazio, sem ficheiros de demonstração; o armazenamento mostra a utilização real da unidade local. O anterior espaço de trabalho foi preservado em `WorkspaceWindow` para a futura integração dos fluxos dos módulos.
