@@ -173,8 +173,8 @@ public partial class MainWindow : Window
 
     private bool IsDarkTheme()
     {
-        if (_dashboardPreferences.Theme == ThemeMode.Dark) return true;
-        if (_dashboardPreferences.Theme == ThemeMode.Light) return false;
+        if (_dashboardPreferences.Theme == Vcc.Office.CoreShell.ThemeMode.Dark) return true;
+        if (_dashboardPreferences.Theme == Vcc.Office.CoreShell.ThemeMode.Light) return false;
         try
         {
             var value = Registry.GetValue(
@@ -190,7 +190,7 @@ public partial class MainWindow : Window
 
     private void OnWindowsPreferencesChanged(object? sender, UserPreferenceChangedEventArgs e)
     {
-        if (_dashboardPreferences.Theme != ThemeMode.System || !_dashboardReady) return;
+        if (_dashboardPreferences.Theme != Vcc.Office.CoreShell.ThemeMode.System || !_dashboardReady) return;
         _ = Dispatcher.BeginInvoke(() =>
         {
             if (DashboardSelector.SelectedValue is string selected)
