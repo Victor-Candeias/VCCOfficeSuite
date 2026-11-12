@@ -51,7 +51,7 @@ public sealed class DashboardSettingsWindow : Window
         {
             var preferred = (string)_preferred.SelectedValue;
             var startup = (string)_startup.SelectedValue == "preferred" ? DashboardStartupMode.Preferred : DashboardStartupMode.Last;
-            var theme = Enum.Parse<ThemeMode>((string)_theme.SelectedValue, ignoreCase: true);
+            var theme = Enum.Parse<Vcc.Office.CoreShell.ThemeMode>((string)_theme.SelectedValue, ignoreCase: true);
             Result = current with { PreferredDashboardId = preferred, StartupMode = startup, Theme = theme };
             DialogResult = true;
         };
