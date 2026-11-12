@@ -161,6 +161,7 @@ public partial class MainWindow : Window
             ClassicDashboardRoot.Visibility = alternative is null ? Visibility.Visible : Visibility.Collapsed;
             AlternativeDashboardHost.Visibility = alternative is null ? Visibility.Collapsed : Visibility.Visible;
             DashboardSelector.SelectedValue = id;
+            ApplyDashboardChrome(id);
 
             if (remember)
             {
@@ -209,6 +210,25 @@ public partial class MainWindow : Window
             MessageBox.Show(this, "Não foi possível guardar as preferências do dashboard. " + ex.Message,
                 "VCC Office", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+
+    private static SolidColorBrush DashboardBrush(string value) =>
+        new((Color)ColorConverter.ConvertFromString(value));
+
+    private void ApplyDashboardChrome(string dashboardId)
+    {
+        var dark = dashboardId != DashboardIds.Classic && IsDarkTheme();
+        TopHeader.Background = DashboardBrush(dark ? "#0D1728" : "#FDFEFF");
+        TopHeader.BorderBrush = DashboardBrush(dark ? "#283852" : "#DCE3ED");
+        BrandNameText.Foreground = DashboardBrush(dark ? "#F3F6FF" : "#0B1220");
+        HeaderSearchSurface.Background = DashboardBrush(dark ? "#111E32" : "#FFFFFF");
+        HeaderSearchSurface.BorderBrush = DashboardBrush(dark ? "#384761" : "#CCD6E6");
+        GlobalSearchBox.Foreground = DashboardBrush(dark ? "#EAF2FF" : "#172238");
+        SearchPlaceholder.Foreground = DashboardBrush(dark ? "#99AACA" : "#667188");
+        DashboardSelector.Background = DashboardBrush(dark ? "#1B2B44" : "#FFFFFF");
+        DashboardSelector.Foreground = DashboardBrush(dark ? "#F3F7FF" : "#172238");
+        HomeRoot.BorderBrush = DashboardBrush(dark ? "#273953" : "#DCE3ED");
     }
 
     private void NavigateDashboard(string id)
