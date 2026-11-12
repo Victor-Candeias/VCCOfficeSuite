@@ -229,6 +229,13 @@ public partial class MainWindow : Window
         DashboardSelector.Background = DashboardBrush(dark ? "#1B2B44" : "#FFFFFF");
         DashboardSelector.Foreground = DashboardBrush(dark ? "#F3F7FF" : "#172238");
         HomeRoot.BorderBrush = DashboardBrush(dark ? "#273953" : "#DCE3ED");
+        UserLabel.Foreground = DashboardBrush(dark ? "#E7F0FF" : "#172238");
+        MaximizeButton.Foreground = DashboardBrush(dark ? "#F1F6FF" : "#24334A");
+        foreach (var icon in FindVisualChildren<System.Windows.Shapes.Path>(TopHeader))
+            if (icon.Stroke is not null)
+                icon.Stroke = DashboardBrush(dark ? "#E9F3FF" : "#213652");
+        foreach (var subtitle in FindVisualChildren<System.Windows.Controls.TextBlock>(BrandSubtitle))
+            subtitle.Foreground = DashboardBrush(dark ? "#C4D3EC" : "#172238");
     }
 
     private void NavigateDashboard(string id)
