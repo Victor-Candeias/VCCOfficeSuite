@@ -1,4 +1,5 @@
 using System.IO;
+using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -10,6 +11,12 @@ namespace Vcc.Office.Shell;
 public partial class MainWindow : Window
 {
     private readonly CoreShellService _shell;
+    private readonly HomeScreenModel _homeModel;
+    private readonly IDashboardRegistry _dashboardRegistry = new DashboardRegistry();
+    private readonly DashboardSqliteRepository _dashboardSettings;
+    private DashboardPreferences _dashboardPreferences = DashboardPreferences.Default;
+    private bool _dashboardReady;
+    private bool _switchingDashboard;
     private bool _stateReady;
     private bool _savingWindow;
     private bool _windowSaved;
@@ -17,10 +24,17 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = new HomeScreenModel();
+        _homeModel = new HomeScreenModel();
+        DataContext = _homeModel;
+        _dashboardSettings = new DashboardSqliteRepository(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "VCC Office", "dashboards.sqlite"));
+        DashboardSelector.ItemsSource = _dashboardRegistry.GetAll();
         var statePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VCC Office", "shell-state.json");
         _shell = new CoreShellService(new ShellStateStore(statePath));
         Loaded += RestoreWindow;
+        Closed += (_, _) => SystemEvents.UserPreferenceChanged -= OnWindowsPreferencesChanged;
+        SystemEvents.UserPreferenceChanged += OnWindowsPreferencesChanged;
         Closing += SaveWindow;
         HomeRoot.SizeChanged += AdaptLayout;
         StateChanged += (_, _) => MaximizeButton.Content = WindowState == WindowState.Maximized ? "❐" : "□";
@@ -47,6 +61,17 @@ public partial class MainWindow : Window
             if (saved.IsMaximized) WindowState = WindowState.Maximized;
         }
         _stateReady = true;
+        try
+        {
+            _dashboardPreferences = _dashboardSettings.Load(Environment.UserName, _dashboardRegistry);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
+        {
+            _dashboardPreferences = DashboardPreferences.Default;
+        }
+        var initial = DashboardPolicy.ResolveStartup(_dashboardPreferences, _dashboardRegistry);
+        ActivateDashboard(initial, remember: false);
+        _dashboardReady = true;
         AdaptLayout(this, null);
     }
 
@@ -115,6 +140,85 @@ public partial class MainWindow : Window
     {
         _ = Dispatcher.InvokeAsync(() => FindVisualChildren<System.Windows.Controls.Button>(MoreApplicationsPopup.Child).FirstOrDefault()?.Focus(),
             System.Windows.Threading.DispatcherPriority.Input);
+    }
+
+
+    private void DashboardSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!_dashboardReady || _switchingDashboard || DashboardSelector.SelectedValue is not string id) return;
+        ActivateDashboard(id, remember: true);
+    }
+
+    private void ActivateDashboard(string id, bool remember)
+    {
+        if (!_dashboardRegistry.Contains(id)) id = DashboardIds.Modern;
+        _switchingDashboard = true;
+        try
+        {
+            // Criar a vista antes de modificar o estado apresentado.
+            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme());
+            AlternativeDashboardHost.Content = alternative;
+            ClassicDashboardRoot.Visibility = alternative is null ? Visibility.Visible : Visibility.Collapsed;
+            AlternativeDashboardHost.Visibility = alternative is null ? Visibility.Collapsed : Visibility.Visible;
+            DashboardSelector.SelectedValue = id;
+
+            if (remember)
+            {
+                _dashboardPreferences = DashboardPolicy.Select(_dashboardPreferences, id, _dashboardRegistry);
+                SaveDashboardPreferences();
+            }
+        }
+        finally { _switchingDashboard = false; }
+    }
+
+    private bool IsDarkTheme()
+    {
+        if (_dashboardPreferences.Theme == ThemeMode.Dark) return true;
+        if (_dashboardPreferences.Theme == ThemeMode.Light) return false;
+        try
+        {
+            var value = Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+                "AppsUseLightTheme", 1);
+            return value is int setting && setting == 0;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        {
+            return false;
+        }
+    }
+
+    private void OnWindowsPreferencesChanged(object? sender, UserPreferenceChangedEventArgs e)
+    {
+        if (_dashboardPreferences.Theme != ThemeMode.System || !_dashboardReady) return;
+        _ = Dispatcher.BeginInvoke(() =>
+        {
+            if (DashboardSelector.SelectedValue is string selected)
+                ActivateDashboard(selected, remember: false);
+        });
+    }
+
+    private void SaveDashboardPreferences()
+    {
+        try
+        {
+            _dashboardSettings.Save(Environment.UserName, _dashboardPreferences);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
+        {
+            MessageBox.Show(this, "Não foi possível guardar as preferências do dashboard. " + ex.Message,
+                "VCC Office", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void OpenDashboardSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new DashboardSettingsWindow(_dashboardPreferences, _dashboardRegistry) { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.Result is null) return;
+        _dashboardPreferences = DashboardPolicy.ValidateOrDefault(dialog.Result, _dashboardRegistry);
+        SaveDashboardPreferences();
+        if (DashboardSelector.SelectedValue is string selected)
+            ActivateDashboard(selected, remember: false);
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
