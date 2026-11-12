@@ -156,7 +156,7 @@ public partial class MainWindow : Window
         try
         {
             // Criar a vista antes de modificar o estado apresentado.
-            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme());
+            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme(), NavigateDashboard, () => OpenDashboardSettings());
             AlternativeDashboardHost.Content = alternative;
             ClassicDashboardRoot.Visibility = alternative is null ? Visibility.Visible : Visibility.Collapsed;
             AlternativeDashboardHost.Visibility = alternative is null ? Visibility.Collapsed : Visibility.Visible;
@@ -211,7 +211,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenDashboardSettings_Click(object sender, RoutedEventArgs e)
+    private void NavigateDashboard(string id)
+    {
+        if (_dashboardRegistry.Contains(id)) ActivateDashboard(id, remember: true);
+    }
+
+    private void OpenDashboardSettings()
     {
         var dialog = new DashboardSettingsWindow(_dashboardPreferences, _dashboardRegistry) { Owner = this };
         if (dialog.ShowDialog() != true || dialog.Result is null) return;
@@ -220,6 +225,8 @@ public partial class MainWindow : Window
         if (DashboardSelector.SelectedValue is string selected)
             ActivateDashboard(selected, remember: false);
     }
+
+    private void OpenDashboardSettings_Click(object sender, RoutedEventArgs e) => OpenDashboardSettings();
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
