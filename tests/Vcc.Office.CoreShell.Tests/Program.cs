@@ -5,6 +5,7 @@ using System.Text;
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
+    ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
     ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
     ("layout de janela é normalizado", NormalizesWindowLayout),
@@ -58,6 +59,34 @@ foreach (var test in tests)
 return 0;
 
 /// <summary>
+
+static Task ValidatesDashboardPreferences()
+{
+    var registry = new DashboardRegistry();
+    if (registry.GetAll().Count != 3) throw new InvalidOperationException("O catálogo deve ter três dashboards.");
+    var defaults = DashboardPreferences.Default;
+    if (DashboardPolicy.ResolveStartup(defaults, registry) != DashboardIds.Modern)
+        throw new InvalidOperationException("No primeiro arranque deve abrir o dashboard moderno.");
+
+    var selected = DashboardPolicy.Select(defaults, DashboardIds.Grid, registry);
+    if (DashboardPolicy.ResolveStartup(selected, registry) != DashboardIds.Grid)
+        throw new InvalidOperationException("O modo last não recordou o dashboard utilizado.");
+    var alwaysPreferred = selected with { StartupMode = DashboardStartupMode.Preferred };
+    if (DashboardPolicy.ResolveStartup(alwaysPreferred, registry) != DashboardIds.Modern)
+        throw new InvalidOperationException("O modo preferred não foi respeitado.");
+
+    var invalid = selected with { LastDashboardId = "removed", PreferredDashboardId = "removed" };
+    if (DashboardPolicy.ResolveStartup(invalid, registry) != DashboardIds.Modern)
+        throw new InvalidOperationException("O fallback moderno não foi aplicado.");
+    var normalized = DashboardPolicy.ValidateOrDefault(invalid, registry);
+    if (normalized.LastDashboardId is not null || normalized.PreferredDashboardId != DashboardIds.Modern)
+        throw new InvalidOperationException("As referências inválidas não foram normalizadas.");
+
+    try { DashboardPolicy.Select(selected, "../invalid", registry); }
+    catch (ArgumentException) { return Task.CompletedTask; }
+    throw new InvalidOperationException("Foi aceite um dashboard não registado.");
+}
+
 static Task AssertValid(ShellState state)
 {
     if (!ShellStateValidator.Validate(state).IsValid) throw new InvalidOperationException("O estado predefinido não é válido.");

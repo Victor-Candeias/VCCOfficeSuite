@@ -134,7 +134,7 @@
                             <TextBlock Text="Suite de Produtividade" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
-                    <Border Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,22,0">
+                    <Border Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,190,0">
                         <Grid Margin="17,0,10,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                             <Path Data="{StaticResource SearchIcon}" Style="{StaticResource OutlineIcon}" Width="18" Height="18"/>
@@ -150,9 +150,14 @@
                             </Border>
                         </Grid>
                     </Border>
+                    <ComboBox x:Name="DashboardSelector" Grid.Column="1" Width="158" Height="36"
+                              HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0"
+                              DisplayMemberPath="Name" SelectedValuePath="Id"
+                              SelectionChanged="DashboardSelector_SelectionChanged"
+                              ToolTip="Selecionar dashboard" AutomationProperties.Name="Selecionar dashboard"/>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" ToolTip="Notificações" AutomationProperties.Name="Notificações"><Path Data="{StaticResource BellIcon}" Style="{StaticResource OutlineIcon}"/></Button>
-                        <Button Style="{StaticResource IconButton}" Margin="3,0,12,0" ToolTip="Definições" AutomationProperties.Name="Definições da aplicação"><Path Data="{StaticResource SettingsIcon}" Style="{StaticResource OutlineIcon}"/></Button>
+                        <Button Style="{StaticResource IconButton}" Margin="3,0,12,0" ToolTip="Definições" AutomationProperties.Name="Definições da aplicação" Click="OpenDashboardSettings_Click"><Path Data="{StaticResource SettingsIcon}" Style="{StaticResource OutlineIcon}"/></Button>
                         <Button Padding="4,5" AutomationProperties.Name="Conta do utilizador" ToolTip="Conta do utilizador">
                             <StackPanel Orientation="Horizontal">
                                 <Border Width="34" Height="34" CornerRadius="17" Background="#E0EAF9"><TextBlock Text="U" FontSize="16" FontWeight="SemiBold" Foreground="#285C9B" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
@@ -167,7 +172,7 @@
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="1">
+            <Grid x:Name="ClassicDashboardRoot" Grid.Row="1">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="228"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <!-- Navegação lateral. Os módulos ficam por ligar nesta fase. -->
                 <Border BorderBrush="{StaticResource HomeLine}" BorderThickness="0,0,1,0">
@@ -193,7 +198,7 @@
                             </StackPanel>
                         </ScrollViewer>
                         <Border Grid.Row="2" BorderBrush="#D7DFEB" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="12,0">
-                            <Button HorizontalContentAlignment="Left" AutomationProperties.Name="Definições" Padding="0,8">
+                            <Button HorizontalContentAlignment="Left" AutomationProperties.Name="Definições" Padding="0,8" Click="OpenDashboardSettings_Click">
                                 <StackPanel Orientation="Horizontal"><Path Data="{StaticResource SettingsIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,16,0"/><TextBlock Text="Definições" VerticalAlignment="Center"/></StackPanel>
                             </Button>
                         </Border>
@@ -323,6 +328,7 @@
                 </ScrollViewer>
             </Grid>
 
+            <ContentControl x:Name="AlternativeDashboardHost" Grid.Row="1" Visibility="Collapsed"/>
             <Popup x:Name="MoreApplicationsPopup" PlacementTarget="{Binding ElementName=MoreApplicationsButton}" Placement="Right" HorizontalOffset="12"
                    IsOpen="{Binding IsChecked, ElementName=MoreApplicationsButton, Mode=TwoWay}" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None" Opened="MoreApplicationsPopup_Opened">
                 <Border Style="{StaticResource Panel}" Padding="14" Width="390" BorderBrush="#CCD8E9" KeyboardNavigation.TabNavigation="Cycle">
