@@ -273,6 +273,8 @@ public sealed class DashboardView : UserControl
         emblem.Child = Label("V", 61, true, Brushes.White);
         ((TextBlock)emblem.Child).HorizontalAlignment = HorizontalAlignment.Center;
         art.Children.Add(emblem);
+        art.SizeChanged += (_, eventArgs) =>
+            emblem.Visibility = eventArgs.NewSize.Width < 970 ? Visibility.Collapsed : Visibility.Visible;
         banner.Child = art;
         root.Children.Add(banner);
 
