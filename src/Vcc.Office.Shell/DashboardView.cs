@@ -62,7 +62,7 @@ public sealed class DashboardView : UserControl
             Child = child
         };
 
-    private Button ActionButton(string title, string description, string glyph, string color)
+    private Border ActionButton(string title, string description, string glyph, string color)
     {
         var content = new DockPanel { LastChildFill = true };
         var mark = new Border
@@ -80,13 +80,14 @@ public sealed class DashboardView : UserControl
         line.Margin = new Thickness(0, 6, 0, 0);
         words.Children.Add(line);
         content.Children.Add(words);
-        return new Button
+        return new Border
         {
-            Content = content, Padding = new Thickness(15), Margin = new Thickness(0, 0, 12, 10),
+            Child = content, Padding = new Thickness(15), Margin = new Thickness(0, 0, 12, 10),
             Background = new LinearGradientBrush(Paint(color).Color, Paint("#1B2C49").Color, 0),
             BorderBrush = Paint(color), BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(12),
             ToolTip = "Disponível quando o módulo correspondente estiver implementado",
-            IsEnabled = false, MinWidth = 184
+            MinWidth = 184
         };
     }
 
@@ -170,15 +171,12 @@ public sealed class DashboardView : UserControl
             badge.Margin = new Thickness(0, 0, 12, 0);
             line.Children.Add(badge);
             line.Children.Add(Label(app.Name.Replace("VCC ", ""), 13));
-            var button = new Button
+            sidebar.Children.Add(new Border
             {
-                Content = line, HorizontalContentAlignment = HorizontalAlignment.Left,
-                Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                Padding = new Thickness(11, 5, 4, 5), Height = 36,
-                ToolTip = "Aplicação ainda não disponível no Launcher",
-                IsEnabled = false
-            };
-            sidebar.Children.Add(button);
+                Child = line, Background = Brushes.Transparent,
+                Padding = new Thickness(11, 5, 4, 5), MinHeight = 36,
+                ToolTip = "Aplicação ainda não disponível no Launcher"
+            });
         }
 
         dock.Children.Add(new ScrollViewer
@@ -383,13 +381,9 @@ public sealed class DashboardView : UserControl
                 icon.HorizontalAlignment = HorizontalAlignment.Center;
                 body.Children.Add(icon);
                 body.Children.Add(Label(app.Name, 14, true));
-                var item = new Button
-                {
-                    Content = body, Margin = new Thickness(0, 0, 12, 12),
-                    Padding = new Thickness(12, 21, 12, 21),
-                    Background = _surface, BorderBrush = _border, BorderThickness = new Thickness(1),
-                    IsEnabled = false, ToolTip = "Módulo não disponível nesta versão"
-                };
+                var item = Panel(body, padding: new Thickness(12, 21, 12, 21));
+                item.Margin = new Thickness(0, 0, 12, 12);
+                item.ToolTip = "Módulo não disponível nesta versão";
                 System.Windows.Automation.AutomationProperties.SetName(item, app.Name);
                 grid.Children.Add(item);
             }
