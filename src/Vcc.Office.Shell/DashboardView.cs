@@ -9,7 +9,6 @@ namespace Vcc.Office.Shell;
 /// <summary>Vistas WPF independentes do dashboard clássico, sem dados fictícios.</summary>
 public sealed class DashboardView : UserControl
 {
-    private readonly string _dashboardId;
     private readonly HomeScreenModel _model;
     private readonly bool _dark;
     private readonly Brush _foreground;
@@ -18,7 +17,6 @@ public sealed class DashboardView : UserControl
 
     public DashboardView(string dashboardId, HomeScreenModel model, bool dark)
     {
-        _dashboardId = dashboardId;
         _model = model;
         _dark = dark;
         _foreground = Brush(dark ? "#EEF4FF" : "#19263B");
