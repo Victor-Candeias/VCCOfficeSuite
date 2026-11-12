@@ -25,7 +25,7 @@ public sealed record DashboardPreferences(
 public interface IDashboardRegistry
 {
     IReadOnlyList<DashboardDefinition> GetAll();
-    bool Contains(string id);
+    bool Contains(string? id);
 }
 
 public sealed class DashboardRegistry : IDashboardRegistry
