@@ -23,10 +23,10 @@ A interface WPF usa WindowStyle=None e WindowChrome CaptionHeight=0; apenas o lo
 |---|---|---|
 | Modify | `src/Vcc.Office.Shell/MainWindow.xaml` | CaptionHeight=64, resize border=8 e marcar controlos interativos como hit-test do chrome. |
 | Modify | `src/Vcc.Office.Shell/MainWindow.xaml.cs` | Remover arrasto exclusivo do logo, selecionar monitor para repor coordenadas e atualizar glifo maximizar/restaurar. |
-| Modify | `src/Vcc.Office.Shell/Vcc.Office.Shell.csproj` | Ativar Windows Forms apenas para Screen.AllScreens. |
+| Modify | `src/Vcc.Office.Shell/MainWindow.xaml.cs` | Identificar a área de trabalho do monitor via Win32 sem adicionar referências WinForms. |
 
 - [x] A janela usa hit testing do WindowChrome em toda a legenda livre.
-- [x] Restauro verifica monitores secundários.
+- [x] Restauro verifica o monitor mais próximo via Win32 MonitorFromRect/GetMonitorInfo.
 - [ ] Validar arrasto maximizado/restauro, Snap e resize em Windows.
 - [ ] Validar monitores com escalas DPI diferentes.
 
@@ -59,6 +59,5 @@ A interface WPF usa WindowStyle=None e WindowChrome CaptionHeight=0; apenas o lo
 |---|---|---|
 | `src/Vcc.Office.Shell/MainWindow.xaml` | Modify | Janela e controlos |
 | `src/Vcc.Office.Shell/MainWindow.xaml.cs` | Modify | Comportamento e monitores |
-| `src/Vcc.Office.Shell/Vcc.Office.Shell.csproj` | Modify | Enumeração de monitores |
 | `.maestru/tracks/vcc-office/vcc-0814.md` | Create | Work item |
 | `.maestru/specs/vcc-office/vcc-0814-window-chrome-spec.md` | Create | Work Spec |
