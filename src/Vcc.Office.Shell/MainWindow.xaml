@@ -237,7 +237,7 @@
             <Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 
             <!-- Cabeçalho: identidade, pesquisa e controlos da aplicação. -->
-            <Border Background="#FDFEFF" BorderBrush="{StaticResource HomeLine}" BorderThickness="0,0,0,1">
+            <Border x:Name="TopHeader" Background="#FDFEFF" BorderBrush="{StaticResource HomeLine}" BorderThickness="0,0,0,1">
                 <Grid Margin="20,0,4,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent" Margin="0,0,26,0">
@@ -247,20 +247,20 @@
                                 <Path Data="M27,4 C31,-3 43,1 39,9 L25,32 C21,39 12,34 16,27 Z" Fill="#00ADBD"/>
                             </Canvas>
                         </Viewbox>
-                        <TextBlock Text="VCC Office" FontSize="23" FontWeight="Bold" VerticalAlignment="Center" Foreground="#0B1220"/>
+                        <TextBlock x:Name="BrandNameText" Text="VCC Office" FontSize="23" FontWeight="Bold" VerticalAlignment="Center" Foreground="#0B1220"/>
                         <StackPanel x:Name="BrandSubtitle" Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Width="1" Height="24" Background="#CDD6E5" Margin="24,0"/>
                             <TextBlock Text="Suite de Produtividade" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
-                    <Border shell:WindowChrome.IsHitTestVisibleInChrome="True" Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,210,0">
+                    <Border x:Name="HeaderSearchSurface" Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,190,0">
                         <Grid Margin="17,0,10,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                             <Path Data="{StaticResource SearchIcon}" Style="{StaticResource OutlineIcon}" Width="18" Height="18"/>
                             <Grid Grid.Column="1" Margin="10,0,6,0">
                                 <TextBox x:Name="GlobalSearchBox" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" FontSize="13"
                                          AutomationProperties.Name="Pesquisar ficheiros, modelos, aplicações e funcionalidades" ToolTip="Pesquisar (Ctrl+K)"/>
-                                <TextBlock Text="Pesquisar ficheiros, modelos, aplicações e funcionalidades..." FontSize="13" Foreground="#667188" VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis">
+                                <TextBlock x:Name="SearchPlaceholder" Text="Pesquisar ficheiros, modelos, aplicações e funcionalidades..." FontSize="13" Foreground="#667188" VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis">
                                     <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=GlobalSearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                 </TextBlock>
                             </Grid>

@@ -210,11 +210,12 @@ public partial class MainWindow : Window
         try
         {
             // Criar a vista antes de modificar o estado apresentado.
-            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme());
+            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme(), NavigateDashboard, () => OpenDashboardSettings());
             AlternativeDashboardHost.Content = alternative;
             ClassicDashboardRoot.Visibility = alternative is null ? Visibility.Visible : Visibility.Collapsed;
             AlternativeDashboardHost.Visibility = alternative is null ? Visibility.Collapsed : Visibility.Visible;
             DashboardSelector.SelectedValue = id;
+            ApplyDashboardChrome(id);
 
             if (remember)
             {
@@ -265,7 +266,38 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenDashboardSettings_Click(object sender, RoutedEventArgs e)
+
+    private static SolidColorBrush DashboardBrush(string value) =>
+        new((Color)ColorConverter.ConvertFromString(value));
+
+    private void ApplyDashboardChrome(string dashboardId)
+    {
+        var dark = dashboardId != DashboardIds.Classic && IsDarkTheme();
+        TopHeader.Background = DashboardBrush(dark ? "#0D1728" : "#FDFEFF");
+        TopHeader.BorderBrush = DashboardBrush(dark ? "#283852" : "#DCE3ED");
+        BrandNameText.Foreground = DashboardBrush(dark ? "#F3F6FF" : "#0B1220");
+        HeaderSearchSurface.Background = DashboardBrush(dark ? "#111E32" : "#FFFFFF");
+        HeaderSearchSurface.BorderBrush = DashboardBrush(dark ? "#384761" : "#CCD6E6");
+        GlobalSearchBox.Foreground = DashboardBrush(dark ? "#EAF2FF" : "#172238");
+        SearchPlaceholder.Foreground = DashboardBrush(dark ? "#99AACA" : "#667188");
+        DashboardSelector.Background = DashboardBrush(dark ? "#1B2B44" : "#FFFFFF");
+        DashboardSelector.Foreground = DashboardBrush(dark ? "#F3F7FF" : "#172238");
+        HomeRoot.BorderBrush = DashboardBrush(dark ? "#273953" : "#DCE3ED");
+        UserLabel.Foreground = DashboardBrush(dark ? "#E7F0FF" : "#172238");
+        MaximizeButton.Foreground = DashboardBrush(dark ? "#F1F6FF" : "#24334A");
+        foreach (var icon in FindVisualChildren<System.Windows.Shapes.Path>(TopHeader))
+            if (icon.Stroke is not null)
+                icon.Stroke = DashboardBrush(dark ? "#E9F3FF" : "#213652");
+        foreach (var subtitle in FindVisualChildren<System.Windows.Controls.TextBlock>(BrandSubtitle))
+            subtitle.Foreground = DashboardBrush(dark ? "#C4D3EC" : "#172238");
+    }
+
+    private void NavigateDashboard(string id)
+    {
+        if (_dashboardRegistry.Contains(id)) ActivateDashboard(id, remember: true);
+    }
+
+    private void OpenDashboardSettings()
     {
         var dialog = new DashboardSettingsWindow(_dashboardPreferences, _dashboardRegistry) { Owner = this };
         if (dialog.ShowDialog() != true || dialog.Result is null) return;
@@ -274,6 +306,8 @@ public partial class MainWindow : Window
         if (DashboardSelector.SelectedValue is string selected)
             ActivateDashboard(selected, remember: false);
     }
+
+    private void OpenDashboardSettings_Click(object sender, RoutedEventArgs e) => OpenDashboardSettings();
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
