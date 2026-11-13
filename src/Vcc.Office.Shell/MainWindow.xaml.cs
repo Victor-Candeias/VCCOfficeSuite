@@ -37,14 +37,14 @@ public partial class MainWindow : Window
         SystemEvents.UserPreferenceChanged += OnWindowsPreferencesChanged;
         Closing += SaveWindow;
         HomeRoot.SizeChanged += AdaptLayout;
-        StateChanged += (_, _) => MaximizeButton.Content = WindowState == WindowState.Maximized ? "❐" : "□";
+        StateChanged += (_, _) => UpdateCaptionState();
     }
 
     private async void RestoreWindow(object sender, RoutedEventArgs e)
     {
         await _shell.InitialiseAsync();
-        var area = SystemParameters.WorkArea;
         var saved = _shell.State.Window;
+        var area = GetWorkAreaForLayout(saved);
         if (saved == WindowLayout.Default)
         {
             Width = Math.Min(1600, area.Width);
@@ -100,6 +100,46 @@ public partial class MainWindow : Window
         }
     }
 
+
+    private Rect GetWorkAreaForLayout(WindowLayout saved)
+    {
+        // Coordenadas WPF são DIPs; a API Screen trabalha em píxeis físicos.
+        // Usar todos os monitores evita deslocar para o principal uma janela guardada no secundário.
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var monitors = System.Windows.Forms.Screen.AllScreens
+            .Select(screen => new Rect(
+                screen.WorkingArea.Left / dpi.DpiScaleX,
+                screen.WorkingArea.Top / dpi.DpiScaleY,
+                screen.WorkingArea.Width / dpi.DpiScaleX,
+                screen.WorkingArea.Height / dpi.DpiScaleY))
+            .ToArray();
+        if (monitors.Length == 0) return SystemParameters.WorkArea;
+        if (saved == WindowLayout.Default)
+            return SystemParameters.WorkArea;
+
+        var savedBounds = new Rect(saved.Left, saved.Top, saved.Width, saved.Height);
+        var best = monitors
+            .Select(screen => (screen, visible: Rect.Intersect(screen, savedBounds)))
+            .OrderByDescending(item => item.visible.IsEmpty ? 0 : item.visible.Width * item.visible.Height)
+            .First();
+        return best.visible.IsEmpty
+            ? SystemParameters.WorkArea
+            : best.screen;
+    }
+
+    private void UpdateCaptionState()
+    {
+        var maximized = WindowState == WindowState.Maximized;
+        MaximizeIcon.Data = (Geometry)FindResource(maximized ? "RestoreGlyph" : "MaximizeGlyph");
+        MaximizeButton.ToolTip = maximized ? "Restaurar" : "Maximizar";
+    }
+
+    private void Notifications_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(this, "Ainda não existem notificações.", "Notificações",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void AdaptLayout(object sender, SizeChangedEventArgs? e)
     {
         if (CreationItems is null) return;
@@ -123,12 +163,6 @@ public partial class MainWindow : Window
             if (child is T match) yield return match;
             foreach (var descendant in FindVisualChildren<T>(child)) yield return descendant;
         }
-    }
-
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount == 2) ToggleMaximize();
-        else if (e.LeftButton == MouseButtonState.Pressed) DragMove();
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
