@@ -8,7 +8,7 @@
         UseLayoutRounding="True" SnapsToDevicePixels="True" Language="pt-PT"
         PreviewKeyDown="Window_PreviewKeyDown" AutomationProperties.Name="VCC Office — Início">
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0"/>
+        <shell:WindowChrome CaptionHeight="64" ResizeBorderThickness="8" CornerRadius="0" GlassFrameThickness="0"/>
     </shell:WindowChrome.WindowChrome>
     <Window.Resources>
         <SolidColorBrush x:Key="HomeAccent" Color="#145ED9"/>
@@ -64,6 +64,125 @@
         <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource FlatControl}">
             <Setter Property="Width" Value="40"/><Setter Property="Height" Value="40"/><Setter Property="Padding" Value="10"/>
         </Style>
+
+        <!-- Controlos da legenda ao estilo Windows: sem rebordo arredondado e com hover discreto. -->
+        <Style x:Key="CaptionButton" TargetType="Button">
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#23344E"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CaptionSurface" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CaptionSurface" Property="Background" Value="#E8EDF5"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CaptionSurface" Property="Background" Value="#CED9E8"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="CaptionSurface" Property="BorderBrush" Value="#286DE0"/>
+                                <Setter TargetName="CaptionSurface" Property="BorderThickness" Value="1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CloseCaptionButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CaptionSurface" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CaptionSurface" Property="Background" Value="#E81123"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="CaptionSurface" Property="Background" Value="#B50E1C"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- O seletor de dashboard utiliza a mesma forma/paleta do campo de pesquisa. -->
+        <Style x:Key="DashboardSelectorStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#263851"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#CBD8EA"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="14,0,10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border x:Name="SelectorSurface" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="22"/>
+                            <Grid Margin="{TemplateBinding Padding}" IsHitTestVisible="False">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/></Grid.ColumnDefinitions>
+                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                  VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <Path Grid.Column="1" Data="{StaticResource DownIcon}" Stretch="Uniform"
+                                      Width="11" Height="7" Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="2" VerticalAlignment="Center"/>
+                            </Grid>
+                            <ToggleButton x:Name="DropdownToggle" Focusable="False"
+                                          Background="Transparent" BorderThickness="0"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent"/>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <Popup x:Name="PART_Popup" Placement="Bottom" PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" StaysOpen="False">
+                                <Border Background="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}"
+                                        BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource TemplatedParent}}"
+                                        BorderThickness="1" CornerRadius="10" Padding="6"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SelectorSurface" Property="BorderBrush" Value="#4C89D9"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="SelectorSurface" Property="BorderBrush" Value="#286DE0"/>
+                                <Setter TargetName="SelectorSurface" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="HeaderActionButton" TargetType="Button" BasedOn="{StaticResource FlatControl}">
+            <Setter Property="Width" Value="42"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="3,0"/>
+            <Setter Property="BorderBrush" Value="#E0E8F3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#F7FAFF"/>
+        </Style>
+        <Geometry x:Key="MaximizeGlyph">M2,2 L14,2 L14,14 L2,14 Z</Geometry>
+        <Geometry x:Key="RestoreGlyph">M4,1 L14,1 L14,11 M4,4 L1,4 L1,15 L12,15 L12,4 Z</Geometry>
         <Style x:Key="NavigationButton" TargetType="Button" BasedOn="{StaticResource FlatControl}">
             <Setter Property="Height" Value="39"/><Setter Property="Padding" Value="12,4"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="Margin" Value="0,1"/>
@@ -121,7 +240,7 @@
             <Border Background="#FDFEFF" BorderBrush="{StaticResource HomeLine}" BorderThickness="0,0,0,1">
                 <Grid Margin="20,0,4,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Margin="0,0,26,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent" Margin="0,0,26,0">
                         <Viewbox Width="38" Height="36" Margin="0,0,10,0">
                             <Canvas Width="40" Height="36">
                                 <Path Data="M3,3 C-1,3 -1,8 1,12 L13,33 C15,37 23,37 25,32 L39,9 C43,1 31,-3 27,4 L19,18 L11,4 C9,1 5,1 3,3 Z" Fill="#0660D5"/>
@@ -134,7 +253,7 @@
                             <TextBlock Text="Suite de Produtividade" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
-                    <Border Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,190,0">
+                    <Border shell:WindowChrome.IsHitTestVisibleInChrome="True" Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,210,0">
                         <Grid Margin="17,0,10,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                             <Path Data="{StaticResource SearchIcon}" Style="{StaticResource OutlineIcon}" Width="18" Height="18"/>
@@ -150,14 +269,26 @@
                             </Border>
                         </Grid>
                     </Border>
-                    <ComboBox x:Name="DashboardSelector" Grid.Column="1" Width="158" Height="36"
-                              HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0"
+                    <ComboBox x:Name="DashboardSelector" Grid.Column="1" Width="180" Height="42" Style="{StaticResource DashboardSelectorStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                              HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
                               DisplayMemberPath="Name" SelectedValuePath="Id"
                               SelectionChanged="DashboardSelector_SelectionChanged"
                               ToolTip="Selecionar dashboard" AutomationProperties.Name="Selecionar dashboard"/>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Style="{StaticResource IconButton}" ToolTip="Notificações" AutomationProperties.Name="Notificações"><Path Data="{StaticResource BellIcon}" Style="{StaticResource OutlineIcon}"/></Button>
-                        <Button Style="{StaticResource IconButton}" Margin="3,0,12,0" ToolTip="Definições" AutomationProperties.Name="Definições da aplicação" Click="OpenDashboardSettings_Click"><Path Data="{StaticResource SettingsIcon}" Style="{StaticResource OutlineIcon}"/></Button>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="NotificationsButton" Style="{StaticResource HeaderActionButton}" ToolTip="Notificações"
+                                AutomationProperties.Name="Notificações" Click="Notifications_Click">
+                            <Grid Width="20" Height="20">
+                                <Path Data="{StaticResource BellIcon}" Stroke="#264567" StrokeThickness="1.7"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform"/>
+                            </Grid>
+                        </Button>
+                        <Button x:Name="SettingsButton" Style="{StaticResource HeaderActionButton}" Margin="3,0,12,0"
+                                ToolTip="Definições do VCC Office" AutomationProperties.Name="Definições da aplicação"
+                                Click="OpenDashboardSettings_Click">
+                            <Path Data="{StaticResource SettingsIcon}" Stroke="#264567" StrokeThickness="1.7"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Width="21" Height="21" Stretch="Uniform"/>
+                        </Button>
                         <Button Padding="4,5" AutomationProperties.Name="Conta do utilizador" ToolTip="Conta do utilizador">
                             <StackPanel Orientation="Horizontal">
                                 <Border Width="34" Height="34" CornerRadius="17" Background="#E0EAF9"><TextBlock Text="U" FontSize="16" FontWeight="SemiBold" Foreground="#285C9B" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
@@ -165,9 +296,23 @@
                                 <Path Data="{StaticResource DownIcon}" Style="{StaticResource OutlineIcon}" Width="10" Height="10" Margin="6,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Width="43" Height="48" Padding="12" Margin="10,0,0,0" Click="Minimize_Click" ToolTip="Minimizar" AutomationProperties.Name="Minimizar janela"><Path Data="M2,8 L16,8" Stroke="#24334A" StrokeThickness="1.6" Width="14" Height="12"/></Button>
-                        <Button x:Name="MaximizeButton" Width="43" Height="48" Padding="0" FontSize="23" Content="□" Click="Maximize_Click" ToolTip="Maximizar ou restaurar" AutomationProperties.Name="Maximizar ou restaurar janela"/>
-                        <Button Width="43" Height="48" Padding="14" Click="Close_Click" ToolTip="Fechar" AutomationProperties.Name="Fechar janela"><Path Data="M1,1 L14,14 M14,1 L1,14" Stroke="#24334A" StrokeThickness="1.6" Width="14" Height="14"/></Button>
+                        <Border Width="1" Height="24" Background="#D8E1EE" Margin="8,0,4,0"/>
+                        <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimizar" AutomationProperties.Name="Minimizar janela">
+                            <Path Data="M1,8 L15,8" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.5" Width="16" Height="16" Stretch="Uniform"/>
+                        </Button>
+                        <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Click="Maximize_Click"
+                                ToolTip="Maximizar" AutomationProperties.Name="Maximizar ou restaurar janela">
+                            <Path x:Name="MaximizeIcon" Data="{StaticResource MaximizeGlyph}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.4" StrokeLineJoin="Miter" Width="15" Height="15" Stretch="Uniform"/>
+                        </Button>
+                        <Button Style="{StaticResource CloseCaptionButton}" Click="Close_Click" ToolTip="Fechar"
+                                AutomationProperties.Name="Fechar janela">
+                            <Path Data="M2,2 L14,14 M14,2 L2,14"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.5" Width="16" Height="16" Stretch="Uniform"/>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>

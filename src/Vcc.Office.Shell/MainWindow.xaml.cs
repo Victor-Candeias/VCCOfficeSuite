@@ -37,14 +37,14 @@ public partial class MainWindow : Window
         SystemEvents.UserPreferenceChanged += OnWindowsPreferencesChanged;
         Closing += SaveWindow;
         HomeRoot.SizeChanged += AdaptLayout;
-        StateChanged += (_, _) => MaximizeButton.Content = WindowState == WindowState.Maximized ? "❐" : "□";
+        StateChanged += (_, _) => UpdateCaptionState();
     }
 
     private async void RestoreWindow(object sender, RoutedEventArgs e)
     {
         await _shell.InitialiseAsync();
-        var area = SystemParameters.WorkArea;
         var saved = _shell.State.Window;
+        var area = GetWorkAreaForLayout(saved);
         if (saved == WindowLayout.Default)
         {
             Width = Math.Min(1600, area.Width);
@@ -100,6 +100,66 @@ public partial class MainWindow : Window
         }
     }
 
+
+    // API Win32 para escolher corretamente a área de trabalho do monitor secundário.
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public int Flags;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern nint MonitorFromRect(ref NativeRect rect, uint flags);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(nint monitor, ref MonitorInfo info);
+
+    private Rect GetWorkAreaForLayout(WindowLayout saved)
+    {
+        if (saved == WindowLayout.Default) return SystemParameters.WorkArea;
+        // WindowLayout está em DIPs; MonitorFromRect espera coordenadas físicas.
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var requested = new NativeRect
+        {
+            Left = (int)Math.Round(saved.Left * dpi.DpiScaleX),
+            Top = (int)Math.Round(saved.Top * dpi.DpiScaleY),
+            Right = (int)Math.Round((saved.Left + saved.Width) * dpi.DpiScaleX),
+            Bottom = (int)Math.Round((saved.Top + saved.Height) * dpi.DpiScaleY)
+        };
+        const uint nearestMonitor = 2;
+        var monitor = MonitorFromRect(ref requested, nearestMonitor);
+        if (monitor == nint.Zero) return SystemParameters.WorkArea;
+        var info = new MonitorInfo { Size = System.Runtime.InteropServices.Marshal.SizeOf<MonitorInfo>() };
+        if (!GetMonitorInfo(monitor, ref info)) return SystemParameters.WorkArea;
+        return new Rect(
+            info.Work.Left / dpi.DpiScaleX, info.Work.Top / dpi.DpiScaleY,
+            (info.Work.Right - info.Work.Left) / dpi.DpiScaleX,
+            (info.Work.Bottom - info.Work.Top) / dpi.DpiScaleY);
+    }
+
+    private void UpdateCaptionState()
+    {
+        var maximized = WindowState == WindowState.Maximized;
+        MaximizeIcon.Data = (Geometry)FindResource(maximized ? "RestoreGlyph" : "MaximizeGlyph");
+        MaximizeButton.ToolTip = maximized ? "Restaurar" : "Maximizar";
+    }
+
+    private void Notifications_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(this, "Ainda não existem notificações.", "Notificações",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void AdaptLayout(object sender, SizeChangedEventArgs? e)
     {
         if (CreationItems is null) return;
@@ -123,12 +183,6 @@ public partial class MainWindow : Window
             if (child is T match) yield return match;
             foreach (var descendant in FindVisualChildren<T>(child)) yield return descendant;
         }
-    }
-
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount == 2) ToggleMaximize();
-        else if (e.LeftButton == MouseButtonState.Pressed) DragMove();
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
