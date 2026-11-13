@@ -101,30 +101,50 @@ public partial class MainWindow : Window
     }
 
 
+    // API Win32 para escolher corretamente a área de trabalho do monitor secundário.
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public int Flags;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern nint MonitorFromRect(ref NativeRect rect, uint flags);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(nint monitor, ref MonitorInfo info);
+
     private Rect GetWorkAreaForLayout(WindowLayout saved)
     {
-        // Coordenadas WPF são DIPs; a API Screen trabalha em píxeis físicos.
-        // Usar todos os monitores evita deslocar para o principal uma janela guardada no secundário.
+        if (saved == WindowLayout.Default) return SystemParameters.WorkArea;
+        // WindowLayout está em DIPs; MonitorFromRect espera coordenadas físicas.
         var dpi = VisualTreeHelper.GetDpi(this);
-        var monitors = System.Windows.Forms.Screen.AllScreens
-            .Select(screen => new Rect(
-                screen.WorkingArea.Left / dpi.DpiScaleX,
-                screen.WorkingArea.Top / dpi.DpiScaleY,
-                screen.WorkingArea.Width / dpi.DpiScaleX,
-                screen.WorkingArea.Height / dpi.DpiScaleY))
-            .ToArray();
-        if (monitors.Length == 0) return SystemParameters.WorkArea;
-        if (saved == WindowLayout.Default)
-            return SystemParameters.WorkArea;
-
-        var savedBounds = new Rect(saved.Left, saved.Top, saved.Width, saved.Height);
-        var best = monitors
-            .Select(screen => (screen, visible: Rect.Intersect(screen, savedBounds)))
-            .OrderByDescending(item => item.visible.IsEmpty ? 0 : item.visible.Width * item.visible.Height)
-            .First();
-        return best.visible.IsEmpty
-            ? SystemParameters.WorkArea
-            : best.screen;
+        var requested = new NativeRect
+        {
+            Left = (int)Math.Round(saved.Left * dpi.DpiScaleX),
+            Top = (int)Math.Round(saved.Top * dpi.DpiScaleY),
+            Right = (int)Math.Round((saved.Left + saved.Width) * dpi.DpiScaleX),
+            Bottom = (int)Math.Round((saved.Top + saved.Height) * dpi.DpiScaleY)
+        };
+        const uint nearestMonitor = 2;
+        var monitor = MonitorFromRect(ref requested, nearestMonitor);
+        if (monitor == nint.Zero) return SystemParameters.WorkArea;
+        var info = new MonitorInfo { Size = System.Runtime.InteropServices.Marshal.SizeOf<MonitorInfo>() };
+        if (!GetMonitorInfo(monitor, ref info)) return SystemParameters.WorkArea;
+        return new Rect(
+            info.Work.Left / dpi.DpiScaleX, info.Work.Top / dpi.DpiScaleY,
+            (info.Work.Right - info.Work.Left) / dpi.DpiScaleX,
+            (info.Work.Bottom - info.Work.Top) / dpi.DpiScaleY);
     }
 
     private void UpdateCaptionState()
