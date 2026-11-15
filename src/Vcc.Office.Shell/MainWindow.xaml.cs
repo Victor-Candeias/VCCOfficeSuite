@@ -288,6 +288,15 @@ public partial class MainWindow : Window
         foreach (var icon in FindVisualChildren<System.Windows.Shapes.Path>(TopHeader))
             if (icon.Stroke is not null)
                 icon.Stroke = DashboardBrush(dark ? "#E9F3FF" : "#213652");
+
+        // Os botões de ações mantêm uma superfície clara, inclusive no modo escuro.
+        // Não aplicar o traço branco do cabeçalho a ícones sobre essa superfície:
+        // a cor escura garante contraste nos estados normal, hover e pressed.
+        var actionIconBrush = DashboardBrush("#264567");
+        foreach (var button in new[] { NotificationsButton, SettingsButton })
+            foreach (var icon in FindVisualChildren<System.Windows.Shapes.Path>(button))
+                if (icon.Stroke is not null)
+                    icon.Stroke = actionIconBrush;
         foreach (var subtitle in FindVisualChildren<System.Windows.Controls.TextBlock>(BrandSubtitle))
             subtitle.Foreground = DashboardBrush(dark ? "#C4D3EC" : "#172238");
     }
