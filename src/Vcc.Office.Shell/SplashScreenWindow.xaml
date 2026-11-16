@@ -1,0 +1,45 @@
+<Window x:Class="Vcc.Office.Shell.SplashScreenWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VCC Office Suite" Width="540" Height="320"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="NoResize"
+        ShowInTaskbar="False" AllowsTransparency="True" Background="Transparent"
+        Icon="Assets/VccOfficeSuite.ico"
+        AutomationProperties.Name="A iniciar VCC Office Suite">
+    <Border CornerRadius="22" Background="#101C35"
+            BorderBrush="#4264A4" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border Width="88" Height="88" CornerRadius="19" Background="#2765D9"
+                        HorizontalAlignment="Center" Margin="0,0,0,22">
+                    <Grid>
+                        <Path Data="M18,22 L37,65 L55,22 M69,22 L69,65"
+                              Stroke="White" StrokeThickness="8"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round" Stretch="Uniform"
+                              Width="55" Height="55" HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <TextBlock Text="VCC OFFICE SUITE" FontFamily="Segoe UI" FontSize="29"
+                           FontWeight="Bold" Foreground="#F6F9FF"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="A sua produtividade num só lugar"
+                           FontFamily="Segoe UI" FontSize="14" Foreground="#B7CAED"
+                           Margin="0,10,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Grid.Row="1" Margin="40,0,40,25">
+                <TextBlock Text="A iniciar a aplicação..." Foreground="#D7E5FF"
+                           FontFamily="Segoe UI" FontSize="12" Margin="0,0,0,9"/>
+                <ProgressBar Height="4" IsIndeterminate="True"
+                             Foreground="#5E9BFF" Background="#263A60"
+                             BorderThickness="0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
