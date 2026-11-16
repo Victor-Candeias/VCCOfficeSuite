@@ -12,7 +12,11 @@ public partial class MainWindow : Window
 {
     private readonly CoreShellService _shell;
     private readonly HomeScreenModel _homeModel;
-    private readonly OfficeApplicationManager _applicationManager = new(new OfficeApplicationRegistry());
+    private readonly OfficeApplicationRegistry _moduleRegistry = new();
+    private readonly OfficeApplicationManager _applicationManager;
+    private readonly OfficeSessionStore _sessionStore;
+    private OfficeSession _session = OfficeSession.Empty;
+    private bool _closingSuite;
     private readonly Dictionary<string, Window> _moduleWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly IDashboardRegistry _dashboardRegistry = new DashboardRegistry();
     private readonly DashboardSqliteRepository _dashboardSettings;
@@ -27,6 +31,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _homeModel = new HomeScreenModel();
+        _applicationManager = new OfficeApplicationManager(_moduleRegistry);
+        _sessionStore = new OfficeSessionStore(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "VCC Office", "application-session.json"));
         DataContext = _homeModel;
         _dashboardSettings = new DashboardSqliteRepository(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -75,6 +83,9 @@ public partial class MainWindow : Window
         ActivateDashboard(initial, remember: false);
         _dashboardReady = true;
         AdaptLayout(this, null);
+        _session = _sessionStore.Load(_moduleRegistry);
+        // A interface principal e as preferências devem estar prontas antes de reabrir módulos.
+        _ = Dispatcher.BeginInvoke(RestoreApplications, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     private async void SaveWindow(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -83,6 +94,7 @@ public partial class MainWindow : Window
         e.Cancel = true;
         if (_savingWindow) return;
         _savingWindow = true;
+        _closingSuite = true;
         var bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, ActualWidth, ActualHeight) : RestoreBounds;
         try
         {
@@ -312,6 +324,28 @@ public partial class MainWindow : Window
             subtitle.Foreground = DashboardBrush(dark ? "#C4D3EC" : "#172238");
     }
 
+    private void PersistSession()
+    {
+        try
+        {
+            _sessionStore.Save(_session, _moduleRegistry);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(this, "Não foi possível guardar a sessão das aplicações: " + ex.Message,
+                "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void RestoreApplications()
+    {
+        foreach (var id in _session.OpenModuleIds.ToArray())
+        {
+            // A política já filtrou os módulos inexistentes ou sem interface.
+            OpenApplication(id);
+        }
+    }
+
     private void OpenApplication(string moduleId)
     {
         if (!_applicationManager.TryResolve(moduleId, out var module) || module is null)
@@ -337,9 +371,25 @@ public partial class MainWindow : Window
             _ => throw new InvalidOperationException("Não existe interface registada para este módulo.")
         };
         window.Owner = this;
-        window.Closed += (_, _) => _moduleWindows.Remove(module.Id);
+        window.Closed += (_, _) =>
+        {
+            _moduleWindows.Remove(module.Id);
+            if (_closingSuite) return; // Preservar janelas abertas ao encerrar a suite.
+            _session = OfficeSessionPolicy.Close(_session, module.Id, _moduleRegistry);
+            PersistSession();
+        };
         _moduleWindows[module.Id] = window;
-        window.Show();
+        try
+        {
+            window.Show();
+            _session = OfficeSessionPolicy.Open(_session, module.Id, _moduleRegistry);
+            PersistSession();
+        }
+        catch
+        {
+            _moduleWindows.Remove(module.Id);
+            throw;
+        }
     }
 
     private void Application_Click(object sender, RoutedEventArgs e)
