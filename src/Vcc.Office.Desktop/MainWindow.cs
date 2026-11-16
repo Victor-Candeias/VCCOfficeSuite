@@ -178,8 +178,8 @@ public sealed class MainWindow : Window
                 EndPoint = new Avalonia.RelativePoint(1, 1, Avalonia.RelativeUnit.Relative),
                 GradientStops =
                 {
-                    new GradientStop(Brush.Parse("#153A85").Color, 0),
-                    new GradientStop(Brush.Parse("#066DD0").Color, 1)
+                    new GradientStop(Color.Parse("#153A85"), 0),
+                    new GradientStop(Color.Parse("#066DD0"), 1)
                 }
             },
             CornerRadius = new CornerRadius(15),
