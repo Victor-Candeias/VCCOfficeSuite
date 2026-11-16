@@ -396,7 +396,7 @@
 
                             <Border BorderBrush="{StaticResource HomeLine}" BorderThickness="0,1,0,0" Margin="7,4,0,0" Padding="0,20,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Ficheiros recentes" Style="{StaticResource SectionTitle}" Margin="0,0,0,12"/>
+                                    <DockPanel Margin="0,0,0,12"><Button DockPanel.Dock="Right" Content="Abrir ficheiro" Click="BrowseFile_Click" Padding="12,7" AutomationProperties.Name="Escolher ficheiro local"/><TextBlock Text="Ficheiros recentes" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/></DockPanel>
                                     <DockPanel Margin="0,0,0,16">
                                         <Border DockPanel.Dock="Right" Style="{StaticResource Panel}" CornerRadius="8" HorizontalAlignment="Right" Margin="8,0,0,0">
                                             <StackPanel Orientation="Horizontal">
@@ -420,13 +420,14 @@
                                         <TextBlock Grid.Column="2" Text="Modificado em ↓" FontSize="12" FontWeight="SemiBold"/>
                                         <TextBlock Grid.Column="3" Text="Tamanho" FontSize="12" FontWeight="SemiBold"/>
                                     </Grid>
-                                    <Border BorderBrush="{StaticResource HomeLine}" BorderThickness="0,1,0,1" Margin="0,12,0,0" Padding="15,28,15,30">
+                                    <Border x:Name="RecentEmptyState" BorderBrush="{StaticResource HomeLine}" BorderThickness="0,1,0,1" Margin="0,12,0,0" Padding="15,28,15,30">
                                         <StackPanel HorizontalAlignment="Center">
                                             <Border Width="52" Height="48" CornerRadius="13" Background="#EEF4FE" Margin="0,0,0,12"><Path Data="{StaticResource FolderIcon}" Style="{StaticResource OutlineIcon}" Stroke="#7B9CCD" Width="27" Height="27"/></Border>
                                             <TextBlock Text="Ainda não há ficheiros recentes" FontWeight="SemiBold" FontSize="14" TextAlignment="Center"/>
                                             <TextBlock Text="Os ficheiros que abrir aparecerão aqui." FontSize="12" Foreground="{StaticResource HomeMuted}" TextAlignment="Center" Margin="0,5,0,0"/>
                                         </StackPanel>
                                     </Border>
+                                    <StackPanel x:Name="RecentDocumentsPanel" Margin="0,10,0,0"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -439,13 +440,13 @@
                                         <StackPanel Orientation="Horizontal"><Path Data="{StaticResource LayersIcon}" Style="{StaticResource OutlineIcon}" Stroke="#1757C2" Width="22" Height="22" Margin="0,0,10,0"/><TextBlock Text="O meu espaço de trabalho" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/></StackPanel>
                                     </Border>
                                     <StackPanel Margin="8,0,8,5">
-                                        <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Os meus ficheiros"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource FolderIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Os meus ficheiros" VerticalAlignment="Center"/></DockPanel></Button>
+                                        <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Os meus ficheiros" Click="BrowseFile_Click"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource FolderIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Os meus ficheiros" VerticalAlignment="Center"/></DockPanel></Button>
                                         <Border Height="1" Background="#EDF0F5" Margin="10,0"/>
                                         <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Projetos"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource PeopleIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Projetos" VerticalAlignment="Center"/></DockPanel></Button>
                                         <Border Height="1" Background="#EDF0F5" Margin="10,0"/>
                                         <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Modelos do espaço de trabalho"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource GridIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Modelos" VerticalAlignment="Center"/></DockPanel></Button>
                                         <Border Height="1" Background="#EDF0F5" Margin="10,0"/>
-                                        <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Favoritos"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource StarIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Favoritos" VerticalAlignment="Center"/></DockPanel></Button>
+                                        <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Favoritos" Click="ShowFavorites_Click"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource StarIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Favoritos" VerticalAlignment="Center"/></DockPanel></Button>
                                         <Border Height="1" Background="#EDF0F5" Margin="10,0"/>
                                         <Button Height="51" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Partilhados comigo"><DockPanel><Path DockPanel.Dock="Right" Data="{StaticResource ChevronIcon}" Style="{StaticResource OutlineIcon}" Width="7" Height="12"/><Path DockPanel.Dock="Left" Data="{StaticResource ClockIcon}" Style="{StaticResource OutlineIcon}" Margin="0,0,14,0"/><TextBlock Text="Partilhados comigo" VerticalAlignment="Center"/></DockPanel></Button>
                                     </StackPanel>
