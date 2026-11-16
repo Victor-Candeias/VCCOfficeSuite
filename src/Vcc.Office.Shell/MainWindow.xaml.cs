@@ -284,10 +284,19 @@ public partial class MainWindow : Window
         DashboardSelector.Foreground = DashboardBrush(dark ? "#F3F7FF" : "#172238");
         HomeRoot.BorderBrush = DashboardBrush(dark ? "#273953" : "#DCE3ED");
         UserLabel.Foreground = DashboardBrush(dark ? "#E7F0FF" : "#172238");
-        MaximizeButton.Foreground = DashboardBrush(dark ? "#F1F6FF" : "#24334A");
+        var captionForeground = DashboardBrush(dark ? "#F1F6FF" : "#24334A");
+        MinimizeButton.Foreground = captionForeground;
+        MaximizeButton.Foreground = captionForeground;
+        CloseButton.Foreground = captionForeground;
         foreach (var icon in FindVisualChildren<System.Windows.Shapes.Path>(TopHeader))
-            if (icon.Stroke is not null)
+        {
+            // Preservar bindings dos glifos da legenda (incluindo hover do botão Fechar).
+            // Atribuir Stroke diretamente removeria o binding ao Foreground do Button.
+            if (icon.Stroke is not null &&
+                System.Windows.Data.BindingOperations.GetBindingBase(
+                    icon, System.Windows.Shapes.Shape.StrokeProperty) is null)
                 icon.Stroke = DashboardBrush(dark ? "#E9F3FF" : "#213652");
+        }
 
         // Os botões de ações mantêm uma superfície clara, inclusive no modo escuro.
         // Não aplicar o traço branco do cabeçalho a ícones sobre essa superfície:
