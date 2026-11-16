@@ -17,9 +17,9 @@ public sealed class DataWindow : Window
     private readonly VccDataService _data;
     private readonly StackPanel _content = new() { Spacing = 14, Margin = new Thickness(22) };
     private readonly TextBlock _status = new() { Text = "Pronto · dados locais", TextWrapping = TextWrapping.Wrap };
-    private readonly ComboBox _tables = new() { MinWidth = 210 };
-    private readonly ComboBox _forms = new() { MinWidth = 210 };
-    private readonly ComboBox _reports = new() { MinWidth = 210 };
+    private ComboBox _tables = new() { MinWidth = 210 };
+    private ComboBox _forms = new() { MinWidth = 210 };
+    private ComboBox _reports = new() { MinWidth = 210 };
     private readonly TextBox _query = new()
     {
         Text = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
@@ -27,8 +27,8 @@ public sealed class DataWindow : Window
         Height = 100,
         TextWrapping = TextWrapping.Wrap
     };
-    private readonly StackPanel _result = new() { Spacing = 5 };
-    private readonly StackPanel _formFields = new() { Spacing = 8 };
+    private StackPanel _result = new() { Spacing = 5 };
+    private StackPanel _formFields = new() { Spacing = 8 };
     private readonly Dictionary<string, TextBox> _formInputs = new(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<DataTableDefinition> _tableDefinitions = [];
     private IReadOnlyList<DataFormDefinition> _formDefinitions = [];
@@ -74,7 +74,6 @@ public sealed class DataWindow : Window
         root.Children.Add(new ScrollViewer { Content = _content });
         Content = root;
 
-        _forms.SelectionChanged += (_, _) => RenderFormFields();
         Opened += async (_, _) =>
         {
             await ReloadAsync();
@@ -124,6 +123,8 @@ public sealed class DataWindow : Window
     private void ShowTables()
     {
         _content.Children.Clear();
+        _result = new StackPanel { Spacing = 5 };
+        _tables = new ComboBox { MinWidth = 210, ItemsSource = _tableDefinitions.Select(t => t.Name).ToArray() };
         _content.Children.Add(TitleText("Tabelas locais"));
         _content.Children.Add(new TextBlock { Text = "Crie tabelas SQLite e consulte os respetivos registos." });
         var picker = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -140,11 +141,11 @@ public sealed class DataWindow : Window
             });
 
         _content.Children.Add(TitleText("Nova tabela"));
-        var name = new TextBox { Watermark = "Nome técnico (ex.: clientes)", MinWidth = 220 };
-        var display = new TextBox { Watermark = "Nome de apresentação", MinWidth = 220 };
+        var name = new TextBox { PlaceholderText = "Nome técnico (ex.: clientes)", MinWidth = 220 };
+        var display = new TextBox { PlaceholderText = "Nome de apresentação", MinWidth = 220 };
         var cols = new TextBox
         {
-            Watermark = "Uma coluna por linha: nome:TIPO:opcionalidade",
+            PlaceholderText = "Uma coluna por linha: nome:TIPO:opcionalidade",
             Text = "nome:TEXT:required" + Environment.NewLine + "idade:INTEGER:nullable",
             AcceptsReturn = true, Height = 100, TextWrapping = TextWrapping.Wrap
         };
@@ -196,6 +197,8 @@ public sealed class DataWindow : Window
     private void ShowQuery()
     {
         _content.Children.Clear();
+        _result = new StackPanel { Spacing = 5 };
+        _tables = new ComboBox { MinWidth = 210, ItemsSource = _tableDefinitions.Select(t => t.Name).ToArray() };
         _content.Children.Add(TitleText("Consultas SQL de leitura"));
         _content.Children.Add(new TextBlock
         {
@@ -294,6 +297,9 @@ public sealed class DataWindow : Window
     private void ShowForms()
     {
         _content.Children.Clear();
+        _forms = new ComboBox { MinWidth = 210, ItemsSource = _formDefinitions.Select(f => f.DisplayName).ToArray() };
+        _forms.SelectionChanged += (_, _) => RenderFormFields();
+        _formFields = new StackPanel { Spacing = 8 };
         _content.Children.Add(TitleText("Formulários VCC Data"));
         _content.Children.Add(new TextBlock { Text = "Selecione um formulário existente e introduza os valores." });
         _content.Children.Add(_forms);
@@ -317,7 +323,7 @@ public sealed class DataWindow : Window
         foreach (var field in _formDefinitions[_forms.SelectedIndex].Fields)
         {
             _formFields.Children.Add(new TextBlock { Text = field.Label + (field.Required ? " *" : "") });
-            var input = new TextBox { Watermark = field.Type, MinWidth = 200 };
+            var input = new TextBox { PlaceholderText = field.Type, MinWidth = 200 };
             _formInputs[field.Name] = input;
             _formFields.Children.Add(input);
         }
@@ -352,6 +358,8 @@ public sealed class DataWindow : Window
     private void ShowReports()
     {
         _content.Children.Clear();
+        _reports = new ComboBox { MinWidth = 210, ItemsSource = _reportDefinitions.Select(r => r.DisplayName).ToArray() };
+        _result = new StackPanel { Spacing = 5 };
         _content.Children.Add(TitleText("Relatórios VCC Data"));
         _content.Children.Add(_reports);
         _content.Children.Add(Action("Executar relatório", () => _ = ExecuteReportAsync()));
