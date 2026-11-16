@@ -93,7 +93,7 @@ foreach (var cardButton in cards.Children.OfType<Button>())
 
 // VCC Writer opens without native display, supports multiline editing and preserves a single editor.
 var writer = new WriterWindow();
-if (writer.Icon is null || !writer.Title.StartsWith("VCC Writer", StringComparison.Ordinal))
+if (writer.Icon is null || writer.Title?.StartsWith("VCC Writer", StringComparison.Ordinal) != true)
     throw new Exception("A janela Writer não foi inicializada corretamente.");
 var editorField = typeof(WriterWindow).GetField("_editor", BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new Exception("Editor Writer não encontrado.");
