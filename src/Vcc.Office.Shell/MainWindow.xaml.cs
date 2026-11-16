@@ -1,4 +1,7 @@
 using System.IO;
+using System.Diagnostics;
+using System.Windows.Controls;
+using Microsoft.Data.Sqlite;
 using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls.Primitives;
@@ -11,6 +14,9 @@ namespace Vcc.Office.Shell;
 public partial class MainWindow : Window
 {
     private readonly CoreShellService _shell;
+    private readonly RecentDocumentsService _recentDocuments = new(new CoreDatabase(StoragePaths.ForLocalApplication()));
+    private bool _favoritesOnly;
+    private string? _recentModuleFilter;
     private readonly HomeScreenModel _homeModel;
     private readonly OfficeApplicationRegistry _moduleRegistry = new();
     private readonly OfficeApplicationManager _applicationManager;
@@ -83,6 +89,7 @@ public partial class MainWindow : Window
         ActivateDashboard(initial, remember: false);
         _dashboardReady = true;
         AdaptLayout(this, null);
+        await RefreshRecentAsync();
         _session = _sessionStore.Load(_moduleRegistry);
         // A interface principal e as preferências devem estar prontas antes de reabrir módulos.
         _ = Dispatcher.BeginInvoke(RestoreApplications, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
@@ -224,7 +231,8 @@ public partial class MainWindow : Window
         try
         {
             // Criar a vista antes de modificar o estado apresentado.
-            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme(), NavigateDashboard, () => OpenDashboardSettings(), OpenApplication);
+            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme(), NavigateDashboard, () => OpenDashboardSettings(), OpenApplication,
+                BrowseFiles, OpenRecent, SetFavorite);
             AlternativeDashboardHost.Content = alternative;
             ClassicDashboardRoot.Visibility = alternative is null ? Visibility.Visible : Visibility.Collapsed;
             AlternativeDashboardHost.Visibility = alternative is null ? Visibility.Collapsed : Visibility.Visible;
@@ -322,6 +330,130 @@ public partial class MainWindow : Window
                     icon.Stroke = actionIconBrush;
         foreach (var subtitle in FindVisualChildren<System.Windows.Controls.TextBlock>(BrandSubtitle))
             subtitle.Foreground = DashboardBrush(dark ? "#C4D3EC" : "#172238");
+    }
+
+    private async Task RefreshRecentAsync()
+    {
+        try
+        {
+            var query = GlobalSearchBox?.Text;
+            var entries = await _recentDocuments.QueryAsync(query, _recentModuleFilter, _favoritesOnly);
+            _homeModel.UpdateRecentDocuments(entries);
+            RenderRecentDocuments();
+            if (_dashboardReady && DashboardSelector.SelectedValue is string id &&
+                id != DashboardIds.Classic)
+                ActivateDashboard(id, remember: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            MessageBox.Show(this, "Não foi possível consultar os ficheiros recentes: " + ex.Message,
+                "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void RenderRecentDocuments()
+    {
+        if (RecentDocumentsPanel is null || RecentEmptyState is null) return;
+        RecentDocumentsPanel.Children.Clear();
+        var documents = _homeModel.RecentDocuments;
+        RecentEmptyState.Visibility = documents.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var doc in documents.Take(30))
+        {
+            var row = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
+            var favorite = new Button
+            {
+                Content = doc.IsFavorite ? "★" : "☆",
+                ToolTip = doc.IsFavorite ? "Retirar dos favoritos" : "Adicionar aos favoritos",
+                Padding = new Thickness(10, 5, 10, 5),
+                Width = 42, Foreground = DashboardBrush("#24549C")
+            };
+            favorite.Click += (_, _) => SetFavorite(doc.FullPath, !doc.IsFavorite);
+            DockPanel.SetDock(favorite, Dock.Right);
+            row.Children.Add(favorite);
+            var open = new Button
+            {
+                Content = doc.FileName + (doc.Exists ? "" : " (ficheiro em falta)"),
+                ToolTip = doc.FullPath,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Padding = new Thickness(10, 9, 10, 9)
+            };
+            open.Click += (_, _) => OpenRecent(doc.FullPath);
+            row.Children.Add(open);
+            RecentDocumentsPanel.Children.Add(row);
+        }
+    }
+
+    private void BrowseFile_Click(object sender, RoutedEventArgs e) => BrowseFiles();
+
+    private void BrowseFiles()
+    {
+        var picker = new OpenFileDialog
+        {
+            Title = "Selecionar documento",
+            CheckFileExists = true,
+            Multiselect = false,
+            Filter = "Documentos e imagens|*.docx;*.doc;*.odt;*.rtf;*.txt;*.md;*.xlsx;*.xls;*.ods;*.csv;*.pptx;*.ppt;*.odp;*.pdf;*.png;*.jpg;*.jpeg;*.webp;*.svg;*.eml;*.ics;*.vcf;*.db;*.sqlite|Todos os ficheiros (*.*)|*.*"
+        };
+        if (picker.ShowDialog(this) == true)
+            _ = TrackAndOpenAsync(picker.FileName);
+    }
+
+    private void OpenRecent(string path) => _ = TrackAndOpenAsync(path);
+
+    private async Task TrackAndOpenAsync(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+            {
+                MessageBox.Show(this, "O ficheiro foi movido ou eliminado. Pode removê-lo dos recentes ou localizá-lo novamente.",
+                    "Ficheiro em falta", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            await _recentDocuments.RegisterAsync(path);
+            await RefreshRecentAsync();
+            // Ainda não existem editores DOCX/XLSX/PPTX integrados: abrir com a aplicação do Windows.
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or ArgumentException)
+        {
+            MessageBox.Show(this, "Não foi possível abrir o documento: " + ex.Message,
+                "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void SetFavorite(string path, bool favorite) => _ = SetFavoriteAsync(path, favorite);
+
+    private async Task SetFavoriteAsync(string path, bool favorite)
+    {
+        try
+        {
+            await _recentDocuments.SetFavoriteAsync(path, favorite);
+            await RefreshRecentAsync();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            MessageBox.Show(this, "Não foi possível atualizar o favorito: " + ex.Message,
+                "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void ShowFavorites_Click(object sender, RoutedEventArgs e)
+    {
+        _favoritesOnly = !_favoritesOnly;
+        _ = RefreshRecentAsync();
+    }
+
+    private void RecentFilter_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_homeModel is null || sender is not RadioButton button) return;
+        _recentModuleFilter = button.Tag as string;
+        _ = RefreshRecentAsync();
+    }
+
+    private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_homeModel is not null && _dashboardReady) _ = RefreshRecentAsync();
     }
 
     private void PersistSession()
