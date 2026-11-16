@@ -52,6 +52,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Slides aplica transições e exporta pacotes; Mail compõe, envia e pesquisa", ExercisesSlidesAndMail)
     ,("Data cria tabelas, importa CSV, consulta e exporta", ExercisesData)
     ,("Data guarda formulários e executa relatórios", ExercisesDataFormsAndReports)
+    ,("Avalonia reutiliza Core Data SQLite entre sessões", ExercisesAvaloniaDataCore)
 };
 
 foreach (var test in tests)
@@ -988,4 +989,51 @@ static async Task TestsDesktopLauncherState()
     {
         Directory.Delete(root, true);
     }
+}
+
+static async Task ExercisesAvaloniaDataCore()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var paths = StoragePaths.ForLocalApplication(directory);
+        var first = new VccDataService(new CoreDatabase(paths));
+        await first.CreateTableAsync(new DataTableDefinition(
+            "avalonia_clients", "Clientes Avalonia",
+            [new("code", "INTEGER", false), new("name", "TEXT", false)]));
+        await first.InsertRowAsync("avalonia_clients",
+            new Dictionary<string, object?> { ["code"] = 1, ["name"] = "Teste" });
+        var second = new VccDataService(new CoreDatabase(paths));
+        var tables = await second.ListTablesAsync();
+        if (!tables.Any(t => t.Name == "avalonia_clients" && t.Columns.Count == 2))
+            throw new Exception("As tabelas não persistiram no Core partilhado.");
+
+        var preview = await second.QueryAsync("SELECT code, name FROM avalonia_clients ORDER BY code");
+        if (preview.Rows.Count != 1 ||
+            Convert.ToString(preview.Rows[0]["name"]) != "Teste")
+            throw new Exception("A consulta do Data após reabrir a sessão falhou.");
+
+        await second.CreateFormAsync(new DataFormDefinition(
+            "avalonia_form", "avalonia_clients", "Novo cliente",
+            [new("code", "Código", "INTEGER", true), new("name", "Nome", "TEXT", true)]));
+        var form = (await second.ListFormsAsync()).Single(f => f.Name == "avalonia_form");
+        await second.SubmitFormAsync(form,
+            new Dictionary<string, object?> { ["code"] = 2L, ["name"] = "Outro" });
+        await second.CreateReportAsync(new DataReportDefinition(
+            "avalonia_report", "Clientes", "SELECT code, name FROM avalonia_clients ORDER BY code"));
+        var report = (await second.ListReportsAsync()).Single(r => r.Name == "avalonia_report");
+        if ((await second.RunReportAsync(report)).Rows.Count != 2)
+            throw new Exception("O formulário/relatório partilhados não foram persistidos.");
+        var exported = await second.ExportCsvAsync("SELECT code, name FROM avalonia_clients ORDER BY code");
+        if (!exported.Contains("Outro", StringComparison.Ordinal))
+            throw new Exception("A exportação CSV do Data falhou.");
+
+        try
+        {
+            await second.QueryAsync("DELETE FROM avalonia_clients");
+            throw new Exception("A consulta de escrita devia ser recusada.");
+        }
+        catch (ArgumentException) { }
+    }
+    finally { Directory.Delete(directory, true); }
 }
