@@ -340,17 +340,17 @@ public sealed class DashboardView : UserControl
             {
                 foreach (var doc in documents)
                 {
-                    var line = Row();
+                    var documentRow = Row();
                     var link = new Button
                     {
                         Content = doc.FileName + (doc.Exists ? "" : " (em falta)"),
                         ToolTip = doc.FullPath, HorizontalContentAlignment = HorizontalAlignment.Left,
                         Background = Brushes.Transparent, Foreground = _foreground,
-                        BorderThickness = new Thickness(0), Padding = new Thickness(4, 8),
+                        BorderThickness = new Thickness(0), Padding = new Thickness(4, 8, 4, 8),
                         Cursor = System.Windows.Input.Cursors.Hand, MinWidth = 125
                     };
                     link.Click += (_, _) => _openRecent(doc.FullPath);
-                    line.Children.Add(link);
+                    documentRow.Children.Add(link);
                     var favorite = new Button
                     {
                         Content = doc.IsFavorite ? "★" : "☆",
@@ -359,8 +359,8 @@ public sealed class DashboardView : UserControl
                         BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand
                     };
                     favorite.Click += (_, _) => _setFavorite(doc.FullPath, !doc.IsFavorite);
-                    line.Children.Add(favorite);
-                    body.Children.Add(line);
+                    documentRow.Children.Add(favorite);
+                    body.Children.Add(documentRow);
                 }
             }
             var card = Panel(body);
