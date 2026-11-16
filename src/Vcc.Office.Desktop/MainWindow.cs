@@ -14,6 +14,7 @@ public sealed class MainWindow : Window
     private readonly DashboardRegistry _dashboards = new();
     private readonly Grid _layout = new();
     private readonly TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
+    private StackPanel? _body;
     private string _activeDashboard = DashboardIds.Modern;
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
@@ -32,7 +33,8 @@ public sealed class MainWindow : Window
         MinHeight = 540;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Content = _layout;
-        _search.TextChanged += (_, _) => Render();
+        // Filtrar os cartões sem reconstruir a caixa de pesquisa (preserva foco/cursor).
+        _search.TextChanged += (_, _) => RefreshBody();
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
         Render();
@@ -143,23 +145,30 @@ public sealed class MainWindow : Window
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
 
-        var body = new StackPanel { Spacing = 20, Margin = new Thickness(25, 22, 25, 28) };
-        switch (_activeDashboard)
-        {
-            case DashboardIds.Classic:
-                BuildClassic(body);
-                break;
-            case DashboardIds.Grid:
-                BuildGrid(body);
-                break;
-            default:
-                BuildModern(body);
-                break;
-        }
-        var scroll = new ScrollViewer { Content = body };
+        _body = new StackPanel { Spacing = 20, Margin = new Thickness(25, 22, 25, 28) };
+        RefreshBody();
+        var scroll = new ScrollViewer { Content = _body };
         Grid.SetRow(scroll, 1);
         Grid.SetColumn(scroll, 1);
         _layout.Children.Add(scroll);
+    }
+
+    private void RefreshBody()
+    {
+        if (_body is null) return;
+        _body.Children.Clear();
+        switch (_activeDashboard)
+        {
+            case DashboardIds.Classic:
+                BuildClassic(_body);
+                break;
+            case DashboardIds.Grid:
+                BuildGrid(_body);
+                break;
+            default:
+                BuildModern(_body);
+                break;
+        }
     }
 
     private void BuildModern(StackPanel root)
