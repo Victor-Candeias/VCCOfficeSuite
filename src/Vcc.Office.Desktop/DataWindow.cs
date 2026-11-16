@@ -34,6 +34,7 @@ public sealed class DataWindow : Window
     {
         _data = data ?? throw new ArgumentNullException(nameof(data));
         Title = "VCC Data — Avalonia";
+        Icon = AppBranding.LoadWindowIcon();
         Width = 1040;
         Height = 750;
         MinWidth = 690;
