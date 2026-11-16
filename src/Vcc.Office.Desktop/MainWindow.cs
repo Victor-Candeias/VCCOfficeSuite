@@ -136,6 +136,9 @@ public sealed partial class MainWindow : Window
             Render();
         };
         tools.Children.Add(theme);
+        var settings = new Button { Content = "⚙ Definições", MinWidth = 105 };
+        settings.Click += (_, _) => ShowLauncherSettings();
+        tools.Children.Add(settings);
         DockPanel.SetDock(tools, Dock.Right);
         headerContent.Children.Add(tools);
         headerContent.Children.Add(Text("▣  VCC OFFICE SUITE", 23, true));
@@ -159,10 +162,27 @@ public sealed partial class MainWindow : Window
             _activeDashboard == DashboardIds.Classic));
         navigation.Children.Add(Nav("◷   Ficheiros recentes", () => ShowRecentPage(false)));
         navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
+        navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
         foreach (var app in _registry.GetAll())
-            navigation.Children.Add(Nav(app.Name.Replace("VCC ", ""), () => OpenModule(app)));
+        {
+            var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            line.Children.Add(ModuleVisuals.Badge(app.Id, 25));
+            line.Children.Add(Text(app.Name.Replace("VCC ", ""), 13));
+            var selected = app.Id == _launcherState.LastSelectedModuleId;
+            var item = new Button
+            {
+                Content = line,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                Background = selected ? Brush.Parse(Dark ? "#263C62" : "#DCE9FC") : Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(7, 5),
+                Margin = new Thickness(0, 2)
+            };
+            item.Click += (_, _) => OpenModule(app);
+            navigation.Children.Add(item);
+        }
         sidebar.Child = new ScrollViewer { Content = navigation };
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
@@ -240,6 +260,8 @@ public sealed partial class MainWindow : Window
             root.Children.Add(Text("Última aplicação selecionada: " + previous.Name, 13, false, Muted));
         root.Children.Add(Text("Aplicações", 20, true));
         AddApplicationCards(root, 12);
+        var openCatalog = Nav("Ver todas as 26 aplicações", () => Switch(DashboardIds.Grid));
+        root.Children.Add(openCatalog);
     }
 
     private void BuildClassic(StackPanel root)
@@ -249,7 +271,22 @@ public sealed partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(_launcherState.LastOpenedDocumentPath))
             root.Children.Add(Text("Último documento: " +
                 System.IO.Path.GetFileName(_launcherState.LastOpenedDocumentPath), 13, false, Muted));
-        root.Children.Add(Card(Text("Criar novo — Writer · Sheets · Slides · Data", 17, true)));
+        var creation = new WrapPanel();
+        foreach (var app in _registry.GetAll().Where(m => m.Id is "writer" or "sheets" or "slides" or "data"))
+        {
+            var tile = new StackPanel { Spacing = 6 };
+            tile.Children.Add(ModuleVisuals.Badge(app.Id, 52));
+            tile.Children.Add(Text(app.Name, 15, true));
+            var action = new Button
+            {
+                Content = tile, Width = 174, Height = 122,
+                Margin = new Thickness(0, 0, 12, 12),
+                Background = Surface
+            };
+            action.Click += (_, _) => OpenModule(app);
+            creation.Children.Add(action);
+        }
+        root.Children.Add(Card(creation));
         AddApplicationCards(root, 15);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
         root.Children.Add(DocumentPanel(_favoritesOnly ? "★  Favoritos" : "◷  Ficheiros recentes", _favoritesOnly, 30));
@@ -275,13 +312,14 @@ public sealed partial class MainWindow : Window
         foreach (var module in list)
         {
             var box = new StackPanel { Spacing = 6 };
+            box.Children.Add(ModuleVisuals.Badge(module.Id, _activeDashboard == DashboardIds.Grid ? 52 : 38));
             box.Children.Add(Text(module.Name, 16, true));
             box.Children.Add(Text(module.Id == "data" ? "Disponível · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(18)),
                 Width = _activeDashboard == DashboardIds.Classic ? 250 : 206,
-                Height = 100,
+                Height = _activeDashboard == DashboardIds.Grid ? 158 : 143,
                 Margin = new Thickness(0, 0, 12, 12),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
