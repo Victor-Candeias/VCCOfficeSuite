@@ -19,12 +19,14 @@ var searchField = typeof(MainWindow).GetField("_search", BindingFlags.NonPublic 
 
 // The previous crash occurred on the second Render() call after restoring session.
 // This tests repeated visual-tree rebuilds without reparenting the search box.
+TextBox? lastSearch = null;
 for (var i = 0; i < 6; i++)
 {
     render.Invoke(window, null);
     var search = (TextBox)searchField.GetValue(window)!;
-    if (search.VisualParent is not null && search.VisualParent is not StackPanel)
-        throw new Exception("TextBox com visual parent inesperado.");
+    if (ReferenceEquals(search, lastSearch))
+        throw new Exception("A pesquisa foi reutilizada entre reconstruções; risco de visual parent duplicado.");
+    lastSearch = search;
     search.Text = i % 2 == 0 ? "data" : "writer";
 }
 
