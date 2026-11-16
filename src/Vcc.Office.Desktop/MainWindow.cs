@@ -13,7 +13,7 @@ public sealed partial class MainWindow : Window
     private readonly OfficeApplicationRegistry _registry = new();
     private readonly DashboardRegistry _dashboards = new();
     private readonly Grid _layout = new();
-    private readonly TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
+    private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
     private DataWindow? _dataWindow;
     private string _activeDashboard = DashboardIds.Modern;
@@ -34,8 +34,6 @@ public sealed partial class MainWindow : Window
         MinHeight = 540;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Content = _layout;
-        // Filtrar os cartões sem reconstruir a caixa de pesquisa (preserva foco/cursor).
-        _search.TextChanged += (_, _) => RefreshBody();
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
         Render();
@@ -93,6 +91,19 @@ public sealed partial class MainWindow : Window
 
     private void Render()
     {
+        // Each full rebuild creates a new header and therefore a new search TextBox.
+        // Reusing a visual from a previous StackPanel throws when the launcher
+        // re-renders (for example, after RestoreLauncherAsync or a theme switch).
+        // Preserve the search value, but never reuse a control's visual parent.
+        var previousSearch = _search.Text;
+        _search = new TextBox
+        {
+            PlaceholderText = "Pesquisar aplicações...",
+            MinWidth = 180,
+            Text = previousSearch
+        };
+        _search.TextChanged += (_, _) => RefreshBody();
+
         _layout.Children.Clear();
         _layout.RowDefinitions = new RowDefinitions("68,*");
         _layout.ColumnDefinitions = new ColumnDefinitions("228,*");
