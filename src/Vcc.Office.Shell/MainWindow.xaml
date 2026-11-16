@@ -253,7 +253,7 @@
                             <TextBlock Text="Suite de Produtividade" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
-                    <Border x:Name="HeaderSearchSurface" Grid.Column="1" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,190,0">
+                    <Border x:Name="HeaderSearchSurface" Grid.Column="1" shell:WindowChrome.IsHitTestVisibleInChrome="True" CornerRadius="22" BorderBrush="#CCD6E6" BorderThickness="1" Background="White" Height="42" VerticalAlignment="Center" Margin="0,0,190,0">
                         <Grid Margin="17,0,10,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                             <Path Data="{StaticResource SearchIcon}" Style="{StaticResource OutlineIcon}" Width="18" Height="18"/>
@@ -297,7 +297,7 @@
                             </StackPanel>
                         </Button>
                         <Border Width="1" Height="24" Background="#D8E1EE" Margin="8,0,4,0"/>
-                        <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimizar" AutomationProperties.Name="Minimizar janela">
+                        <Button x:Name="MinimizeButton" Style="{StaticResource CaptionButton}" Click="Minimize_Click" ToolTip="Minimizar" AutomationProperties.Name="Minimizar janela">
                             <Path Data="M1,8 L15,8" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   StrokeThickness="1.5" Width="16" Height="16" Stretch="Uniform"/>
                         </Button>
@@ -307,7 +307,7 @@
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                   StrokeThickness="1.4" StrokeLineJoin="Miter" Width="15" Height="15" Stretch="Uniform"/>
                         </Button>
-                        <Button Style="{StaticResource CloseCaptionButton}" Click="Close_Click" ToolTip="Fechar"
+                        <Button x:Name="CloseButton" Style="{StaticResource CloseCaptionButton}" Click="Close_Click" ToolTip="Fechar"
                                 AutomationProperties.Name="Fechar janela">
                             <Path Data="M2,2 L14,14 M14,2 L2,14"
                                   Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
