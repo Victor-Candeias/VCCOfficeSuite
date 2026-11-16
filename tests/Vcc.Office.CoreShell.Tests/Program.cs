@@ -6,6 +6,7 @@ var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
     ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
+    ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
     ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
@@ -831,3 +832,54 @@ static Task ValidatesOfficeApplicationRegistry()
     return Task.CompletedTask;
 }
 
+
+static Task ValidatesOfficeSessionRecovery()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var registry = new OfficeApplicationRegistry();
+        var store = new OfficeSessionStore(Path.Combine(directory, "application-session.json"));
+        if (store.Load(registry).OpenModuleIds.Count != 0)
+            throw new Exception("Uma primeira execução deve começar sem janelas de módulos.");
+
+        var session = OfficeSessionPolicy.Open(OfficeSession.Empty, "DATA", registry);
+        session = OfficeSessionPolicy.Open(session, "data", registry);
+        if (session.OpenModuleIds.Count != 1 || session.LastModuleId != "data")
+            throw new Exception("O mesmo módulo não pode originar sessões duplicadas.");
+        store.Save(session, registry);
+        var restored = store.Load(registry);
+        if (restored.LastModuleId != "data" || restored.OpenModuleIds.Single() != "data")
+            throw new Exception("Não foi possível recuperar a última aplicação aberta.");
+
+        var closed = OfficeSessionPolicy.Close(restored, "DATA", registry);
+        store.Save(closed, registry);
+        if (store.Load(registry).OpenModuleIds.Count != 0 ||
+            store.Load(registry).LastModuleId != "data")
+            throw new Exception("Uma janela fechada não deve reabrir, mas a última aplicação deve ser recordada.");
+
+        registry.Register(new OfficeModule("writer", "VCC Writer", true));
+        var multi = OfficeSessionPolicy.Open(closed, "writer", registry);
+        multi = OfficeSessionPolicy.Open(multi, "data", registry);
+        store.Save(multi, registry);
+        var newRegistry = new OfficeApplicationRegistry();
+        var available = store.Load(newRegistry);
+        if (available.OpenModuleIds.Count != 1 || available.OpenModuleIds[0] != "data")
+            throw new Exception("Módulos que deixaram de estar disponíveis não devem ser restaurados.");
+
+        // Um JSON danificado deve recuperar a versão anterior guardada no backup.
+        File.WriteAllText(store.FilePath, "{ inválido");
+        var recovered = store.Load(newRegistry);
+        if (recovered.OpenModuleIds.Count != 0 || recovered.LastModuleId != "data")
+            throw new Exception("A sessão não foi recuperada do backup.");
+
+        try
+        {
+            OfficeSessionPolicy.Open(OfficeSession.Empty, "slides", newRegistry);
+            throw new Exception("Um editor não implementado não pode entrar na sessão.");
+        }
+        catch (ArgumentException) { }
+    }
+    finally { Directory.Delete(directory, true); }
+    return Task.CompletedTask;
+}
