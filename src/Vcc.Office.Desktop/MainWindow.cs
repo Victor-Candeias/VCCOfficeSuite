@@ -21,7 +21,7 @@ public sealed class MainWindow : Window
     private IBrush Page => Brush.Parse(Dark ? "#0B1422" : "#F5F8FD");
     private IBrush ForegroundBrush => Brush.Parse(Dark ? "#F2F6FF" : "#16253B");
     private IBrush Muted => Brush.Parse(Dark ? "#A7B7D1" : "#62718B");
-    private IBrush BorderBrush => Brush.Parse(Dark ? "#33445F" : "#DDE4EF");
+    private IBrush LineBrush => Brush.Parse(Dark ? "#33445F" : "#DDE4EF");
 
     public MainWindow()
     {
@@ -52,7 +52,7 @@ public sealed class MainWindow : Window
     private Border Card(Control child, Thickness? padding = null) => new()
     {
         Background = Surface,
-        BorderBrush = BorderBrush,
+        BorderBrush = LineBrush,
         BorderThickness = new Thickness(1),
         CornerRadius = new CornerRadius(13),
         Padding = padding ?? new Thickness(18),
@@ -94,7 +94,7 @@ public sealed class MainWindow : Window
         var header = new Border
         {
             Background = Surface,
-            BorderBrush = BorderBrush,
+            BorderBrush = LineBrush,
             BorderThickness = new Thickness(0, 0, 0, 1),
             Padding = new Thickness(20, 10)
         };
@@ -124,7 +124,7 @@ public sealed class MainWindow : Window
         var sidebar = new Border
         {
             Background = Brush.Parse(Dark ? "#101B2D" : "#EEF3FA"),
-            BorderBrush = BorderBrush,
+            BorderBrush = LineBrush,
             BorderThickness = new Thickness(0, 0, 1, 0),
             Padding = new Thickness(13)
         };
@@ -135,7 +135,7 @@ public sealed class MainWindow : Window
             _activeDashboard == DashboardIds.Grid));
         navigation.Children.Add(Nav("▣   Dashboard clássico", () => Switch(DashboardIds.Classic),
             _activeDashboard == DashboardIds.Classic));
-        navigation.Children.Add(new Border { Height = 1, Background = BorderBrush, Margin = new Thickness(0, 17, 0, 9) });
+        navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
         foreach (var app in _registry.GetAll())
             navigation.Children.Add(Nav(app.Name.Replace("VCC ", ""), () => NotifyUnavailable(app)));
@@ -203,7 +203,7 @@ public sealed class MainWindow : Window
         {
             var inner = new StackPanel { Spacing = 15 };
             inner.Children.Add(Text(title, 17, true));
-            inner.Children.Add(new Border { Background = BorderBrush, Height = 1 });
+            inner.Children.Add(new Border { Background = LineBrush, Height = 1 });
             inner.Children.Add(Text(message, 13, false, Muted));
             var panel = Card(inner);
             panel.Width = 270;
