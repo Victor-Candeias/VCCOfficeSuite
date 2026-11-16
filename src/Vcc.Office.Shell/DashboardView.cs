@@ -17,6 +17,7 @@ public sealed class DashboardView : UserControl
     private readonly bool _dark;
     private readonly Action<string> _navigate;
     private readonly Action _openSettings;
+    private readonly Action<string> _openApplication;
     private readonly Brush _foreground;
     private readonly Brush _muted;
     private readonly Brush _surface;
@@ -24,12 +25,13 @@ public sealed class DashboardView : UserControl
     private readonly Brush _background;
 
     public DashboardView(string dashboardId, HomeScreenModel model, bool dark,
-        Action<string> navigate, Action openSettings)
+        Action<string> navigate, Action openSettings, Action<string> openApplication)
     {
         _model = model;
         _dark = dark;
         _navigate = navigate;
         _openSettings = openSettings;
+        _openApplication = openApplication;
         _foreground = Paint(dark ? "#F2F6FF" : "#16253B");
         _muted = Paint(dark ? "#A7B7D1" : "#62718B");
         _surface = Paint(dark ? "#172439" : "#FFFFFF");
@@ -171,12 +173,17 @@ public sealed class DashboardView : UserControl
             badge.Margin = new Thickness(0, 0, 12, 0);
             line.Children.Add(badge);
             line.Children.Add(Label(app.Name.Replace("VCC ", ""), 13));
-            sidebar.Children.Add(new Border
+            var link = new Button
             {
-                Child = line, Background = Brushes.Transparent,
+                Content = line, Background = Brushes.Transparent, Foreground = _foreground,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(11, 5, 4, 5), MinHeight = 36,
-                ToolTip = "Aplicação ainda não disponível no Launcher"
-            });
+                BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand,
+                ToolTip = "Abrir ou consultar disponibilidade da aplicação"
+            };
+            System.Windows.Automation.AutomationProperties.SetName(link, app.Name);
+            link.Click += (_, _) => _openApplication(app.Id);
+            sidebar.Children.Add(link);
         }
 
         dock.Children.Add(new ScrollViewer
@@ -383,10 +390,16 @@ public sealed class DashboardView : UserControl
                 icon.HorizontalAlignment = HorizontalAlignment.Center;
                 body.Children.Add(icon);
                 body.Children.Add(Label(app.Name, 14, true));
-                var item = Panel(body, padding: new Thickness(12, 21, 12, 21));
-                item.Margin = new Thickness(0, 0, 12, 12);
-                item.ToolTip = "Módulo não disponível nesta versão";
+                var item = new Button
+                {
+                    Content = Panel(body, padding: new Thickness(12, 21, 12, 21)),
+                    Margin = new Thickness(0, 0, 12, 12),
+                    Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                    ToolTip = "Abrir ou consultar disponibilidade da aplicação"
+                };
                 System.Windows.Automation.AutomationProperties.SetName(item, app.Name);
+                item.Click += (_, _) => _openApplication(app.Id);
                 grid.Children.Add(item);
             }
             if (grid.Children.Count == 0)
