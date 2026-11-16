@@ -115,12 +115,11 @@ public sealed partial class MainWindow : Window
         var theme = new Button { Content = Dark ? "☀ Tema claro" : "☾ Tema escuro", MinWidth = 116 };
         theme.Click += (_, _) =>
         {
+            var nextTheme = Dark ? ThemeMode.Light : ThemeMode.Dark;
+            _launcherState = _launcherState with { Theme = nextTheme };
             if (Application.Current is { } app)
-                app.RequestedThemeVariant = Dark ? ThemeVariant.Light : ThemeVariant.Dark;
-            _launcherState = _launcherState with
-            {
-                Theme = Dark ? ThemeMode.Dark : ThemeMode.Light
-            };
+                app.RequestedThemeVariant = nextTheme == ThemeMode.Dark
+                    ? ThemeVariant.Dark : ThemeVariant.Light;
             _ = SaveLauncherAsync();
             Render();
         };
