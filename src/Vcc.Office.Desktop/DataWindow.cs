@@ -20,13 +20,8 @@ public sealed class DataWindow : Window
     private ComboBox _tables = new() { MinWidth = 210 };
     private ComboBox _forms = new() { MinWidth = 210 };
     private ComboBox _reports = new() { MinWidth = 210 };
-    private readonly TextBox _query = new()
-    {
-        Text = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-        AcceptsReturn = true,
-        Height = 100,
-        TextWrapping = TextWrapping.Wrap
-    };
+    private string _querySql = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
+    private TextBox _query = new();
     private StackPanel _result = new() { Spacing = 5 };
     private StackPanel _formFields = new() { Spacing = 8 };
     private readonly Dictionary<string, TextBox> _formInputs = new(StringComparer.OrdinalIgnoreCase);
@@ -199,6 +194,14 @@ public sealed class DataWindow : Window
         _content.Children.Clear();
         _result = new StackPanel { Spacing = 5 };
         _tables = new ComboBox { MinWidth = 210, ItemsSource = _tableDefinitions.Select(t => t.Name).ToArray() };
+        _query = new TextBox
+        {
+            Text = _querySql,
+            AcceptsReturn = true,
+            Height = 100,
+            TextWrapping = TextWrapping.Wrap
+        };
+        _query.TextChanged += (_, _) => _querySql = _query.Text ?? "";
         _content.Children.Add(TitleText("Consultas SQL de leitura"));
         _content.Children.Add(new TextBlock
         {
