@@ -7,6 +7,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
     ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
+    ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
     ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
@@ -882,4 +883,51 @@ static Task ValidatesOfficeSessionRecovery()
     }
     finally { Directory.Delete(directory, true); }
     return Task.CompletedTask;
+}
+
+static async Task TestsRecentDocuments()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var database = new CoreDatabase(StoragePaths.ForLocalApplication(root));
+        var documents = new RecentDocumentsService(database);
+        var docx = Path.Combine(root, "Relatório.docx");
+        var xlsx = Path.Combine(root, "Tabela.xlsx");
+        File.WriteAllText(docx, "documento de teste");
+        File.WriteAllText(xlsx, "tabela de teste");
+
+        if (RecentDocumentsService.ResolveModule(docx) != "writer" ||
+            RecentDocumentsService.ResolveModule(xlsx) != "sheets" ||
+            RecentDocumentsService.ResolveModule("teste.ext") is not null)
+            throw new Exception("Associações de formatos incorretas.");
+
+        await documents.RegisterAsync(docx);
+        await documents.RegisterAsync(xlsx);
+        await documents.RegisterAsync(docx);
+        var recent = await documents.QueryAsync();
+        if (recent.Count != 2 || recent[0].FileName != "Relatório.docx")
+            throw new Exception("Recentes não devem duplicar ficheiros e devem estar ordenados.");
+        if ((await documents.QueryAsync(moduleId: "sheets")).Count != 1 ||
+            (await documents.QueryAsync(search: "relatório")).Count != 1)
+            throw new Exception("Filtros por aplicação e pesquisa falharam.");
+
+        await documents.SetFavoriteAsync(xlsx, true);
+        if ((await documents.QueryAsync(favoritesOnly: true)).Single().FullPath != xlsx)
+            throw new Exception("O favorito não foi guardado.");
+        var reopened = new RecentDocumentsService(new CoreDatabase(StoragePaths.ForLocalApplication(root)));
+        if ((await reopened.QueryAsync(favoritesOnly: true)).Count != 1)
+            throw new Exception("A persistência SQLite não sobreviveu à nova instância.");
+
+        File.Delete(xlsx);
+        if ((await reopened.QueryAsync(favoritesOnly: true)).Single().Exists)
+            throw new Exception("Deveria ser sinalizado um ficheiro eliminado.");
+
+        await reopened.RemoveAsync(xlsx);
+        if ((await reopened.QueryAsync(favoritesOnly: true)).Count != 0)
+            throw new Exception("O ficheiro não foi removido do catálogo.");
+
+        await AssertThrows<FileNotFoundException>(() => reopened.RegisterAsync(xlsx));
+    }
+    finally { Directory.Delete(root, true); }
 }
