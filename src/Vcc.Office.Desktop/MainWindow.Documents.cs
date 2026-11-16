@@ -186,12 +186,13 @@ public sealed partial class MainWindow
             var pin = new Button
             {
                 Content = document.IsFavorite ? "★" : "☆",
-                ToolTip = document.IsFavorite ? "Retirar dos favoritos" : "Adicionar aos favoritos",
                 MinWidth = 32
             };
+            ToolTip.SetTip(pin, document.IsFavorite ? "Retirar dos favoritos" : "Adicionar aos favoritos");
             pin.Click += async (_, _) => await ChangeFavoriteAsync(document);
             controls.Children.Add(pin);
-            var remove = new Button { Content = "×", ToolTip = "Remover dos recentes", MinWidth = 32 };
+            var remove = new Button { Content = "×", MinWidth = 32 };
+            ToolTip.SetTip(remove, "Remover dos recentes");
             remove.Click += async (_, _) => await RemoveRecentAsync(document);
             controls.Children.Add(remove);
             DockPanel.SetDock(controls, Dock.Right);
@@ -200,12 +201,12 @@ public sealed partial class MainWindow
             var open = new Button
             {
                 Content = document.FileName + (document.Exists ? "" : "  (em falta)"),
-                ToolTip = document.FullPath,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 Background = Brushes.Transparent,
                 Foreground = ForegroundBrush,
                 BorderThickness = new Thickness(0)
             };
+            ToolTip.SetTip(open, document.FullPath);
             open.Click += async (_, _) => await OpenLocalDocumentAsync(document.FullPath);
             row.Children.Add(open);
             content.Children.Add(row);
