@@ -15,6 +15,7 @@ public sealed partial class MainWindow : Window
     private readonly Grid _layout = new();
     private readonly TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
+    private DataWindow? _dataWindow;
     private string _activeDashboard = DashboardIds.Modern;
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
@@ -150,7 +151,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
         foreach (var app in _registry.GetAll())
-            navigation.Children.Add(Nav(app.Name.Replace("VCC ", ""), () => NotifyUnavailable(app)));
+            navigation.Children.Add(Nav(app.Name.Replace("VCC ", ""), () => OpenModule(app)));
         sidebar.Child = new ScrollViewer { Content = navigation };
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
@@ -264,7 +265,7 @@ public sealed partial class MainWindow : Window
         {
             var box = new StackPanel { Spacing = 6 };
             box.Children.Add(Text(module.Name, 16, true));
-            box.Children.Add(Text("Em migração", 12, false, Muted));
+            box.Children.Add(Text(module.Id == "data" ? "Disponível · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(18)),
@@ -275,7 +276,7 @@ public sealed partial class MainWindow : Window
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0)
             };
-            card.Click += (_, _) => NotifyUnavailable(module);
+            card.Click += (_, _) => OpenModule(module);
             cards.Children.Add(card);
         }
         if (list.Length == 0)
@@ -284,7 +285,31 @@ public sealed partial class MainWindow : Window
     }
 
     private void NotifyUnavailable(string id) =>
-        NotifyUnavailable(_registry.Find(id));
+        OpenModule(_registry.Find(id));
+
+    private void OpenModule(OfficeModule? module)
+    {
+        if (module?.Id == "data")
+        {
+            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
+            _ = SaveLauncherAsync();
+            if (_dataWindow is not null)
+            {
+                if (_dataWindow.WindowState == WindowState.Minimized)
+                    _dataWindow.WindowState = WindowState.Normal;
+                _dataWindow.Activate();
+                return;
+            }
+
+            var data = new DataWindow(new VccDataService(_documentsDatabase));
+            data.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            data.Closed += (_, _) => _dataWindow = null;
+            _dataWindow = data;
+            data.Show(this);
+            return;
+        }
+        NotifyUnavailable(module);
+    }
 
     private void NotifyUnavailable(OfficeModule? module)
     {
