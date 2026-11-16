@@ -8,6 +8,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
+    ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
     ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
@@ -930,4 +931,61 @@ static async Task TestsRecentDocuments()
         await AssertThrows<FileNotFoundException>(() => reopened.RegisterAsync(xlsx));
     }
     finally { Directory.Delete(root, true); }
+}
+
+static async Task TestsDesktopLauncherState()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var database = new CoreDatabase(StoragePaths.ForLocalApplication(root));
+        var dashboards = new DashboardRegistry();
+        var modules = new OfficeApplicationRegistry();
+        var store = new DesktopLauncherStateStore(database, dashboards, modules);
+        var initial = await store.LoadAsync();
+        if (initial != DesktopLauncherState.Default)
+            throw new Exception("O Launcher Avalonia deve começar com preferências predefinidas.");
+
+        var path = Path.Combine(root, "Exemplo.docx");
+        File.WriteAllText(path, "Documento de teste");
+        var selected = new DesktopLauncherState(
+            DashboardIds.Grid, ThemeMode.Dark, "WRITER", path);
+        await store.SaveAsync(selected);
+
+        var recovered = await new DesktopLauncherStateStore(
+            new CoreDatabase(StoragePaths.ForLocalApplication(root)), dashboards, modules).LoadAsync();
+        if (recovered.DashboardId != DashboardIds.Grid ||
+            recovered.Theme != ThemeMode.Dark ||
+            recovered.LastSelectedModuleId != "writer" ||
+            recovered.LastOpenedDocumentPath != path)
+            throw new Exception("A sessão Avalonia não recuperou dashboard, tema, módulo e último documento.");
+
+        // Um módulo pode estar registado mas ainda não ter interface Avalonia:
+        // recordar a seleção não implica abrir uma janela fictícia.
+        var invalid = new DesktopLauncherState(
+            "desconhecido", (ThemeMode)999, "modulo-inexistente", " ");
+        await store.SaveAsync(invalid);
+        var normalized = await store.LoadAsync();
+        if (normalized.DashboardId != DashboardIds.Modern ||
+            normalized.Theme != ThemeMode.System ||
+            normalized.LastSelectedModuleId is not null ||
+            normalized.LastOpenedDocumentPath is not null)
+            throw new Exception("O estado inválido do Launcher deve ser normalizado.");
+
+        await database.SetSettingAsync("avalonia.launcher.session.v1", "{corrompido");
+        if (await store.LoadAsync() != DesktopLauncherState.Default)
+            throw new Exception("Um JSON de sessão corrompido deve recuperar valores predefinidos.");
+
+        // Sessões e documentos partilham CoreDatabase sem alterar documentos locais.
+        var docs = new RecentDocumentsService(database);
+        await docs.RegisterAsync(path);
+        await docs.SetFavoriteAsync(path, true);
+        if ((await docs.QueryAsync(favoritesOnly: true)).Single().FullPath != path ||
+            File.ReadAllText(path) != "Documento de teste")
+            throw new Exception("A migração não pode afetar o conteúdo dos documentos.");
+    }
+    finally
+    {
+        Directory.Delete(root, true);
+    }
 }
