@@ -392,7 +392,7 @@ public partial class MainWindow : Window
             Title = "Selecionar documento",
             CheckFileExists = true,
             Multiselect = false,
-            Filter = "Documentos e imagens|*.docx;*.doc;*.odt;*.rtf;*.txt;*.md;*.xlsx;*.xls;*.ods;*.csv;*.pptx;*.ppt;*.odp;*.pdf;*.png;*.jpg;*.jpeg;*.webp;*.svg;*.eml;*.ics;*.vcf;*.db;*.sqlite|Todos os ficheiros (*.*)|*.*"
+            Filter = "Documentos e imagens|*.docx;*.doc;*.odt;*.rtf;*.txt;*.md;*.xlsx;*.xls;*.ods;*.csv;*.pptx;*.ppt;*.odp;*.pdf;*.png;*.jpg;*.jpeg;*.webp;*.svg;*.eml;*.ics;*.vcf;*.db;*.sqlite"
         };
         if (picker.ShowDialog(this) == true)
             _ = TrackAndOpenAsync(picker.FileName);
@@ -408,6 +408,12 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show(this, "O ficheiro foi movido ou eliminado. Pode removê-lo dos recentes ou localizá-lo novamente.",
                     "Ficheiro em falta", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (RecentDocumentsService.ResolveModule(path) is null)
+            {
+                MessageBox.Show(this, "Este formato ainda não é reconhecido pelo VCC Office Suite.",
+                    "Formato não suportado", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             await _recentDocuments.RegisterAsync(path);
