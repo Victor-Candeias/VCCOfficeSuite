@@ -18,14 +18,16 @@ public partial class WorkspaceWindow : Window
     private readonly CoreShellService _shell;
     private readonly VccDataService _data;
     private readonly Dictionary<string, TextBox> _formInputs = new(StringComparer.OrdinalIgnoreCase);
+    private bool _openDataOnLoad;
     private bool _darkTheme;
     private CoreThemeMode _themeMode = CoreThemeMode.System;
     private bool _stateReady;
     private IReadOnlyList<LauncherItem> _launcherCatalog = [];
     private IReadOnlyList<RibbonTab> _ribbonCatalog = [];
 
-    public WorkspaceWindow()
+    public WorkspaceWindow(bool openDataOnLoad = false)
     {
+        _openDataOnLoad = openDataOnLoad;
         InitializeComponent();
         var statePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VCC Office", "shell-state.json");
         _shell = new CoreShellService(new ShellStateStore(statePath));
@@ -54,6 +56,7 @@ public partial class WorkspaceWindow : Window
         _ = Dispatcher.BeginInvoke(ApplyNavigationFocus, DispatcherPriority.Input);
         await RefreshDataTablesAsync();
         await RefreshDataFormsAndReportsAsync();
+        if (_openDataOnLoad) OpenData_Click(this, new RoutedEventArgs());
     }
 
     private async Task RefreshDataTablesAsync()
