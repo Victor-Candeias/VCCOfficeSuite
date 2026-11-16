@@ -54,3 +54,11 @@ dotnet run --project src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj
 
 ## Segurança e honestidade de estado
 A migração está em curso. O executável WPF não funciona em Linux/macOS. Build/publish não garante arranque da interface gráfica nem a distribuição instalável. Não foi migrada nenhuma interface de edição de documentos. O CoreShell continua partilhado.
+
+## VCC-0818.5 — Estabilização e identidade visual
+- Reposição dos ícones vetoriais coloridos do catálogo WPF para os 26 módulos Avalonia, sem bibliotecas de ícones de Windows.
+- Os dashboards Moderno, Clássico e Grelha mantêm-se distintos. Área de definições para escolher dashboard de entrada e tema Sistema/Claro/Escuro.
+- A pesquisa mantém o foco durante filtragem; reconstruções completas criam sempre novos controlos para evitar `visual parent` duplicado.
+- Testes de CoreShell acrescentados para as 9 combinações (3 dashboards × 3 temas).
+- Teste headless Avalonia tenta reconstruir a janela várias vezes e alternar tema, pesquisa e dashboards em Windows/Linux/macOS, no pipeline dedicado.
+- Continua a ser indispensável teste de interação visual em máquinas reais, incluindo resoluções e escalas distintas.
