@@ -21,6 +21,17 @@ dotnet run --project src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj
 - Os painéis de documentos recentes e favoritos apresentam estados de migração, não os dados SQLite; ainda não foi alcançada paridade com WPF.
 - Validação de compilação Windows/Linux/macOS Debug/Release não é validação visual em ambiente gráfico.
 
+## Incremento — Documentos recentes, favoritos e sessão do Launcher
+- Integração do `RecentDocumentsService` SQLite existente na nova interface Avalonia, sem reimplementar as tabelas ou copiar documentos.
+- Seletor nativo Avalonia (`StorageProvider`), com aceitação apenas de caminhos locais e de formatos já reconhecidos pelo CoreShell.
+- Abertura com a aplicação predefinida do sistema operativo (`ProcessStartInfo.UseShellExecute`). Não representa edição dentro do VCC Office.
+- Listas de recentes, favoritos, indicadores de ficheiro em falta, remoção de entradas, pesquisa por nome/caminho e ações nos três dashboards.
+- Novo `DesktopLauncherStateStore` sobre as definições da base `office.db` existente, que preserva o último dashboard, o tema, o módulo escolhido e o último caminho de documento, sem marcar módulos não migrados como abertos.
+- O Windows WPF mantém os seus formatos de preferências e o seu `OfficeSessionStore` independentes; a nova sessão é específica do Launcher Avalonia.
+- Testes automatizados de recuperação, normalização, estado corrompido e coexistência com documentos/favoritos.
+
+**Ainda por migrar:** reabertura de janelas reais de módulos Avalonia, editores, drag & drop, documentos remotos, instaladores e validação visual interativa nos três sistemas.
+
 ## Próximos incrementos do VCC-0818
 1. Migrar o splash screen, a identidade visual e o Chrome da janela, respeitando janelas nativas.
 2. Migrar os layouts completos dos três dashboards e respetivos temas, depois de validação visual por plataforma.
