@@ -44,6 +44,10 @@ public sealed class HomeScreenModel
         App("time", "Time", "#0B9996", icon: "M12,2 A10,10 0 1 0 12,22 A10,10 0 1 0 12,2 M12,6 L12,12 L17,15")
     ];
 
+    public IReadOnlyList<Vcc.Office.CoreShell.RecentDocument> RecentDocuments { get; private set; } = [];
+    public void UpdateRecentDocuments(IReadOnlyList<Vcc.Office.CoreShell.RecentDocument> items) =>
+        RecentDocuments = items ?? [];
+
     public IReadOnlyList<HomeApplication> MainApplications { get; } = Applications.Take(15).ToArray();
     public IReadOnlyList<HomeApplication> MoreApplications { get; } = Applications.Skip(15).ToArray();
     public IReadOnlyList<HomeCreation> CreationActions { get; } =
