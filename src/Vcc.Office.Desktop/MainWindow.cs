@@ -52,6 +52,16 @@ public sealed partial class MainWindow : Window
             VerticalAlignment = VerticalAlignment.Center
         };
 
+    private const double ControlCornerRadius = 9;
+
+    private TextBlock CenteredText(string value, double size, bool bold = false, IBrush? color = null)
+    {
+        var label = Text(value, size, bold, color);
+        label.HorizontalAlignment = HorizontalAlignment.Stretch;
+        label.TextAlignment = TextAlignment.Center;
+        return label;
+    }
+
     private Border Card(Control child, Thickness? padding = null) => new()
     {
         Background = Surface,
@@ -67,6 +77,7 @@ public sealed partial class MainWindow : Window
         var button = new Button
         {
             Content = label,
+            CornerRadius = new CornerRadius(ControlCornerRadius),
             HorizontalContentAlignment = HorizontalAlignment.Left,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Height = 40,
@@ -102,7 +113,8 @@ public sealed partial class MainWindow : Window
         {
             PlaceholderText = "Pesquisar aplicações...",
             MinWidth = 180,
-            Text = previousSearch
+            Text = previousSearch,
+            CornerRadius = new CornerRadius(ControlCornerRadius)
         };
         _search.TextChanged += (_, _) => RefreshBody();
 
@@ -126,7 +138,7 @@ public sealed partial class MainWindow : Window
             Spacing = 10
         };
         tools.Children.Add(_search);
-        var theme = new Button { Content = Dark ? "☀ Tema claro" : "☾ Tema escuro", MinWidth = 116 };
+        var theme = new Button { Content = Dark ? "☀ Tema claro" : "☾ Tema escuro", MinWidth = 116, CornerRadius = new CornerRadius(ControlCornerRadius) };
         theme.Click += (_, _) =>
         {
             var nextTheme = Dark ? ThemeMode.Light : ThemeMode.Dark;
@@ -138,7 +150,7 @@ public sealed partial class MainWindow : Window
             Render();
         };
         tools.Children.Add(theme);
-        var settings = new Button { Content = "⚙ Definições", MinWidth = 105 };
+        var settings = new Button { Content = "⚙ Definições", MinWidth = 105, CornerRadius = new CornerRadius(ControlCornerRadius) };
         settings.Click += (_, _) => ShowLauncherSettings();
         tools.Children.Add(settings);
         DockPanel.SetDock(tools, Dock.Right);
@@ -184,6 +196,7 @@ public sealed partial class MainWindow : Window
             var item = new Button
             {
                 Content = line,
+                CornerRadius = new CornerRadius(ControlCornerRadius),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 Background = selected ? Brush.Parse(Dark ? "#263C62" : "#DCE9FC") : Brushes.Transparent,
                 BorderThickness = new Thickness(0),
@@ -284,12 +297,16 @@ public sealed partial class MainWindow : Window
         var creation = new WrapPanel();
         foreach (var app in _registry.GetAll().Where(m => m.Id is "writer" or "sheets" or "slides" or "data"))
         {
-            var tile = new StackPanel { Spacing = 6 };
-            tile.Children.Add(ModuleVisuals.Badge(app.Id, 52));
-            tile.Children.Add(Text(app.Name, 15, true));
+            var tile = new StackPanel { Spacing = 6, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var tileIcon = ModuleVisuals.Badge(app.Id, 52);
+            tileIcon.HorizontalAlignment = HorizontalAlignment.Center;
+            tile.Children.Add(tileIcon);
+            tile.Children.Add(CenteredText(app.Name, 15, true));
             var action = new Button
             {
                 Content = tile, Width = 174, Height = 122,
+                CornerRadius = new CornerRadius(ControlCornerRadius),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 Margin = new Thickness(0, 0, 12, 12),
                 Background = Surface
             };
@@ -321,13 +338,17 @@ public sealed partial class MainWindow : Window
         var cards = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var module in list)
         {
-            var box = new StackPanel { Spacing = 6 };
-            box.Children.Add(ModuleVisuals.Badge(module.Id, _activeDashboard == DashboardIds.Grid ? 52 : 38));
-            box.Children.Add(Text(module.Name, 16, true));
-            box.Children.Add(Text(module.Id == "data" ? "Disponível · offline" : "Em migração", 12, false, Muted));
+            var box = new StackPanel { Spacing = 6, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var moduleIcon = ModuleVisuals.Badge(module.Id, _activeDashboard == DashboardIds.Grid ? 52 : 38);
+            moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
+            box.Children.Add(moduleIcon);
+            box.Children.Add(CenteredText(module.Name, 16, true));
+            box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(18)),
+                CornerRadius = new CornerRadius(ControlCornerRadius),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 Width = _activeDashboard == DashboardIds.Classic ? 250 : 206,
                 Height = _activeDashboard == DashboardIds.Grid ? 158 : 143,
                 Margin = new Thickness(0, 0, 12, 12),
