@@ -224,6 +224,8 @@ public sealed partial class MainWindow : Window
             panels.Children.Add(panel);
         }
         root.Children.Add(panels);
+        if (_registry.Find(_launcherState.LastSelectedModuleId) is { } previous)
+            root.Children.Add(Text("Última aplicação selecionada: " + previous.Name, 13, false, Muted));
         root.Children.Add(Text("Aplicações", 20, true));
         AddApplicationCards(root, 12);
     }
@@ -232,6 +234,9 @@ public sealed partial class MainWindow : Window
     {
         root.Children.Add(Text("VCC Office — Dashboard clássico", 28, true));
         root.Children.Add(Text("Crie documentos e aceda aos módulos da suite.", 14, false, Muted));
+        if (!string.IsNullOrWhiteSpace(_launcherState.LastOpenedDocumentPath))
+            root.Children.Add(Text("Último documento: " +
+                System.IO.Path.GetFileName(_launcherState.LastOpenedDocumentPath), 13, false, Muted));
         root.Children.Add(Card(Text("Criar novo — Writer · Sheets · Slides · Data", 17, true)));
         AddApplicationCards(root, 15);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
