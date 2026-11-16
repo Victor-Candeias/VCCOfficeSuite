@@ -360,6 +360,14 @@ public partial class MainWindow : Window
         foreach (var doc in documents.Take(30))
         {
             var row = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
+            var remove = new Button
+            {
+                Content = "×", ToolTip = "Remover da lista de recentes",
+                Padding = new Thickness(10, 5, 10, 5), Width = 42
+            };
+            remove.Click += (_, _) => _ = RemoveRecentAsync(doc.FullPath);
+            DockPanel.SetDock(remove, Dock.Right);
+            row.Children.Add(remove);
             var favorite = new Button
             {
                 Content = doc.IsFavorite ? "★" : "☆",
@@ -424,6 +432,20 @@ public partial class MainWindow : Window
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or ArgumentException)
         {
             MessageBox.Show(this, "Não foi possível abrir o documento: " + ex.Message,
+                "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private async Task RemoveRecentAsync(string path)
+    {
+        try
+        {
+            await _recentDocuments.RemoveAsync(path);
+            await RefreshRecentAsync();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
+        {
+            MessageBox.Show(this, "Não foi possível remover o ficheiro dos recentes: " + ex.Message,
                 "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
