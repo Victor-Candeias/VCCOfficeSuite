@@ -11,6 +11,7 @@ public sealed class SplashScreenWindow : Window
     public SplashScreenWindow()
     {
         Title = "VCC Office Suite — A iniciar";
+        Icon = AppBranding.LoadWindowIcon();
         Width = 540;
         Height = 320;
         CanResize = false;

@@ -18,6 +18,7 @@ public sealed partial class MainWindow
         var dialog = new Window
         {
             Title = "VCC Office — Aparência e dashboard",
+            Icon = AppBranding.LoadWindowIcon(),
             Width = 475,
             Height = 405,
             MinWidth = 400,

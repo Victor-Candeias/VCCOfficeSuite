@@ -17,6 +17,18 @@ var switchDashboard = typeof(MainWindow).GetMethod("Switch", BindingFlags.NonPub
 var searchField = typeof(MainWindow).GetField("_search", BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new InvalidOperationException("Campo de pesquisa não encontrado.");
 
+// Every window must have the original VCC Office icon, embedded in the portable assembly.
+if (window.Icon is null ||
+    typeof(MainWindow).Assembly.GetManifestResourceStream("Vcc.Office.Desktop.AppIcon") is null)
+    throw new Exception("O ícone VCC Office não foi incorporado/atribuído à janela.");
+
+// Navigation options must fill the sidebar instead of sizing to their text.
+var nav = typeof(MainWindow).GetMethod("Nav", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new InvalidOperationException("MainWindow.Nav não encontrado.");
+var navButton = (Button)nav.Invoke(window, ["Verificação", (Action)(() => { }), false])!;
+if (navButton.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch)
+    throw new Exception("Os botões do menu não ocupam toda a largura da barra lateral.");
+
 // The previous crash occurred on the second Render() call after restoring session.
 // This tests repeated visual-tree rebuilds without reparenting the search box.
 TextBox? lastSearch = null;

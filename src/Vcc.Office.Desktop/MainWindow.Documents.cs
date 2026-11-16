@@ -228,6 +228,7 @@ public sealed partial class MainWindow
         var dialog = new Window
         {
             Title = title,
+            Icon = AppBranding.LoadWindowIcon(),
             Width = 460,
             Height = 195,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,

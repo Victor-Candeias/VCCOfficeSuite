@@ -28,6 +28,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         Title = "VCC Office Suite";
+        Icon = AppBranding.LoadWindowIcon();
         Width = 1280;
         Height = 820;
         MinWidth = 760;
@@ -67,6 +68,7 @@ public sealed partial class MainWindow : Window
         {
             Content = label,
             HorizontalContentAlignment = HorizontalAlignment.Left,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             Height = 40,
             Margin = new Thickness(0, 3),
             Padding = new Thickness(14, 8),
@@ -141,7 +143,15 @@ public sealed partial class MainWindow : Window
         tools.Children.Add(settings);
         DockPanel.SetDock(tools, Dock.Right);
         headerContent.Children.Add(tools);
-        headerContent.Children.Add(Text("▣  VCC OFFICE SUITE", 23, true));
+        var brand = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 10,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        brand.Children.Add(AppBranding.HeaderIcon(30));
+        brand.Children.Add(Text("VCC OFFICE SUITE", 23, true));
+        headerContent.Children.Add(brand);
         header.Child = headerContent;
         Grid.SetColumnSpan(header, 2);
         _layout.Children.Add(header);
