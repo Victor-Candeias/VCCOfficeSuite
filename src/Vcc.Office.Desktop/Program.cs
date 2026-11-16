@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Themes.Fluent;
+using Avalonia.Threading;
 
 namespace Vcc.Office.Desktop;
 
@@ -19,7 +20,20 @@ internal static class Program
             .AfterSetup(builder => builder.Instance?.Styles.Add(new FluentTheme()))
             .SetupWithLifetime(lifetime);
 
-        lifetime.MainWindow = new MainWindow();
+        // Iniciar com o splash antes de construir a janela principal.
+        var splash = new SplashScreenWindow();
+        lifetime.MainWindow = splash;
+        splash.Opened += (_, _) =>
+        {
+            // Ceder o primeiro ciclo de desenho ao splash; depois abrir o Launcher.
+            Dispatcher.UIThread.Post(() =>
+            {
+                var main = new MainWindow();
+                lifetime.MainWindow = main;
+                main.Show();
+                splash.Close();
+            }, DispatcherPriority.Background);
+        };
         lifetime.Start(args);
     }
 }

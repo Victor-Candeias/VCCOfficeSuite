@@ -2,9 +2,6 @@ name: Avalonia Cross-Platform
 
 on:
   push:
-    branches:
-      - main
-      - feature/vcc-0818-avalonia-crossplatform-foundation
   pull_request:
   workflow_dispatch:
 
