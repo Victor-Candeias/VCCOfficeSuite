@@ -15,7 +15,7 @@ public sealed class SplashScreenWindow : Window
         Height = 320;
         CanResize = false;
         ShowInTaskbar = false;
-        SystemDecorations = SystemDecorations.None;
+        WindowDecorations = Avalonia.Controls.WindowDecorations.None;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = Brushes.Transparent;
         ExtendClientAreaToDecorationsHint = false;
