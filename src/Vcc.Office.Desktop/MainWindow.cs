@@ -8,7 +8,7 @@ using Vcc.Office.CoreShell;
 namespace Vcc.Office.Desktop;
 
 /// <summary>Launcher multiplataforma com três disposições distintas e catálogo partilhado.</summary>
-public sealed class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     private readonly OfficeApplicationRegistry _registry = new();
     private readonly DashboardRegistry _dashboards = new();
@@ -38,6 +38,7 @@ public sealed class MainWindow : Window
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
         Render();
+        Opened += async (_, _) => await RestoreLauncherAsync();
     }
 
     private TextBlock Text(string value, double size = 14, bool bold = false, IBrush? color = null) =>
@@ -82,6 +83,9 @@ public sealed class MainWindow : Window
     {
         if (!_dashboards.Contains(id)) return;
         _activeDashboard = id;
+        _favoritesOnly = false;
+        _launcherState = _launcherState with { DashboardId = id };
+        _ = SaveLauncherAsync();
         _search.Text = "";
         Render();
     }
@@ -113,6 +117,11 @@ public sealed class MainWindow : Window
         {
             if (Application.Current is { } app)
                 app.RequestedThemeVariant = Dark ? ThemeVariant.Light : ThemeVariant.Dark;
+            _launcherState = _launcherState with
+            {
+                Theme = Dark ? ThemeMode.Dark : ThemeMode.Light
+            };
+            _ = SaveLauncherAsync();
             Render();
         };
         tools.Children.Add(theme);
@@ -137,6 +146,8 @@ public sealed class MainWindow : Window
             _activeDashboard == DashboardIds.Grid));
         navigation.Children.Add(Nav("▣   Dashboard clássico", () => Switch(DashboardIds.Classic),
             _activeDashboard == DashboardIds.Classic));
+        navigation.Children.Add(Nav("◷   Ficheiros recentes", () => ShowRecentPage(false)));
+        navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
         foreach (var app in _registry.GetAll())
@@ -198,24 +209,17 @@ public sealed class MainWindow : Window
 
         var shortcuts = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         shortcuts.Children.Add(Nav("＋  Novo documento", () => NotifyUnavailable("writer")));
-        shortcuts.Children.Add(Nav("▱  Abrir ficheiro", () => NotifyFeature("Abertura multiplataforma de ficheiros")));
+        shortcuts.Children.Add(Nav("▱  Abrir ficheiro", () => _ = ChooseLocalFileAsync()));
         shortcuts.Children.Add(Nav("▦  Modelos", () => NotifyUnavailable("templates")));
         root.Children.Add(shortcuts);
 
         var panels = new WrapPanel { Orientation = Orientation.Horizontal };
-        foreach (var (title, message) in new[]
+        var recent = DocumentPanel("◷  Ficheiros recentes", false, 5);
+        var favorites = DocumentPanel("★  Favoritos", true, 5);
+        var shared = Card(Text("♧  Partilhados comigo: fonte de colaboração não configurada.", 14, false, Muted));
+        foreach (var panel in new[] { recent, favorites, shared })
         {
-            ("◷  Ficheiros recentes", "Ainda não há ficheiros recentes nesta interface."),
-            ("★  Ficheiros fixos", "Os favoritos serão integrados nesta fase de migração."),
-            ("♧  Partilhados comigo", "É necessária uma fonte de colaboração configurada.")
-        })
-        {
-            var inner = new StackPanel { Spacing = 15 };
-            inner.Children.Add(Text(title, 17, true));
-            inner.Children.Add(new Border { Background = LineBrush, Height = 1 });
-            inner.Children.Add(Text(message, 13, false, Muted));
-            var panel = Card(inner);
-            panel.Width = 270;
+            panel.Width = 285;
             panel.MinHeight = 178;
             panel.Margin = new Thickness(0, 0, 14, 10);
             panels.Children.Add(panel);
@@ -231,7 +235,8 @@ public sealed class MainWindow : Window
         root.Children.Add(Text("Crie documentos e aceda aos módulos da suite.", 14, false, Muted));
         root.Children.Add(Card(Text("Criar novo — Writer · Sheets · Slides · Data", 17, true)));
         AddApplicationCards(root, 15);
-        root.Children.Add(Card(Text("Ficheiros recentes e favoritos: integração multiplataforma pendente.", 14, false, Muted)));
+        root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
+        root.Children.Add(DocumentPanel(_favoritesOnly ? "★  Favoritos" : "◷  Ficheiros recentes", _favoritesOnly, 30));
     }
 
     private void BuildGrid(StackPanel root)
@@ -239,6 +244,8 @@ public sealed class MainWindow : Window
         root.Children.Add(Text("Todas as aplicações", 30, true));
         root.Children.Add(Text("Explore os 26 módulos do VCC Office.", 14, false, Muted));
         AddApplicationCards(root, int.MaxValue);
+        root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
+        root.Children.Add(DocumentPanel("◷  Ficheiros recentes", false, 8));
     }
 
     private void AddApplicationCards(StackPanel root, int maximum)
@@ -277,6 +284,11 @@ public sealed class MainWindow : Window
 
     private void NotifyUnavailable(OfficeModule? module)
     {
+        if (module is not null)
+        {
+            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
+            _ = SaveLauncherAsync();
+        }
         NotifyFeature(module is null ? "Módulo desconhecido" :
             module.Name + " ainda não tem uma interface Avalonia disponível");
     }
