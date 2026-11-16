@@ -961,6 +961,20 @@ static async Task TestsDesktopLauncherState()
             recovered.LastOpenedDocumentPath != path)
             throw new Exception("A sessão Avalonia não recuperou dashboard, tema, módulo e último documento.");
 
+        // Every dashboard and theme mode must roundtrip through the shared SQLite store.
+        foreach (var dashboard in new[] { DashboardIds.Modern, DashboardIds.Classic, DashboardIds.Grid })
+        {
+            foreach (var theme in new[] { ThemeMode.System, ThemeMode.Light, ThemeMode.Dark })
+            {
+                await store.SaveAsync(new DesktopLauncherState(dashboard, theme, "data", path));
+                var persisted = await new DesktopLauncherStateStore(
+                    new CoreDatabase(StoragePaths.ForLocalApplication(root)), dashboards, modules).LoadAsync();
+                if (persisted.DashboardId != dashboard || persisted.Theme != theme ||
+                    persisted.LastSelectedModuleId != "data")
+                    throw new Exception("Falha ao recuperar uma combinação dashboard/tema.");
+            }
+        }
+
         // Um módulo pode estar registado mas ainda não ter interface Avalonia:
         // recordar a seleção não implica abrir uma janela fictícia.
         var invalid = new DesktopLauncherState(
