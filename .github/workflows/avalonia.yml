@@ -46,3 +46,33 @@ jobs:
           path: artifacts/desktop/
           if-no-files-found: error
           retention-days: 14
+
+  windows-standalone:
+    name: Windows 11 x64 - Release standalone
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish standalone Windows x64 (includes .NET runtime)
+        run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true --property:PublishTrimmed=false --property:PublishSingleFile=false --output artifacts/windows-standalone
+      - name: Verify runtime is included
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'artifacts/windows-standalone/coreclr.dll')) {
+            throw 'Self-contained publish failed: coreclr.dll is missing.'
+          }
+          if (-not (Test-Path 'artifacts/windows-standalone/VCC Office Suite.exe')) {
+            throw 'Windows executable missing.'
+          }
+      - name: Upload standalone Windows x64 artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: VCCOfficeDesktop-Windows11-x64-Standalone-Release
+          path: artifacts/windows-standalone/
+          if-no-files-found: error
+          retention-days: 14
