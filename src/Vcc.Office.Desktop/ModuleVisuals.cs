@@ -63,7 +63,7 @@ internal static class ModuleVisuals
         };
         if (style.Path is not null)
         {
-            badge.Child = new Path
+            badge.Child = new Avalonia.Controls.Shapes.Path
             {
                 Data = Geometry.Parse(style.Path),
                 Stroke = Brushes.White,
