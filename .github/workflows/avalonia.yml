@@ -35,6 +35,8 @@ jobs:
         run: dotnet build src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration ${{ matrix.configuration }} --no-restore --property:ContinuousIntegrationBuild=true
       - name: Test shared CoreShell
         run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration ${{ matrix.configuration }}
+      - name: Smoke test Avalonia visual tree without display server
+        run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration ${{ matrix.configuration }}
       - name: Publish desktop
         run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration ${{ matrix.configuration }} --no-restore --self-contained false --property:PublishTrimmed=false --output artifacts/desktop
       - name: Upload binary artifact
