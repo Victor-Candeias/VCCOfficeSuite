@@ -32,6 +32,18 @@ dotnet run --project src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj
 
 **Ainda por migrar:** reabertura de janelas reais de módulos Avalonia, editores, drag & drop, documentos remotos, instaladores e validação visual interativa nos três sistemas.
 
+## Incremento — VCC Data Avalonia (primeira interface funcional de módulo)
+- Janela `DataWindow` em Avalonia, ligada ao `VccDataService` existente sobre a mesma base `office.db`.
+- Lançamento pelo catálogo e pelos três dashboards; reutilização da janela aberta, restauro de minimização e registo da última aplicação selecionada.
+- Consultar e criar tabelas SQLite, listar colunas e pré-visualizar até 100 registos.
+- Executar consultas SQL de leitura, pré-visualizar até 150 registos e exportar resultados completos para CSV.
+- Importar CSV para tabelas existentes usando o seletor de ficheiros Avalonia.
+- Apresentar formulários e relatórios previamente definidos, submeter formulários com conversão de tipos e executar relatórios.
+- Os serviços e dados continuam offline; não se introduzem dependências WPF na interface multiplataforma.
+- Os testes CoreShell validam reutilização do mesmo `VccDataService` entre instâncias, persistência de tabelas, formulários, relatórios e CSV.
+
+**Limites deste incremento:** criação visual de formulários/relatórios, relações, edição em grelha, atalhos avançados, formatação visual final e testes de interação num ambiente desktop real permanecem pendentes. A criação de formulários e relatórios continua disponível como API de CoreShell, não como designer Avalonia.
+
 ## Próximos incrementos do VCC-0818
 1. Migrar o splash screen, a identidade visual e o Chrome da janela, respeitando janelas nativas.
 2. Migrar os layouts completos dos três dashboards e respetivos temas, depois de validação visual por plataforma.

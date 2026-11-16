@@ -52,15 +52,16 @@ public sealed class VccDataService
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
             tables.Add(new DataTableDefinition(reader.GetString(0), reader.GetString(1), []));
-        foreach (var table in tables)
+        for (var tableIndex = 0; tableIndex < tables.Count; tableIndex++)
         {
+            var table = tables[tableIndex];
             await using var columns = connection.CreateCommand();
             columns.CommandText = "SELECT name, type, nullable, position FROM data_columns WHERE table_name = $table ORDER BY position";
             columns.Parameters.AddWithValue("$table", table.Name);
             await using var columnReader = await columns.ExecuteReaderAsync(cancellationToken);
             var definitions = new List<DataColumnDefinition>();
             while (await columnReader.ReadAsync(cancellationToken)) definitions.Add(new(columnReader.GetString(0), columnReader.GetString(1), columnReader.GetInt32(2) != 0, columnReader.GetInt32(3)));
-            tables[tables.IndexOf(table)] = table with { Columns = definitions };
+            tables[tableIndex] = table with { Columns = definitions };
         }
         return tables;
     }
