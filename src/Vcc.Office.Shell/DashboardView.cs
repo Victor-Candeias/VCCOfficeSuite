@@ -18,6 +18,9 @@ public sealed class DashboardView : UserControl
     private readonly Action<string> _navigate;
     private readonly Action _openSettings;
     private readonly Action<string> _openApplication;
+    private readonly Action _browseFiles;
+    private readonly Action<string> _openRecent;
+    private readonly Action<string, bool> _setFavorite;
     private readonly Brush _foreground;
     private readonly Brush _muted;
     private readonly Brush _surface;
@@ -25,13 +28,17 @@ public sealed class DashboardView : UserControl
     private readonly Brush _background;
 
     public DashboardView(string dashboardId, HomeScreenModel model, bool dark,
-        Action<string> navigate, Action openSettings, Action<string> openApplication)
+        Action<string> navigate, Action openSettings, Action<string> openApplication,
+        Action browseFiles, Action<string> openRecent, Action<string, bool> setFavorite)
     {
         _model = model;
         _dark = dark;
         _navigate = navigate;
         _openSettings = openSettings;
         _openApplication = openApplication;
+        _browseFiles = browseFiles;
+        _openRecent = openRecent;
+        _setFavorite = setFavorite;
         _foreground = Paint(dark ? "#F2F6FF" : "#16253B");
         _muted = Paint(dark ? "#A7B7D1" : "#62718B");
         _surface = Paint(dark ? "#172439" : "#FFFFFF");
@@ -287,7 +294,16 @@ public sealed class DashboardView : UserControl
 
         var actions = new UniformGrid { Columns = 4, Margin = new Thickness(0, 0, 0, 15) };
         actions.Children.Add(ActionButton("Novo documento", "Criar um ficheiro", "＋", "#1C64E7"));
-        actions.Children.Add(ActionButton("Abrir ficheiro", "No computador", "▱", "#027F9A"));
+        var browseButton = new Button
+        {
+            Content = ActionButton("Abrir ficheiro", "No computador", "▱", "#027F9A"),
+            Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand, Padding = new Thickness(0),
+            HorizontalContentAlignment = HorizontalAlignment.Stretch
+        };
+        System.Windows.Automation.AutomationProperties.SetName(browseButton, "Abrir ficheiro local");
+        browseButton.Click += (_, _) => _browseFiles();
+        actions.Children.Add(browseButton);
         actions.Children.Add(ActionButton("Modelos", "Modelos prontos", "▦", "#6D43CB"));
         actions.Children.Add(ActionButton("Importar", "Ficheiros externos", "⇧", "#2856A3"));
         root.Children.Add(actions);
@@ -309,11 +325,44 @@ public sealed class DashboardView : UserControl
                 Height = 1, Background = _border, Margin = new Thickness(0, 16, 0, 0)
             };
             body.Children.Add(separator);
-            var text = Label(empties[i], 13, false, _muted);
-            text.Margin = new Thickness(4, 26, 4, 34);
-            text.HorizontalAlignment = HorizontalAlignment.Center;
-            text.TextAlignment = TextAlignment.Center;
-            body.Children.Add(text);
+            var documents = i == 0 ? _model.RecentDocuments.Take(5).ToArray()
+                : i == 1 ? _model.RecentDocuments.Where(d => d.IsFavorite).Take(5).ToArray()
+                : [];
+            if (documents.Length == 0)
+            {
+                var text = Label(empties[i], 13, false, _muted);
+                text.Margin = new Thickness(4, 26, 4, 34);
+                text.HorizontalAlignment = HorizontalAlignment.Center;
+                text.TextAlignment = TextAlignment.Center;
+                body.Children.Add(text);
+            }
+            else
+            {
+                foreach (var doc in documents)
+                {
+                    var line = Row();
+                    var link = new Button
+                    {
+                        Content = doc.FileName + (doc.Exists ? "" : " (em falta)"),
+                        ToolTip = doc.FullPath, HorizontalContentAlignment = HorizontalAlignment.Left,
+                        Background = Brushes.Transparent, Foreground = _foreground,
+                        BorderThickness = new Thickness(0), Padding = new Thickness(4, 8),
+                        Cursor = System.Windows.Input.Cursors.Hand, MinWidth = 125
+                    };
+                    link.Click += (_, _) => _openRecent(doc.FullPath);
+                    line.Children.Add(link);
+                    var favorite = new Button
+                    {
+                        Content = doc.IsFavorite ? "★" : "☆",
+                        ToolTip = doc.IsFavorite ? "Retirar dos favoritos" : "Adicionar aos favoritos",
+                        Background = Brushes.Transparent, Foreground = _foreground,
+                        BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand
+                    };
+                    favorite.Click += (_, _) => _setFavorite(doc.FullPath, !doc.IsFavorite);
+                    line.Children.Add(favorite);
+                    body.Children.Add(line);
+                }
+            }
             var card = Panel(body);
             card.Margin = new Thickness(0, 0, i == 2 ? 0 : 12, 0);
             panels.Children.Add(card);
