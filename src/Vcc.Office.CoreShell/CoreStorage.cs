@@ -33,6 +33,18 @@ public sealed class MigrationRunner
         CREATE TABLE IF NOT EXISTS data_forms (name TEXT NOT NULL PRIMARY KEY, table_name TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS data_form_fields (form_name TEXT NOT NULL, name TEXT NOT NULL, label TEXT NOT NULL, type TEXT NOT NULL, required INTEGER NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(form_name, name), FOREIGN KEY(form_name) REFERENCES data_forms(name) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS data_reports (name TEXT NOT NULL PRIMARY KEY, display_name TEXT NOT NULL, query_sql TEXT NOT NULL, created_at TEXT NOT NULL);
+        """),
+        (4, """
+        CREATE TABLE IF NOT EXISTS recent_documents (
+            full_path TEXT NOT NULL PRIMARY KEY COLLATE NOCASE,
+            file_name TEXT NOT NULL,
+            extension TEXT NOT NULL,
+            module_id TEXT,
+            opened_at TEXT NOT NULL,
+            is_favorite INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS ix_recent_documents_opened ON recent_documents(opened_at DESC);
+        CREATE INDEX IF NOT EXISTS ix_recent_documents_favorites ON recent_documents(is_favorite, opened_at DESC);
         """)
     ];
 
