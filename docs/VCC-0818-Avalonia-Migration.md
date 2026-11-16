@@ -13,6 +13,14 @@
 dotnet run --project src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj
 ```
 
+## Incremento seguinte — Splash e dashboards
+- Splash Avalonia nativo com identidade visual e indicador de progresso, mostrado antes da construção da janela principal.
+- Janela principal Avalonia com decorações nativas (evita APIs Win32), cabeçalho, barra lateral e pesquisa.
+- Três dashboards com disposições diferenciadas: moderno (banner, ações, painéis), clássico (criação e catálogo) e grelha (26 módulos).
+- Modo claro/escuro aplicado à interface Avalonia. Os editores e o seletor de ficheiros continuam por migrar.
+- Os painéis de documentos recentes e favoritos apresentam estados de migração, não os dados SQLite; ainda não foi alcançada paridade com WPF.
+- Validação de compilação Windows/Linux/macOS Debug/Release não é validação visual em ambiente gráfico.
+
 ## Próximos incrementos do VCC-0818
 1. Migrar o splash screen, a identidade visual e o Chrome da janela, respeitando janelas nativas.
 2. Migrar os layouts completos dos três dashboards e respetivos temas, depois de validação visual por plataforma.
