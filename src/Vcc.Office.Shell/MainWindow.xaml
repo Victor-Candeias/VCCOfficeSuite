@@ -223,7 +223,7 @@
             </Border>
         </DataTemplate>
         <DataTemplate x:Key="ApplicationNavigation">
-            <Button Style="{StaticResource NavigationButton}" AutomationProperties.Name="{Binding Name}">
+            <Button Style="{StaticResource NavigationButton}" AutomationProperties.Name="{Binding Name}" Tag="{Binding Id}" Click="Application_Click">
                 <StackPanel Orientation="Horizontal">
                     <Viewbox Width="28" Height="28"><ContentControl Content="{Binding}" ContentTemplate="{StaticResource ApplicationIcon}"/></Viewbox>
                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="16,0,0,0"/>
@@ -383,7 +383,7 @@
                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="6"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource CreationCard}" AutomationProperties.Name="{Binding Title}">
+                                        <Button Style="{StaticResource CreationCard}" AutomationProperties.Name="{Binding Title}" Tag="{Binding Application.Id}" Click="Application_Click">
                                             <StackPanel HorizontalAlignment="Center">
                                                 <ContentControl Content="{Binding Application}" ContentTemplate="{StaticResource ApplicationIcon}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                                 <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>

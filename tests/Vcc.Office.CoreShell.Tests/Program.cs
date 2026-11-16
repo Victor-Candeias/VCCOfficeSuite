@@ -5,6 +5,7 @@ using System.Text;
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
+    ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
     ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
@@ -806,3 +807,27 @@ static string CreateTestDirectory()
     Directory.CreateDirectory(path);
     return path;
 }
+
+static Task ValidatesOfficeApplicationRegistry()
+{
+    var registry = new OfficeApplicationRegistry();
+    var all = registry.GetAll();
+    if (all.Count != 26 || all.Select(m => m.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 26)
+        throw new Exception("O catálogo deve conter 26 módulos únicos.");
+    var manager = new OfficeApplicationManager(registry);
+    if (!manager.TryResolve("DATA", out var data) || data?.Id != "data")
+        throw new Exception("VCC Data deve abrir no Launcher.");
+    if (manager.TryResolve("writer", out _) || manager.TryResolve("desconhecido", out _))
+        throw new Exception("Módulos sem interface não podem ser anunciados como disponíveis.");
+    registry.Register(new OfficeModule("writer", "VCC Writer", true));
+    if (!manager.TryResolve("writer", out _))
+        throw new Exception("O registo dinâmico deve permitir disponibilizar futuros módulos.");
+    try
+    {
+        registry.Register(new OfficeModule("unknown", "Inexistente", true));
+        throw new Exception("Foi aceite um módulo desconhecido.");
+    }
+    catch (ArgumentException) { }
+    return Task.CompletedTask;
+}
+

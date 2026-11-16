@@ -12,6 +12,8 @@ public partial class MainWindow : Window
 {
     private readonly CoreShellService _shell;
     private readonly HomeScreenModel _homeModel;
+    private readonly OfficeApplicationManager _applicationManager = new(new OfficeApplicationRegistry());
+    private readonly Dictionary<string, Window> _moduleWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly IDashboardRegistry _dashboardRegistry = new DashboardRegistry();
     private readonly DashboardSqliteRepository _dashboardSettings;
     private DashboardPreferences _dashboardPreferences = DashboardPreferences.Default;
@@ -210,7 +212,7 @@ public partial class MainWindow : Window
         try
         {
             // Criar a vista antes de modificar o estado apresentado.
-            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme(), NavigateDashboard, () => OpenDashboardSettings());
+            var alternative = id == DashboardIds.Classic ? null : new DashboardView(id, _homeModel, IsDarkTheme(), NavigateDashboard, () => OpenDashboardSettings(), OpenApplication);
             AlternativeDashboardHost.Content = alternative;
             ClassicDashboardRoot.Visibility = alternative is null ? Visibility.Visible : Visibility.Collapsed;
             AlternativeDashboardHost.Visibility = alternative is null ? Visibility.Collapsed : Visibility.Visible;
@@ -308,6 +310,45 @@ public partial class MainWindow : Window
                     icon.Stroke = actionIconBrush;
         foreach (var subtitle in FindVisualChildren<System.Windows.Controls.TextBlock>(BrandSubtitle))
             subtitle.Foreground = DashboardBrush(dark ? "#C4D3EC" : "#172238");
+    }
+
+    private void OpenApplication(string moduleId)
+    {
+        if (!_applicationManager.TryResolve(moduleId, out var module) || module is null)
+        {
+            var name = _homeModel.MainApplications.Concat(_homeModel.MoreApplications)
+                .FirstOrDefault(app => string.Equals(app.Id, moduleId, StringComparison.OrdinalIgnoreCase))?.Name
+                ?? moduleId;
+            MessageBox.Show(this, $"{name} ainda não tem uma interface disponível nesta versão.",
+                "VCC Office Suite", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (_moduleWindows.TryGetValue(module.Id, out var existing))
+        {
+            if (existing.WindowState == WindowState.Minimized) existing.WindowState = WindowState.Normal;
+            existing.Activate();
+            return;
+        }
+
+        Window window = module.Id switch
+        {
+            "data" => new WorkspaceWindow(openDataOnLoad: true),
+            _ => throw new InvalidOperationException("Não existe interface registada para este módulo.")
+        };
+        window.Owner = this;
+        window.Closed += (_, _) => _moduleWindows.Remove(module.Id);
+        _moduleWindows[module.Id] = window;
+        window.Show();
+    }
+
+    private void Application_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button { Tag: string id })
+        {
+            MoreApplicationsPopup.IsOpen = false;
+            OpenApplication(id);
+        }
     }
 
     private void NavigateDashboard(string id)
