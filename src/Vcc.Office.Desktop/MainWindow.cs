@@ -16,7 +16,7 @@ public sealed class MainWindow : Window
     private readonly OfficeApplicationRegistry _registry = new();
     private readonly DashboardRegistry _dashboards = new();
     private readonly StackPanel _content = new() { Spacing = 14 };
-    private readonly TextBox _search = new() { Watermark = "Pesquisar aplicações..." };
+    private const string SearchHint = "Pesquisar aplicações...";
     private string _activeDashboard = DashboardIds.Modern;
 
     public MainWindow()
@@ -63,8 +63,6 @@ public sealed class MainWindow : Window
 
         var scroller = new ScrollViewer
         {
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Content = _content
         };
         _content.Margin = new Thickness(26, 16);
@@ -94,7 +92,7 @@ public sealed class MainWindow : Window
             TextWrapping = TextWrapping.Wrap
         });
 
-        var search = new TextBox { Watermark = _search.Watermark, MinWidth = 280 };
+        var search = new TextBox { PlaceholderText = SearchHint, MinWidth = 280 };
         _content.Children.Add(search);
         var modules = new WrapPanel
         {
