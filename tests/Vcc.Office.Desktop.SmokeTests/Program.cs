@@ -58,5 +58,38 @@ if (Application.Current is { } app)
     render.Invoke(window, null);
 }
 
-Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards e temas");
+// Regression: launcher controls should use consistent rounded corners.
+if (navButton.CornerRadius.TopLeft < 8)
+    throw new Exception("Os botões de navegação não têm cantos arredondados.");
+render.Invoke(window, null);
+var roundedSearch = (TextBox)searchField.GetValue(window)!;
+if (roundedSearch.CornerRadius.TopLeft < 8)
+    throw new Exception("A caixa de pesquisa não tem cantos arredondados.");
+
+// Regression: card titles and subtitles must sit centered below their icons.
+var centeredText = typeof(MainWindow).GetMethod("CenteredText", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new InvalidOperationException("Helper CenteredText não encontrado.");
+var title = (TextBlock)centeredText.Invoke(window, ["VCC writer", 16.0, true, null])!;
+if (title.TextAlignment != Avalonia.Media.TextAlignment.Center ||
+    title.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch)
+    throw new Exception("O texto dos cartões não está centrado.");
+
+var cardsMethod = typeof(MainWindow).GetMethod("AddApplicationCards", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new InvalidOperationException("AddApplicationCards não encontrado.");
+var root = new StackPanel();
+cardsMethod.Invoke(window, [root, 4]);
+var cards = root.Children.OfType<WrapPanel>().FirstOrDefault()
+    ?? throw new Exception("Grelha de cartões não encontrada.");
+foreach (var cardButton in cards.Children.OfType<Button>())
+{
+    if (cardButton.Content is not Border cardBorder || cardBorder.Child is not StackPanel stack)
+        throw new Exception("Estrutura do cartão inesperada.");
+    if (cardButton.CornerRadius.TopLeft < 8 ||
+        stack.Children.Count < 3 ||
+        stack.Children[0].HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Center ||
+        stack.Children.OfType<TextBlock>().Any(t => t.TextAlignment != Avalonia.Media.TextAlignment.Center))
+        throw new Exception("Ícone ou textos do cartão não estão centrados, ou cantos por arredondar.");
+}
+
+Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
