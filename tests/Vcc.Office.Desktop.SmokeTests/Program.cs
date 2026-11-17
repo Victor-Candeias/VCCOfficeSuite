@@ -158,5 +158,24 @@ if (customButton.Content?.ToString()?.Contains("Módulo Teste", StringComparison
     ToolTip.GetTip(customButton)?.ToString()?.Contains("sem aplicação associada", StringComparison.Ordinal) != true)
     throw new Exception("Módulo personalizado sem título ou aviso de disponibilidade.");
 
+// The Avalonia launcher must reuse the existing session contract for exactly
+// the editors that it can actually instantiate (not all catalog placeholders).
+var sessionRegistryField = typeof(MainWindow).GetField("_sessionRegistry",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Registo da recuperação de sessões Avalonia em falta.");
+var sessionRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)sessionRegistryField.GetValue(window)!;
+var availableIds = sessionRegistry.GetAll().Where(item => item.IsAvailable).Select(item => item.Id).ToArray();
+if (!availableIds.SequenceEqual(new[] { "writer", "sheets", "slides", "data" }))
+    throw new Exception("A sessão Avalonia deve abrir apenas os quatro editores funcionais.");
+foreach (var name in new[] { "RestoreModuleSession", "TrackModuleOpened", "TrackModuleClosed" })
+    if (typeof(MainWindow).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance) is null)
+        throw new Exception("Fluxo de sessão não integrado: " + name);
+var sessionStoreField = typeof(MainWindow).GetField("_sessionStore",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Persistência de sessão Avalonia em falta.");
+var sessionStore = (Vcc.Office.CoreShell.OfficeSessionStore)sessionStoreField.GetValue(window)!;
+if (!sessionStore.FilePath.EndsWith("avalonia-application-session.json", StringComparison.OrdinalIgnoreCase))
+    throw new Exception("A sessão Avalonia não pode sobrescrever a sessão WPF.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
