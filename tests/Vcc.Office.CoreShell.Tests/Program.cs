@@ -50,6 +50,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Sheets seleciona, recalcula, copia e limpa intervalos", ExercisesSheetRanges)
     ,("Sheets exporta PDF e Slides cria, apresenta e persiste", ExercisesSlides)
     ,("Slides aplica transições e exporta pacotes; Mail compõe, envia e pesquisa", ExercisesSlidesAndMail)
+    ,("VCC-0820 Slides adiciona diapositivos, edita títulos e recupera estado", TestsSlidesAvaloniaWorkflow)
     ,("Data cria tabelas, importa CSV, consulta e exporta", ExercisesData)
     ,("Data guarda formulários e executa relatórios", ExercisesDataFormsAndReports)
     ,("Avalonia reutiliza Core Data SQLite entre sessões", ExercisesAvaloniaDataCore)
@@ -1050,4 +1051,30 @@ static async Task ExercisesAvaloniaDataCore()
         catch (ArgumentException) { }
     }
     finally { Directory.Delete(directory, true); }
+}
+
+static async Task TestsSlidesAvaloniaWorkflow()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var path = Path.Combine(directory, "slides-avalonia.json");
+        var service = new VccSlidesService(path);
+        var deck = await service.CreateAsync("slides-0820", "Verificação Avalonia");
+        if (deck.Slides.Count != 1) throw new Exception("A apresentação inicial deve ter um diapositivo.");
+        await service.SetSlideTitleAsync(deck.Id, 0, "Capa atualizada");
+        var next = await service.AddSlideAsync(deck.Id, "Agenda");
+        await service.SetNotesAsync(deck.Id, 1, "Notas do segundo diapositivo");
+        await service.AddObjectAsync(deck.Id, 1, new SlideObject("texto-1", SlideObjectKind.Text, 15, 30, 420, 80, "Agenda"));
+        if (next.Slides.Count != 2 || service.Navigate(deck.Id).Slides[0].Title != "Capa atualizada")
+            throw new Exception("Criação e edição dos diapositivos falharam.");
+        var recovered = new VccSlidesService(path);
+        await recovered.LoadAsync();
+        var loaded = recovered.Navigate(deck.Id);
+        if (loaded.Slides.Count != 2 || loaded.CurrentSlide != 1 ||
+            loaded.Slides[1].Notes != "Notas do segundo diapositivo" ||
+            loaded.Slides[1].Objects.Single().Content != "Agenda")
+            throw new Exception("O estado dos Slides não foi preservado.");
+    }
+    finally { Directory.Delete(directory, recursive: true); }
 }
