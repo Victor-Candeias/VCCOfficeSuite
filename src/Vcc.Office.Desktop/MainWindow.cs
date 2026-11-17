@@ -24,6 +24,9 @@ public sealed partial class MainWindow : Window
     private WriterWindow? _writerWindow;
     private string _activeDashboard = DashboardIds.Modern;
     private bool _compactLayout;
+    private string? _selectedSidebarModuleId;
+    private readonly Dictionary<string, Button> _sidebarModuleButtons = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Button> _sidebarDashboardButtons = new(StringComparer.OrdinalIgnoreCase);
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
     private bool HighContrast => _workspaceShell.State.HighContrast;
@@ -113,6 +116,7 @@ public sealed partial class MainWindow : Window
     private void Switch(string id)
     {
         if (!_dashboards.Contains(id)) return;
+        _selectedSidebarModuleId = null;
         _activeDashboard = id;
         _favoritesOnly = false;
         _launcherState = _launcherState with { DashboardId = id };
@@ -195,6 +199,8 @@ public sealed partial class MainWindow : Window
             BorderThickness = new Thickness(0, 0, 1, 0),
             Padding = new Thickness(13)
         };
+        _sidebarDashboardButtons.Clear();
+        _sidebarModuleButtons.Clear();
         var navigation = new StackPanel
         {
             Spacing = 3,
@@ -202,14 +208,17 @@ public sealed partial class MainWindow : Window
             // Keep every menu entry inside the usable width, clear of the vertical scrollbar.
             Margin = new Thickness(0, 0, 12, 0)
         };
-        navigation.Children.Add(Nav("⌂   Início", () => Switch(DashboardIds.Modern),
-            _activeDashboard == DashboardIds.Modern));
+        var homeButton = Nav("⌂   Início", () => Switch(DashboardIds.Modern));
+        _sidebarDashboardButtons[DashboardIds.Modern] = homeButton;
+        navigation.Children.Add(homeButton);
         _launcherFocusButton = Nav("▦   Todas as aplicações", () => Switch(DashboardIds.Grid),
             _activeDashboard == DashboardIds.Grid);
         SetAccessibleName(_launcherFocusButton, "Abrir Launcher de aplicações");
+        _sidebarDashboardButtons[DashboardIds.Grid] = _launcherFocusButton;
         navigation.Children.Add(_launcherFocusButton);
-        navigation.Children.Add(Nav("▣   Dashboard clássico", () => Switch(DashboardIds.Classic),
-            _activeDashboard == DashboardIds.Classic));
+        var classicButton = Nav("▣   Dashboard clássico", () => Switch(DashboardIds.Classic));
+        _sidebarDashboardButtons[DashboardIds.Classic] = classicButton;
+        navigation.Children.Add(classicButton);
         navigation.Children.Add(Nav("◷   Ficheiros recentes", () => ShowRecentPage(false)));
         navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
@@ -223,7 +232,7 @@ public sealed partial class MainWindow : Window
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
             line.Children.Add(ModuleVisuals.Badge(app.Id, 25));
             line.Children.Add(Text(app.Name.Replace("VCC ", ""), 13));
-            var selected = app.Id == _launcherState.LastSelectedModuleId;
+            var selected = app.Id == _selectedSidebarModuleId;
             var item = new Button
             {
                 Content = line,
@@ -237,11 +246,13 @@ public sealed partial class MainWindow : Window
             };
             AutomationProperties.SetName(item, "Abrir " + app.Name);
             item.Click += (_, _) => OpenModule(app);
+            _sidebarModuleButtons[app.Id] = item;
             navigation.Children.Add(item);
         }
         _configuredSidebar = new StackPanel { Spacing = 3 };
         navigation.Children.Add(_configuredSidebar);
         RefreshConfiguredSidebar();
+        RefreshSidebarSelection();
         sidebar.Child = new ScrollViewer
         {
             Content = navigation,
@@ -459,8 +470,37 @@ public sealed partial class MainWindow : Window
     private void NotifyUnavailable(string id) =>
         OpenModule(_registry.Find(id));
 
+    // Highlight the module that was actually opened rather than the last one
+    // saved in preferences. Updating existing controls preserves sidebar scroll position.
+    private void SelectSidebarModule(string moduleId)
+    {
+        _selectedSidebarModuleId = moduleId;
+        RefreshSidebarSelection();
+    }
+
+    private void RefreshSidebarSelection()
+    {
+        foreach (var (dashboardId, button) in _sidebarDashboardButtons)
+        {
+            var selected = _selectedSidebarModuleId is null && _activeDashboard == dashboardId;
+            button.Foreground = selected ? Brushes.White : ForegroundBrush;
+            button.Background = selected
+                ? Brush.Parse(HighContrast ? "#003399" : "#2158AD")
+                : Brush.Parse(HighContrast ? "#000000" : Dark ? "#172439" : "#EEF3FA");
+        }
+
+        foreach (var (moduleId, button) in _sidebarModuleButtons)
+        {
+            var selected = moduleId == _selectedSidebarModuleId;
+            button.Background = selected
+                ? Brush.Parse(Dark ? "#263C62" : "#DCE9FC")
+                : Brushes.Transparent;
+        }
+    }
+
     private void OpenModule(OfficeModule? module)
     {
+        if (module is not null) SelectSidebarModule(module.Id);
         if (module?.Id == "writer")
         {
             _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
