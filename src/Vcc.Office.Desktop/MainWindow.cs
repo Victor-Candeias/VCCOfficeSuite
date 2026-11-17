@@ -345,7 +345,7 @@ public sealed partial class MainWindow : Window
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
-            box.Children.Add(CenteredText(module.Id is "data" or "sheets" or "slides" ? "Disponível · offline" : "Em migração", 12, false, Muted));
+            box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : module.Id is "sheets" or "slides" ? "Editor inicial · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(18)),
