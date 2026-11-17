@@ -52,6 +52,40 @@ if (sidebarButtons.Length < 8 ||
     sidebarButtons.Any(button => button.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch))
     throw new Exception("Os botões de navegação e aplicações devem ocupar a mesma largura disponível.");
 
+// Active module highlight must move to the clicked app, not stay on the saved app.
+var selectSidebarModule = typeof(MainWindow).GetMethod("SelectSidebarModule",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Atualização da seleção do menu lateral não encontrada.");
+var sidebarModulesField = typeof(MainWindow).GetField("_sidebarModuleButtons",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Botões das aplicações não encontrados.");
+var sidebarDashboardsField = typeof(MainWindow).GetField("_sidebarDashboardButtons",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Botões dos dashboards não encontrados.");
+var moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
+var dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
+selectSidebarModule.Invoke(window, ["writer"]);
+var writerBackground = moduleButtons["writer"].Background?.ToString();
+if (writerBackground == moduleButtons["sheets"].Background?.ToString() ||
+    dashboardButtons["modern"].Background?.ToString() ==
+    dashboardButtons["classic"].Background?.ToString() && dashboardButtons["modern"].Foreground?.ToString() == "#ffffffff")
+    throw new Exception("O Writer não ficou selecionado de forma exclusiva.");
+selectSidebarModule.Invoke(window, ["sheets"]);
+if (moduleButtons["sheets"].Background?.ToString() != writerBackground ||
+    moduleButtons["writer"].Background?.ToString() == writerBackground)
+    throw new Exception("A seleção não passou de Writer para Sheets.");
+render.Invoke(window, null);
+moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
+if (moduleButtons["sheets"].Background?.ToString() != writerBackground)
+    throw new Exception("A seleção da aplicação perdeu-se ao reconstruir o menu.");
+switchDashboard.Invoke(window, ["classic"]);
+moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
+dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
+if (moduleButtons["sheets"].Background?.ToString() == writerBackground ||
+    dashboardButtons["classic"].Background?.ToString() != "#2158AD" &&
+    dashboardButtons["classic"].Background?.ToString() != "#003399")
+    throw new Exception("Selecionar um dashboard deve remover a seleção da aplicação.");
+
 // The previous crash occurred on the second Render() call after restoring session.
 // This tests repeated visual-tree rebuilds without reparenting the search box.
 TextBox? lastSearch = null;
