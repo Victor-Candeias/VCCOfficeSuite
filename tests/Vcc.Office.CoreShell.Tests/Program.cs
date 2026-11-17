@@ -52,6 +52,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("Sheets exporta PDF e Slides cria, apresenta e persiste", ExercisesSlides)
     ,("Slides aplica transições e exporta pacotes; Mail compõe, envia e pesquisa", ExercisesSlidesAndMail)
     ,("VCC-0820 Slides adiciona diapositivos, edita títulos e recupera estado", TestsSlidesAvaloniaWorkflow)
+    ,("VCC-0820 WPF e Avalonia partilham estado Workspace sem migração destrutiva", TestsLegacyWorkspaceParity)
     ,("Data cria tabelas, importa CSV, consulta e exporta", ExercisesData)
     ,("Data guarda formulários e executa relatórios", ExercisesDataFormsAndReports)
     ,("Avalonia reutiliza Core Data SQLite entre sessões", ExercisesAvaloniaDataCore)
@@ -1101,6 +1102,40 @@ static async Task RoundTripsWriterDocx()
         var original = service.Navigate("docx-a");
         if (!original.Paragraphs.Select(p => p.Text).SequenceEqual(imported.Paragraphs.Select(p => p.Text)))
             throw new InvalidOperationException("Parágrafos Unicode não sobreviveram ao DOCX.");
+    }
+    finally { Directory.Delete(directory, recursive: true); }
+}
+
+static async Task TestsLegacyWorkspaceParity()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var path = Path.Combine(directory, "VCC Office", "shell-state.json");
+        var legacy = new CoreShellService(new ShellStateStore(path));
+        await legacy.InitialiseAsync();
+        await legacy.ConfigureRibbonAsync([.. legacy.State.Ribbon,
+            new RibbonTab("custom", "Personalizado", [
+                new RibbonCommand("print", "Imprimir", "Personalizado", "P")])]);
+        await legacy.ConfigureShortcutsAsync(new Dictionary<string, string>(legacy.State.Shortcuts)
+        {
+            ["print"] = "Ctrl+Shift+P"
+        });
+        await legacy.ConfigureNavigationAsync(new NavigationSettings(NavigationFocusTarget.Ribbon, true));
+        await legacy.ConfigureAccessibilityAsync(highContrast: true, reducedMotion: true);
+        await legacy.ConfigureWindowAsync(new WindowLayout(1024, 768, 70, 80, false));
+        var avalonia = new CoreShellService(new ShellStateStore(path));
+        await avalonia.InitialiseAsync();
+        if (!avalonia.State.HighContrast || !avalonia.State.ReducedMotion ||
+            avalonia.State.Navigation.InitialFocus != NavigationFocusTarget.Ribbon ||
+            !avalonia.State.Navigation.WrapFocus ||
+            avalonia.State.Window.Width != 1024 ||
+            !avalonia.State.Ribbon.Any(tab => tab.Id == "custom") ||
+            !ShortcutCatalog.TryResolveCommand(avalonia.State.Shortcuts, "Ctrl+Shift+P", out var cmd) ||
+            cmd != "print")
+            throw new Exception("O estado do Workspace WPF não foi recuperado pela versão Avalonia.");
+        if (File.ReadAllText(path).Contains("System.Windows", StringComparison.Ordinal))
+            throw new Exception("O estado persistido contém dependências de WPF.");
     }
     finally { Directory.Delete(directory, recursive: true); }
 }
