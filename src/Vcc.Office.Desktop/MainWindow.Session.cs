@@ -27,7 +27,9 @@ public sealed partial class MainWindow
         Closing += (_, _) =>
         {
             _closingSuite = true;
-            SaveModuleSession();
+            try { SaveModuleSession(); }
+            catch (IOException) { /* Do not block window shutdown. */ }
+            catch (UnauthorizedAccessException) { /* A read-only profile can still close. */ }
         };
     }
 
