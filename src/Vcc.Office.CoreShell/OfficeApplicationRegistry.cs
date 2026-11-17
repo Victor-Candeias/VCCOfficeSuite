@@ -14,6 +14,7 @@ public sealed class OfficeApplicationRegistry
     ];
 
     private readonly Dictionary<string, OfficeModule> _modules;
+    private readonly List<string> _externalIds = [];
 
     public OfficeApplicationRegistry(IEnumerable<OfficeModule>? registered = null)
     {
@@ -28,10 +29,20 @@ public sealed class OfficeApplicationRegistry
             foreach (var module in registered) Register(module);
     }
 
-    public IReadOnlyList<OfficeModule> GetAll() => ModuleIds.Select(id => _modules[id]).ToArray();
+    public IReadOnlyList<OfficeModule> GetAll() => ModuleIds.Concat(_externalIds).Select(id => _modules[id]).ToArray();
 
     public OfficeModule? Find(string? id) =>
         id is not null && _modules.TryGetValue(id.Trim(), out var module) ? module : null;
+
+    /// <summary>Install a dynamically discovered plugin, including IDs not in the legacy catalogue.</summary>
+    public void RegisterPlugin(OfficeModule module)
+    {
+        ArgumentNullException.ThrowIfNull(module);
+        if (string.IsNullOrWhiteSpace(module.Id) || string.IsNullOrWhiteSpace(module.Name))
+            throw new ArgumentException("O plugin deve fornecer ID e nome.", nameof(module));
+        if (!_modules.ContainsKey(module.Id)) _externalIds.Add(module.Id);
+        _modules[module.Id] = module;
+    }
 
     public void Register(OfficeModule module)
     {
