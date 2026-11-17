@@ -42,6 +42,8 @@ jobs:
       # Windows performs the same checks before creating its standalone package.
       - name: Publish desktop (Linux/macOS Release only)
         run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --no-restore --self-contained false --property:PublishTrimmed=false --output artifacts/desktop
+      - name: Stage discovered plugin DLLs (Linux/macOS)
+        run: python scripts/stage-office-plugins.py artifacts/desktop Release
       - name: Verify Writer plugin in Linux/macOS release
         run: python scripts/check-writer-plugin-package.py artifacts/desktop
       - name: Upload Linux/macOS Release artifact
@@ -76,6 +78,8 @@ jobs:
         run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration Release
       - name: Publish standalone Windows x64 (includes .NET runtime)
         run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true --property:PublishTrimmed=false --property:PublishSingleFile=false --output artifacts/windows-standalone
+      - name: Stage discovered plugin DLLs (Windows)
+        run: python scripts/stage-office-plugins.py artifacts/windows-standalone Release
       - name: Verify Writer plugin in Windows standalone release
         run: python scripts/check-writer-plugin-package.py artifacts/windows-standalone
       - name: Verify runtime is included
