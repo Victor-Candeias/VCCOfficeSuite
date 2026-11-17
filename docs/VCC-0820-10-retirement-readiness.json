@@ -1,0 +1,59 @@
+{
+  "retired": false,
+  "approved_by": null,
+  "approved_at": null,
+  "checks": {
+    "launcher_and_dashboards": {
+      "passed": false,
+      "evidence": null
+    },
+    "writer_and_documents": {
+      "passed": false,
+      "evidence": null
+    },
+    "sheets_and_workbooks": {
+      "passed": false,
+      "evidence": null
+    },
+    "slides_and_presentations": {
+      "passed": false,
+      "evidence": null
+    },
+    "data_forms_and_reports": {
+      "passed": false,
+      "evidence": null
+    },
+    "recent_files_and_favorites": {
+      "passed": false,
+      "evidence": null
+    },
+    "workspace_settings_and_shortcuts": {
+      "passed": false,
+      "evidence": null
+    },
+    "accessibility_and_keyboard": {
+      "passed": false,
+      "evidence": null
+    },
+    "window_geometry_and_dpi": {
+      "passed": false,
+      "evidence": null
+    },
+    "legacy_data_import_and_rollback": {
+      "passed": false,
+      "evidence": null
+    },
+    "windows_real_ui_acceptance": {
+      "passed": false,
+      "evidence": null
+    },
+    "linux_real_ui_acceptance": {
+      "passed": false,
+      "evidence": null
+    },
+    "macos_real_ui_acceptance": {
+      "passed": false,
+      "evidence": null
+    }
+  }
+}

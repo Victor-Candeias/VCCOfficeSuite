@@ -40,6 +40,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Verificar bloqueio de retirada WPF sem paridade aprovada
+        run: python scripts/check-wpf-retirement.py
+
       - name: Restaurar dependências
         run: dotnet restore VCC.Office.sln
 
@@ -71,7 +74,7 @@ jobs:
       - name: Disponibilizar a aplicação
         uses: actions/upload-artifact@v7
         with:
-          name: VCCOfficeSuite-${{ matrix.configuration }}-win-x64
+          name: VCCOfficeSuite-Legacy-WPF-${{ matrix.configuration }}-win-x64
           path: artifacts/publish/${{ matrix.configuration }}/
           if-no-files-found: error
           retention-days: 14
