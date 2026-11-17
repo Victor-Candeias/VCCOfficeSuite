@@ -194,7 +194,13 @@ public sealed partial class MainWindow : Window
             BorderThickness = new Thickness(0, 0, 1, 0),
             Padding = new Thickness(13)
         };
-        var navigation = new StackPanel { Spacing = 3 };
+        var navigation = new StackPanel
+        {
+            Spacing = 3,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            // Keep every menu entry inside the usable width, clear of the vertical scrollbar.
+            Margin = new Thickness(0, 0, 12, 0)
+        };
         navigation.Children.Add(Nav("⌂   Início", () => Switch(DashboardIds.Modern),
             _activeDashboard == DashboardIds.Modern));
         _launcherFocusButton = Nav("▦   Todas as aplicações", () => Switch(DashboardIds.Grid),
@@ -221,7 +227,8 @@ public sealed partial class MainWindow : Window
             {
                 Content = line,
                 CornerRadius = new CornerRadius(ControlCornerRadius),
-                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
                 Background = selected ? Brush.Parse(Dark ? "#263C62" : "#DCE9FC") : Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(7, 5),
@@ -234,7 +241,12 @@ public sealed partial class MainWindow : Window
         _configuredSidebar = new StackPanel { Spacing = 3 };
         navigation.Children.Add(_configuredSidebar);
         RefreshConfiguredSidebar();
-        sidebar.Child = new ScrollViewer { Content = navigation };
+        sidebar.Child = new ScrollViewer
+        {
+            Content = navigation,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+        };
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
 
