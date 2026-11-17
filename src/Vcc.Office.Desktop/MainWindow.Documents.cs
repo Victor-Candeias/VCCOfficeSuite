@@ -42,6 +42,7 @@ public sealed partial class MainWindow
             }
             await RefreshRecentAsync();
             Render();
+            RestoreModuleSession();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
             Microsoft.Data.Sqlite.SqliteException)

@@ -7,6 +7,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
     ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
+    ("VCC-0820.8 sessões Avalonia: migração WPF, duplicados, fecho e backup", ValidatesAvaloniaSessionMigration),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
@@ -1232,4 +1233,65 @@ static async Task TestsConfiguredLauncherPolicy()
             throw new InvalidOperationException("A seleção do módulo personalizado não foi persistida.");
     }
     finally { Directory.Delete(directory, recursive: true); }
+}
+
+static Task ValidatesAvaloniaSessionMigration()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var legacyPath = Path.Combine(directory, "application-session.json");
+        var avaloniaPath = Path.Combine(directory, "avalonia-application-session.json");
+        var legacy = new OfficeSessionStore(legacyPath);
+        var avalonia = new OfficeSessionStore(avaloniaPath);
+        var registry = AvaloniaModuleSession.AvailableModules();
+
+        // The CoreShell default registry intentionally keeps the unfinished
+        // applications unavailable, but Avalonia can open its four editors.
+        if (registry.GetAll().Count(module => module.IsAvailable) != 4)
+            throw new Exception("A sessão Avalonia deve incluir apenas os quatro editores implementados.");
+
+        var original = new OfficeSession("writer", ["writer", "sheets", "slides", "data", "mail"]);
+        var sourceContent = System.Text.Json.JsonSerializer.Serialize(original);
+        File.WriteAllText(legacyPath, sourceContent);
+
+        var imported = AvaloniaModuleSession.Load(avalonia, legacy, registry);
+        if (imported.OpenModuleIds.Count != 4 ||
+            imported.OpenModuleIds.Any(id => id == "mail") ||
+            imported.LastModuleId != "writer")
+            throw new Exception("A sessão WPF não foi importada corretamente.");
+
+        var selected = OfficeSessionPolicy.Open(imported, "WRITER", registry);
+        if (selected.OpenModuleIds.Count != 4 || selected.LastModuleId != "writer")
+            throw new Exception("Abrir um módulo existente duplicou uma janela.");
+
+        selected = OfficeSessionPolicy.Close(selected, "SHEETS", registry);
+        avalonia.Save(selected, registry);
+        var reloaded = AvaloniaModuleSession.Load(avalonia, legacy, registry);
+        if (reloaded.OpenModuleIds.Count != 3 ||
+            reloaded.OpenModuleIds.Contains("sheets") ||
+            !reloaded.OpenModuleIds.Contains("data"))
+            throw new Exception("A sessão Avalonia não preservou o fecho da janela.");
+
+        if (File.ReadAllText(legacyPath) != sourceContent)
+            throw new Exception("A importação reescreveu a sessão WPF original.");
+
+        // A valid Avalonia backup takes precedence over the WPF source even if
+        // the current JSON is corrupt.
+        avalonia.Save(reloaded with { OpenModuleIds = ["writer", "data"] }, registry);
+        File.WriteAllText(avaloniaPath, "{invalid json");
+        var recovered = AvaloniaModuleSession.Load(avalonia, legacy, registry);
+        if (recovered.OpenModuleIds.Count != 3 ||
+            recovered.OpenModuleIds.Contains("sheets"))
+            throw new Exception("Não foi recuperado o backup da sessão Avalonia.");
+
+        // The legacy file must remain unchanged throughout the process.
+        if (File.ReadAllText(legacyPath) != sourceContent)
+            throw new Exception("O ficheiro WPF foi alterado durante a recuperação.");
+    }
+    finally
+    {
+        Directory.Delete(directory, recursive: true);
+    }
+    return Task.CompletedTask;
 }
