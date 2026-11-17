@@ -22,7 +22,7 @@ public sealed partial class MainWindow : Window
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
-    private Window? _writerWindow;
+    private readonly Dictionary<string, Window> _pluginWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly OfficePluginHost _plugins = OfficePluginHost.Discover();
     private string _activeDashboard = DashboardIds.Modern;
     private bool _compactLayout;
@@ -50,8 +50,7 @@ public sealed partial class MainWindow : Window
         Content = _layout;
         // Installed plugins own the names shown by the launcher.
         foreach (var plugin in _plugins.Plugins)
-            if (_registry.Find(plugin.Id) is not null)
-                _registry.Register(new OfficeModule(plugin.Id, plugin.DisplayName, true));
+            _registry.RegisterPlugin(new OfficeModule(plugin.Id, plugin.DisplayName, true));
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
         EnableWorkspaceShortcuts();
@@ -319,7 +318,7 @@ public sealed partial class MainWindow : Window
         });
 
         var shortcuts = new WrapPanel { Orientation = Orientation.Horizontal };
-        shortcuts.Children.Add(Nav("＋  Novo documento", () => NotifyUnavailable("writer")));
+        shortcuts.Children.Add(Nav("＋  Novo documento", () => OpenDefaultDocumentEditor()));
         shortcuts.Children.Add(Nav("▱  Abrir ficheiro", () => _ = ChooseLocalFileAsync()));
         shortcuts.Children.Add(Nav("▦  Modelos", () => NotifyUnavailable("templates")));
         root.Children.Add(shortcuts);
@@ -353,7 +352,7 @@ public sealed partial class MainWindow : Window
             root.Children.Add(Text("Último documento: " +
                 System.IO.Path.GetFileName(_launcherState.LastOpenedDocumentPath), 13, false, Muted));
         var creation = new WrapPanel { Orientation = Orientation.Horizontal };
-        foreach (var app in _registry.GetAll().Where(m => m.Id is "writer" or "sheets" or "slides" or "data"))
+        foreach (var app in _registry.GetAll().Where(m => m.IsAvailable))
         {
             var tile = new StackPanel { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Stretch };
             var tileIcon = ModuleIcon(app.Id, 40);
@@ -404,7 +403,7 @@ public sealed partial class MainWindow : Window
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
-            box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : module.Id is "writer" or "sheets" or "slides" ? "Editor inicial · offline" : "Em migração", 12, false, Muted));
+            box.Children.Add(CenteredText(module.IsAvailable ? "Disponível · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(12)),
@@ -514,33 +513,54 @@ public sealed partial class MainWindow : Window
             ? plugin.ToolTip
             : module.Name;
 
+    private void OpenDefaultDocumentEditor()
+    {
+        // The launcher uses capabilities supplied by installed plugins instead of a
+        // hardcoded Writer ID. Until document types are negotiated through the API,
+        // the shortcut opens the first available plugin.
+        var plugin = _plugins.Plugins.FirstOrDefault();
+        if (plugin is null)
+        {
+            NotifyFeature("Não existem aplicações instaladas");
+            return;
+        }
+        OpenModule(_registry.Find(plugin.Id));
+    }
+
+    private void OpenPlugin(OfficeModule module)
+    {
+        _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
+        _ = SaveLauncherAsync();
+
+        if (_pluginWindows.TryGetValue(module.Id, out var existing))
+        {
+            if (existing.WindowState == WindowState.Minimized)
+                existing.WindowState = WindowState.Normal;
+            existing.Activate();
+            return;
+        }
+
+        if (!_plugins.TryCreateWindow(module.Id, null, out var pluginWindow) || pluginWindow is null)
+        {
+            NotifyFeature(module.Name + ": não foi possível iniciar o plugin");
+            return;
+        }
+        pluginWindow.Closed += (_, _) =>
+        {
+            _pluginWindows.Remove(module.Id);
+            TrackModuleClosed(module.Id);
+        };
+        _pluginWindows.Add(module.Id, pluginWindow);
+        pluginWindow.Show(this);
+        TrackModuleOpened(module.Id);
+    }
+
     private void OpenModule(OfficeModule? module)
     {
         if (module is not null) SelectSidebarModule(module.Id);
-        if (module?.Id == "writer")
+        if (module is not null && _plugins.TryGet(module.Id, out _))
         {
-            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
-            _ = SaveLauncherAsync();
-            if (_writerWindow is not null)
-            {
-                if (_writerWindow.WindowState == WindowState.Minimized)
-                    _writerWindow.WindowState = WindowState.Normal;
-                _writerWindow.Activate();
-                return;
-            }
-            if (!_plugins.TryCreateWindow("writer", null, out var writer) || writer is null)
-            {
-                NotifyFeature("VCC Writer: plugin não instalado ou incompatível");
-                return;
-            }
-            writer.Closed += (_, _) =>
-            {
-                _writerWindow = null;
-                TrackModuleClosed("writer");
-            };
-            _writerWindow = writer;
-            writer.Show(this);
-            TrackModuleOpened("writer");
+            OpenPlugin(module);
             return;
         }
         if (module?.Id == "sheets")
