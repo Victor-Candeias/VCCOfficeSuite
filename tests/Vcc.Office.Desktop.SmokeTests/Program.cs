@@ -121,5 +121,20 @@ editor.Text = "Primeira linha\\nSegunda linha";
 if (editor.Text != "Primeira linha\\nSegunda linha")
     throw new Exception("O conteúdo editado não foi preservado.");
 
+// Legacy Workspace settings are available without any WPF runtime.
+var stateFile = Path.Combine(Path.GetTempPath(), "vcc-wpf-parity-" + Guid.NewGuid().ToString("N") + ".json");
+var stateService = new Vcc.Office.CoreShell.CoreShellService(
+    new Vcc.Office.CoreShell.ShellStateStore(stateFile));
+var workspaceSettings = new WorkspaceSettingsWindow(stateService);
+if (workspaceSettings.Icon is null || workspaceSettings.StatePath != Path.GetFullPath(stateFile))
+    throw new Exception("A janela de configuração não reutiliza o estado do CoreShell.");
+var sectionsField = typeof(WorkspaceSettingsWindow).GetField("_sections", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Separadores de configuração não encontrados.");
+var tabs = (TabControl)sectionsField.GetValue(workspaceSettings)!;
+var labels = (tabs.ItemsSource as IEnumerable<TabItem>)?.Select(tab => tab.Header?.ToString()).ToArray()
+    ?? throw new Exception("Separadores de configuração indisponíveis.");
+foreach (var label in new[] { "Launcher", "Ribbon", "Atalhos", "Acessibilidade", "Navegação", "Janela" })
+    if (!labels.Contains(label)) throw new Exception("Área WPF sem migração: " + label);
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
