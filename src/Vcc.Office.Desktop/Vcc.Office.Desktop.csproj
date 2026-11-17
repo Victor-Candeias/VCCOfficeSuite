@@ -12,7 +12,6 @@
     <PackageReference Include="Avalonia" Version="12.1.6" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
-    <PackageReference Include="ProEdit.Word.Avalonia" Version="0.1.0" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Assets/VccOfficeSuite.ico" LogicalName="Vcc.Office.Desktop.AppIcon" />
