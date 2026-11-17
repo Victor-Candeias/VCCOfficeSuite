@@ -1,0 +1,6 @@
+{
+  "id": "writer",
+  "assembly": "Vcc.Office.Writer.dll",
+  "entryType": "Vcc.Office.Writer.WriterPlugin",
+  "apiVersion": 1
+}
