@@ -1,5 +1,7 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Vcc.Office.CoreShell;
 
 namespace Vcc.Office.Desktop;
@@ -7,6 +9,9 @@ namespace Vcc.Office.Desktop;
 public sealed partial class MainWindow
 {
     private RibbonWindow? _ribbonWindow;
+    private Button? _launcherFocusButton;
+    private Button? _ribbonFocusButton;
+    private bool _initialNavigationFocusApplied;
     private string _configuredLauncherRevision = "";
 
     private readonly CoreShellService _workspaceShell = new(new ShellStateStore(
@@ -30,12 +35,36 @@ public sealed partial class MainWindow
                     _configuredLauncherRevision = newRevision;
                     Render();
                 }
+                ApplyWorkspaceNavigation();
+                if (!_initialNavigationFocusApplied)
+                {
+                    _initialNavigationFocusApplied = true;
+                    Dispatcher.UIThread.Post(FocusConfiguredTarget, DispatcherPriority.Input);
+                }
             }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         };
         KeyDown += WorkspaceKeyDown;
     }
+
+    /// <summary>Apply the same Cycle/Continue policy that the WPF Workspace used.</summary>
+    private void ApplyWorkspaceNavigation()
+    {
+        KeyboardNavigation.SetTabNavigation(_layout, _workspaceShell.State.Navigation.WrapFocus
+            ? KeyboardNavigationMode.Cycle : KeyboardNavigationMode.Continue);
+    }
+
+    private void FocusConfiguredTarget()
+    {
+        var chosen = _workspaceShell.State.Navigation.InitialFocus == NavigationFocusTarget.Ribbon
+            ? _ribbonFocusButton : _launcherFocusButton;
+        if (chosen?.Focus() != true)
+            _search.Focus();
+    }
+
+    private static void SetAccessibleName(Button button, string name) =>
+        AutomationProperties.SetName(button, name);
 
     private IReadOnlyList<LauncherItem> ConfiguredItems(string? query = null) =>
         ConfiguredLauncherPolicy.CustomItems(_workspaceShell.State.Launcher, _registry, query);
