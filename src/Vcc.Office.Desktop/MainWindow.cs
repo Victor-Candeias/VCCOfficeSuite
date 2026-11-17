@@ -16,6 +16,8 @@ public sealed partial class MainWindow : Window
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
     private DataWindow? _dataWindow;
+    private SheetsWindow? _sheetsWindow;
+    private SlidesWindow? _slidesWindow;
     private string _activeDashboard = DashboardIds.Modern;
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
@@ -343,7 +345,7 @@ public sealed partial class MainWindow : Window
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
-            box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : "Em migração", 12, false, Muted));
+            box.Children.Add(CenteredText(module.Id is "data" or "sheets" or "slides" ? "Disponível · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(18)),
@@ -369,6 +371,40 @@ public sealed partial class MainWindow : Window
 
     private void OpenModule(OfficeModule? module)
     {
+        if (module?.Id == "sheets")
+        {
+            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
+            _ = SaveLauncherAsync();
+            if (_sheetsWindow is not null)
+            {
+                if (_sheetsWindow.WindowState == WindowState.Minimized)
+                    _sheetsWindow.WindowState = WindowState.Normal;
+                _sheetsWindow.Activate();
+                return;
+            }
+            var sheets = new SheetsWindow();
+            sheets.Closed += (_, _) => _sheetsWindow = null;
+            _sheetsWindow = sheets;
+            sheets.Show(this);
+            return;
+        }
+        if (module?.Id == "slides")
+        {
+            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
+            _ = SaveLauncherAsync();
+            if (_slidesWindow is not null)
+            {
+                if (_slidesWindow.WindowState == WindowState.Minimized)
+                    _slidesWindow.WindowState = WindowState.Normal;
+                _slidesWindow.Activate();
+                return;
+            }
+            var slides = new SlidesWindow();
+            slides.Closed += (_, _) => _slidesWindow = null;
+            _slidesWindow = slides;
+            slides.Show(this);
+            return;
+        }
         if (module?.Id == "data")
         {
             _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
