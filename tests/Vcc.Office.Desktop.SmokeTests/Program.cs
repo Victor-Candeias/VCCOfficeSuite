@@ -64,11 +64,11 @@ var sidebarDashboardsField = typeof(MainWindow).GetField("_sidebarDashboardButto
     ?? throw new Exception("Botões dos dashboards não encontrados.");
 var moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
 var dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
+var selectedDashboardBackground = dashboardButtons["modern"].Background?.ToString();
 selectSidebarModule.Invoke(window, ["writer"]);
 var writerBackground = moduleButtons["writer"].Background?.ToString();
 if (writerBackground == moduleButtons["sheets"].Background?.ToString() ||
-    dashboardButtons["modern"].Background?.ToString() ==
-    dashboardButtons["classic"].Background?.ToString() && dashboardButtons["modern"].Foreground?.ToString() == "#ffffffff")
+    dashboardButtons["modern"].Background?.ToString() == selectedDashboardBackground)
     throw new Exception("O Writer não ficou selecionado de forma exclusiva.");
 selectSidebarModule.Invoke(window, ["sheets"]);
 if (moduleButtons["sheets"].Background?.ToString() != writerBackground ||
@@ -82,8 +82,7 @@ switchDashboard.Invoke(window, ["classic"]);
 moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
 dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
 if (moduleButtons["sheets"].Background?.ToString() == writerBackground ||
-    dashboardButtons["classic"].Background?.ToString() != "#2158AD" &&
-    dashboardButtons["classic"].Background?.ToString() != "#003399")
+    dashboardButtons["classic"].Background?.ToString() != selectedDashboardBackground)
     throw new Exception("Selecionar um dashboard deve remover a seleção da aplicação.");
 
 // The previous crash occurred on the second Render() call after restoring session.
