@@ -7,6 +7,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Styling;
 using Vcc.Office.Desktop;
+using Vcc.Office.Writer;
+using Vcc.Office.PluginHost;
 
 AppBuilder.Configure<Application>()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions())
@@ -351,6 +353,23 @@ if (columns.ColumnDefinitions[0].Width.Value != 228)
 if (typeof(MainWindow).GetMethod("WorkspaceKeyDown",
         BindingFlags.Instance | BindingFlags.NonPublic) is null)
     throw new Exception("Atalho de pesquisa global não está implementado.");
+
+// Writer is a real DLL plugin: discovery must work from the staged Plugins/Writer
+// folder, while an absent plugin must not prevent the shell from starting.
+var emptyPluginsRoot = Path.Combine(Path.GetTempPath(), "vcc-office-plugin-empty-" + Guid.NewGuid().ToString("N"));
+if (OfficePluginHost.Discover(emptyPluginsRoot).Plugins.Count != 0)
+    throw new Exception("Um launcher sem plugins deve arrancar com catálogo vazio.");
+
+var pluginHost = OfficePluginHost.Discover();
+if (pluginHost.Errors.Count != 0 ||
+    !pluginHost.TryGet("writer", out var writerPlugin) || writerPlugin is null ||
+    writerPlugin.DisplayName != "VCC Writer")
+    throw new Exception("O Writer não foi descoberto como plugin independente.");
+if (!pluginHost.TryCreateWindow("writer", null, out var pluginWriterWindow) ||
+    pluginWriterWindow is null ||
+    pluginWriterWindow.GetType().FullName != typeof(WriterWindow).FullName)
+    throw new Exception("A DLL externa do Writer não criou a janela Avalonia.");
+pluginWriterWindow.Close();
 
 // Writer visual regression: keep Ribbon, A4 page, rulers and editable text intact.
 var writerVisualWindow = new WriterWindow();
