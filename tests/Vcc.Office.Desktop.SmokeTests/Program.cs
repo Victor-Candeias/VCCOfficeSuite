@@ -91,5 +91,22 @@ foreach (var cardButton in cards.Children.OfType<Button>())
         throw new Exception("Ícone ou textos do cartão não estão centrados, ou cantos por arredondar.");
 }
 
+// New Avalonia Sheets and Slides surfaces must initialise and expose usable editors.
+var sheetsWindow = new SheetsWindow();
+if (sheetsWindow.Icon is null || sheetsWindow.Title?.Contains("Sheets", StringComparison.Ordinal) != true)
+    throw new Exception("VCC Sheets Avalonia não foi inicializado.");
+var sheetsAddress = typeof(SheetsWindow).GetField("_address", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Editor de célula Sheets não encontrado.");
+if (((TextBox)sheetsAddress.GetValue(sheetsWindow)!).Text != "A1")
+    throw new Exception("Sheets deve iniciar na célula A1.");
+
+var slidesWindow = new SlidesWindow();
+if (slidesWindow.Icon is null || slidesWindow.Title?.Contains("Slides", StringComparison.Ordinal) != true)
+    throw new Exception("VCC Slides Avalonia não foi inicializado.");
+var slidesNotes = typeof(SlidesWindow).GetField("_notes", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Editor de notas Slides não encontrado.");
+if (!((TextBox)slidesNotes.GetValue(slidesWindow)!).AcceptsReturn)
+    throw new Exception("Slides deve permitir notas multilinha.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
