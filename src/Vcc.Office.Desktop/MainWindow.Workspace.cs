@@ -8,9 +8,7 @@ namespace Vcc.Office.Desktop;
 
 public sealed partial class MainWindow
 {
-    private RibbonWindow? _ribbonWindow;
     private Button? _launcherFocusButton;
-    private Button? _ribbonFocusButton;
     private bool _initialNavigationFocusApplied;
     private bool _lastReducedMotion;
     private string _configuredLauncherRevision = "";
@@ -60,9 +58,9 @@ public sealed partial class MainWindow
 
     private void FocusConfiguredTarget()
     {
-        if (_launcherFocusButton is null || _ribbonFocusButton is null ||
-            !WorkspaceNavigationAdapter.InitialFocusTarget(_workspaceShell.State.Navigation,
-                _launcherFocusButton, _ribbonFocusButton).Focus())
+        // Ribbon no longer has an entry in the launcher; all saved focus
+        // preferences fall back to the available application launcher.
+        if (_launcherFocusButton?.Focus() != true)
             _search.Focus();
     }
 
@@ -109,21 +107,6 @@ public sealed partial class MainWindow
         return button;
     }
 
-    private void OpenRibbon()
-    {
-        if (_ribbonWindow is not null)
-        {
-            if (_ribbonWindow.WindowState == WindowState.Minimized)
-                _ribbonWindow.WindowState = WindowState.Normal;
-            _ribbonWindow.Activate();
-            return;
-        }
-        var ribbon = new RibbonWindow(_workspaceShell);
-        ribbon.Closed += (_, _) => _ribbonWindow = null;
-        _ribbonWindow = ribbon;
-        ribbon.Show(this);
-    }
-
     private void WorkspaceKeyDown(object? sender, KeyEventArgs e)
     {
         // WPF global-search shortcut: it must work even without a configured
@@ -146,7 +129,6 @@ public sealed partial class MainWindow
                 string.Join('+', parts), out var command)) return;
         if (command == "open-settings") ShowLauncherSettings();
         else if (command == "open-launcher") Switch(DashboardIds.Grid);
-        else if (command == "open-ribbon") OpenRibbon();
         else return; // No silent claim that arbitrary configured commands were executed.
         e.Handled = true;
     }

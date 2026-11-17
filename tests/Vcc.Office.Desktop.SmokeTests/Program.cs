@@ -244,14 +244,16 @@ if (KeyboardNavigation.GetTabNavigation(layout) != KeyboardNavigationMode.Contin
 var launcherFocusField = typeof(MainWindow).GetField("_launcherFocusButton",
     BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new Exception("Foco inicial Launcher não implementado.");
-var ribbonFocusField = typeof(MainWindow).GetField("_ribbonFocusButton",
-    BindingFlags.NonPublic | BindingFlags.Instance)
-    ?? throw new Exception("Foco inicial Ribbon não implementado.");
 var launcherFocus = (Button?)launcherFocusField.GetValue(window);
-var ribbonFocus = (Button?)ribbonFocusField.GetValue(window);
-if (AutomationProperties.GetName(launcherFocus!) != "Abrir Launcher de aplicações" ||
-    AutomationProperties.GetName(ribbonFocus!) != "Abrir Ribbon")
-    throw new Exception("A navegação não expõe nomes acessíveis para Launcher e Ribbon.");
+if (AutomationProperties.GetName(launcherFocus!) != "Abrir Launcher de aplicações")
+    throw new Exception("A navegação não expõe o nome acessível do Launcher.");
+if (typeof(MainWindow).GetField("_ribbonFocusButton", BindingFlags.NonPublic | BindingFlags.Instance) is not null ||
+    typeof(MainWindow).GetMethod("OpenRibbon", BindingFlags.NonPublic | BindingFlags.Instance) is not null)
+    throw new Exception("A interface principal ainda expõe a janela Ribbon.");
+var menu = (StackPanel)sidebarScroll.Content!;
+if (menu.Children.OfType<Button>().Any(button =>
+        button.Content?.ToString()?.Contains("Ribbon", StringComparison.OrdinalIgnoreCase) == true))
+    throw new Exception("A entrada Ribbon não deve aparecer no menu lateral.");
 
 var navigationMethod = typeof(MainWindow).GetMethod("ApplyWorkspaceNavigation",
     BindingFlags.NonPublic | BindingFlags.Instance)
