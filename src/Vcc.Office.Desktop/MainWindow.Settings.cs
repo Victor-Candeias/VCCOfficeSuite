@@ -20,7 +20,7 @@ public sealed partial class MainWindow
             Title = "VCC Office — Aparência e dashboard",
             Icon = AppBranding.LoadWindowIcon(),
             Width = 475,
-            Height = 405,
+            Height = 530,
             MinWidth = 400,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner
@@ -45,6 +45,22 @@ public sealed partial class MainWindow
             SelectedIndex = Math.Max(0, Array.FindIndex(dashboards, x => x.Id == _activeDashboard))
         };
         panel.Children.Add(dashboardChoice);
+
+        panel.Children.Add(new TextBlock { Text = "Dashboard preferido", FontWeight = FontWeight.SemiBold });
+        var preferredChoice = new ComboBox
+        {
+            ItemsSource = dashboardOptions,
+            SelectedIndex = Math.Max(0, Array.FindIndex(dashboards,
+                x => x.Id == _launcherState.PreferredDashboardId))
+        };
+        panel.Children.Add(preferredChoice);
+        panel.Children.Add(new TextBlock { Text = "Ao iniciar a suite", FontWeight = FontWeight.SemiBold });
+        var startupChoice = new ComboBox
+        {
+            ItemsSource = new[] { "Abrir o último dashboard", "Abrir sempre o preferido" },
+            SelectedIndex = _launcherState.StartupMode == DashboardStartupMode.Preferred ? 1 : 0
+        };
+        panel.Children.Add(startupChoice);
 
         panel.Children.Add(new TextBlock
         {
@@ -82,6 +98,7 @@ public sealed partial class MainWindow
         {
             if (dashboardChoice.SelectedIndex < 0 || themeChoice.SelectedIndex < 0)
                 return;
+            if (preferredChoice.SelectedIndex < 0 || startupChoice.SelectedIndex < 0) return;
 
             var dashboard = dashboards[dashboardChoice.SelectedIndex].Id;
             var theme = themeChoice.SelectedIndex switch
@@ -90,7 +107,10 @@ public sealed partial class MainWindow
                 2 => ThemeMode.Dark,
                 _ => ThemeMode.System
             };
-            _launcherState = _launcherState with { DashboardId = dashboard, Theme = theme };
+            _launcherState = _launcherState with { DashboardId = dashboard,
+                PreferredDashboardId = dashboards[preferredChoice.SelectedIndex].Id,
+                StartupMode = startupChoice.SelectedIndex == 1 ? DashboardStartupMode.Preferred : DashboardStartupMode.Last,
+                Theme = theme };
             _activeDashboard = dashboard;
             _favoritesOnly = false;
             _search.Text = string.Empty;
