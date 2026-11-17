@@ -27,9 +27,9 @@ public sealed class WriterWindow : Window
     private readonly Border _bottomRuler = new() { Name = "WriterBottomRuler" };
     private readonly Border _verticalRuler = new() { Name = "WriterVerticalRuler" };
     private bool _showRulers = true;
-    private const double PageWidth = 794; // A4 at 96 DPI
+    private const double PageWidth = 1024; // 794; // A4 at 96 DPI
     private const double PageHeight = 1123;
-    private const double PageMargin = 76; // approximately 2 cm
+    private const double PageMargin = 38; //76; // approximately 2 cm
 
     private string _documentId = Guid.NewGuid().ToString("N");
     private string _documentTitle = "Sem título";
@@ -47,7 +47,11 @@ public sealed class WriterWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Background = Brush("#E9EDF2");
 
-        var root = new DockPanel();
+        var root = new DockPanel()
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+
         var ribbon = BuildRibbon();
         DockPanel.SetDock(ribbon, Dock.Top);
         root.Children.Add(ribbon);
@@ -90,10 +94,11 @@ public sealed class WriterWindow : Window
             Name = "WriterPage",
             Width = PageWidth,
             Height = PageHeight,
-            Padding = new Thickness(PageMargin),
+            Padding = new Thickness(PageMargin / 2),
             Background = Brushes.White,
             BorderBrush = Brush("#C9D0DB"),
             BorderThickness = new Thickness(1),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             Child = _editor
         };
 
@@ -101,8 +106,13 @@ public sealed class WriterWindow : Window
         BuildHorizontalRuler(_bottomRuler);
         BuildVerticalRuler();
 
-        var topRow = new StackPanel { Orientation = Orientation.Horizontal };
-        topRow.Children.Add(new Border { Width = 28 });
+        var topRow = new StackPanel 
+        { 
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+
+        topRow.Children.Add(new Border { Width = 32 });
         topRow.Children.Add(_topRuler);
 
         var pageRow = new StackPanel { Orientation = Orientation.Horizontal };
@@ -110,26 +120,31 @@ public sealed class WriterWindow : Window
         pageRow.Children.Add(page);
 
         var bottomRow = new StackPanel { Orientation = Orientation.Horizontal };
-        bottomRow.Children.Add(new Border { Width = 28 });
+        bottomRow.Children.Add(new Border { Width = 32 });
         bottomRow.Children.Add(_bottomRuler);
 
         var workspace = new StackPanel
         {
             Name = "WriterPageWorkspace",
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(26, 18, 26, 36)
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(20, 18, 20, 36)
         };
+
         workspace.Children.Add(topRow);
         workspace.Children.Add(pageRow);
         workspace.Children.Add(bottomRow);
+        
         root.Children.Add(new ScrollViewer
         {
             Name = "WriterScrollViewer",
             Content = workspace,
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
         });
+
         Content = root;
+
         _editor.TextChanged += (_, _) =>
         {
             _dirty = true;
@@ -142,17 +157,26 @@ public sealed class WriterWindow : Window
 
     private Control BuildRibbon()
     {
-        var file = new WrapPanel { Margin = new Thickness(14, 11) };
+        var file = new WrapPanel 
+        { 
+            Margin = new Thickness(14, 11),
+        };
+
         file.Children.Add(Action("Novo", () => _ = NewAsync()));
         file.Children.Add(Action("Abrir TXT / DOCX", () => _ = OpenAsync()));
         file.Children.Add(Action("Guardar", () => _ = SaveAsync()));
         file.Children.Add(Action("Guardar como", () => _ = SaveAsAsync()));
         file.Children.Add(Action("Exportar DOCX", () => _ = ExportDocxAsync()));
 
-        var home = new WrapPanel { Margin = new Thickness(14, 11) };
+        var home = new WrapPanel 
+        { 
+            Margin = new Thickness(14, 11) 
+        };
+
         home.Children.Add(Action("Selecionar tudo", () => _editor.SelectAll()));
         home.Children.Add(Action("A−", () => ChangeTextSize(-1)));
         home.Children.Add(Action("A+", () => ChangeTextSize(1)));
+
         home.Children.Add(new TextBlock
         {
             Text = "Editor de texto simples  ·  formatação rica numa fase posterior",
@@ -182,13 +206,20 @@ public sealed class WriterWindow : Window
                 SelectedIndex = 1,
                 Items =
                 {
-                    new TabItem { Header = "Ficheiro", Content = file },
-                    new TabItem { Header = "Base", Content = home },
-                    new TabItem { Header = "Ver", Content = view }
+                    RibbonTab("Ficheiro", file),
+                    RibbonTab("Base", home),
+                    RibbonTab("Ver", view)
                 }
             }
         };
     }
+
+    private TabItem RibbonTab(string title, Control content) => new()
+    {
+        Header = title,
+        Content = content,
+        Foreground = Brushes.White,
+    };
 
     private void ChangeTextSize(int delta)
     {
@@ -212,16 +243,17 @@ public sealed class WriterWindow : Window
     private static void BuildHorizontalRuler(Border ruler)
     {
         var ticks = new StackPanel { Orientation = Orientation.Horizontal };
-        for (var centimetre = 0; centimetre < 21; centimetre++)
+        for (var centimetre = 0; centimetre < 23; centimetre++)
         {
             ticks.Children.Add(new TextBlock
             {
                 Text = centimetre.ToString(),
-                Width = PageWidth / 21,
+                Width = PageWidth / 23,
                 FontSize = 10,
                 Foreground = Brush("#566273"),
                 TextAlignment = TextAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             });
         }
         ruler.Width = PageWidth;
@@ -262,13 +294,33 @@ public sealed class WriterWindow : Window
             Content = title,
             CornerRadius = new CornerRadius(9),
             Margin = new Thickness(0, 0, 8, 8),
-            Padding = new Thickness(12, 8)
+            Padding = new Thickness(12, 8),
+            Foreground = Brushes.Blue,
+            Background = Brushes.White,
         };
         button.Click += (_, _) => callback();
+
+        // Equivalente ao MouseEnter / MouseOver
+        button.PointerEntered += (sender, e) =>
+        {
+            // Ação quando o rato passa por cima (ex: mudar cor ou cursor)
+            button.Foreground = Brushes.White;
+            button.Background = Brushes.Blue; // Exemplo: mudar a cor de fundo
+        };
+
+        // Equivalente ao MouseLeave
+        button.PointerExited += (sender, e) =>
+        {
+            // Repor o estado normal quando o rato sai
+            button.Foreground = Brushes.Blue;
+            button.Background = Brushes.White; // Exemplo: mudar a cor de fundo
+        };
+
         return button;
     }
 
     private void UpdateTitle() => Title = "VCC Writer — " + _documentTitle + (_dirty ? " *" : "");
+
     private void Status(string value) => _status.Text = value;
 
     private async Task ExecuteAsync(Func<Task> action)
