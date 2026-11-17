@@ -234,7 +234,7 @@ public sealed partial class MainWindow : Window
         {
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
             line.Children.Add(ModuleIcon(app.Id, 25));
-            line.Children.Add(Text(app.Name.Replace("VCC ", ""), 13));
+            line.Children.Add(Text(app.Name, 13));
             var selected = app.Id == _selectedSidebarModuleId;
             var item = new Button
             {
