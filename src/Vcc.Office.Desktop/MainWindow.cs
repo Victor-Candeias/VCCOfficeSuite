@@ -345,26 +345,26 @@ public sealed partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(_launcherState.LastOpenedDocumentPath))
             root.Children.Add(Text("Último documento: " +
                 System.IO.Path.GetFileName(_launcherState.LastOpenedDocumentPath), 13, false, Muted));
-        var creation = new WrapPanel();
+        var creation = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var app in _registry.GetAll().Where(m => m.Id is "writer" or "sheets" or "slides" or "data"))
         {
-            var tile = new StackPanel { Spacing = 6, HorizontalAlignment = HorizontalAlignment.Stretch };
-            var tileIcon = ModuleVisuals.Badge(app.Id, 52);
+            var tile = new StackPanel { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var tileIcon = ModuleVisuals.Badge(app.Id, 40);
             tileIcon.HorizontalAlignment = HorizontalAlignment.Center;
             tile.Children.Add(tileIcon);
             tile.Children.Add(CenteredText(app.Name, 15, true));
             var action = new Button
             {
-                Content = tile, Width = 174, Height = 122,
+                Content = tile, Width = 160, Height = 94,
                 CornerRadius = new CornerRadius(ControlCornerRadius),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Margin = new Thickness(0, 0, 12, 12),
+                Margin = new Thickness(0, 0, 10, 0),
                 Background = Surface
             };
             action.Click += (_, _) => OpenModule(app);
             creation.Children.Add(action);
         }
-        root.Children.Add(Card(creation));
+        root.Children.Add(Card(creation, new Thickness(12, 10)));
         AddApplicationCards(root, 15);
         AddConfiguredCards(root);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
@@ -391,20 +391,20 @@ public sealed partial class MainWindow : Window
         var cards = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var module in list)
         {
-            var box = new StackPanel { Spacing = 6, HorizontalAlignment = HorizontalAlignment.Stretch };
-            var moduleIcon = ModuleVisuals.Badge(module.Id, _activeDashboard == DashboardIds.Grid ? 52 : 38);
+            var box = new StackPanel { Spacing = 5, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var moduleIcon = ModuleVisuals.Badge(module.Id, _activeDashboard == DashboardIds.Grid ? 42 : 34);
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
             box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : module.Id is "writer" or "sheets" or "slides" ? "Editor inicial · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
-                Content = Card(box, new Thickness(18)),
+                Content = Card(box, new Thickness(12)),
                 CornerRadius = new CornerRadius(ControlCornerRadius),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Width = _compactLayout ? 175 : _activeDashboard == DashboardIds.Classic ? 250 : 206,
-                Height = _activeDashboard == DashboardIds.Grid ? 158 : 143,
-                Margin = new Thickness(0, 0, 12, 12),
+                Width = _compactLayout ? 168 : _activeDashboard == DashboardIds.Classic ? 218 : 190,
+                Height = _activeDashboard == DashboardIds.Grid ? 132 : 120,
+                Margin = new Thickness(0, 0, 10, 10),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0)
