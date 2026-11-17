@@ -4,8 +4,10 @@
 
 - `Vcc.Office.Plugin.Abstractions`: contrato `IOfficePlugin` (ID, nome e criação da janela).
 - `Vcc.Office.PluginHost`: descoberta de manifestos e carregamento dinâmico de DLLs com `AssemblyLoadContext` e `AssemblyDependencyResolver`.
-- `Vcc.Office.Writer`: aplicação Avalonia e implementação `WriterPlugin`, com as funcionalidades TXT/DOCX existentes.
+- `Vcc.Office.Writer`: aplicação Avalonia, `WriterPlugin` e **motor documental próprio** (`WriterService.cs`: modelos, edição, TXT/DOCX, exportação PDF, acessibilidade e persistência); utiliza apenas infraestrutura comum do CoreShell, como `AtomicFileStore` e `ValidationResult`.
 - `Vcc.Office.Desktop`: launcher principal. Não compila contra `WriterWindow` nem tem referência à DLL Writer para invocar os seus tipos.
+
+O motor `VccWriterService` foi removido de `Vcc.Office.CoreShell` para impedir que o serviço específico do Writer fique no núcleo do launcher.
 
 O projeto do launcher referencia o Writer apenas como **dependência de build** (`ReferenceOutputAssembly=false`) para compilar e colocar a DLL na distribuição. Em execução, descobre módulos por manifesto.
 
