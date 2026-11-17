@@ -7,7 +7,7 @@ public sealed class OfficeApplicationRegistry
 {
     private static readonly string[] ModuleIds =
     [
-        "writer", "sheets", "slides", "mail", "calendar", "notes", "pdf", "draw",
+        "sheets", "slides", "mail", "calendar", "notes", "pdf", "draw",
         "projects", "publisher", "planner", "images", "analytics", "forms",
         "contacts", "data", "mindmap", "whiteboard", "scan", "convert", "backup",
         "automate", "templates", "math", "archive", "time"
