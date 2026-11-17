@@ -1246,7 +1246,12 @@ static Task ValidatesAvaloniaSessionMigration()
         var avaloniaPath = Path.Combine(directory, "avalonia-application-session.json");
         var legacy = new OfficeSessionStore(legacyPath);
         var avalonia = new OfficeSessionStore(avaloniaPath);
-        var registry = AvaloniaModuleSession.AvailableModules();
+        var registry = AvaloniaModuleSession.AvailableModules([
+            new OfficeModule("writer", "VCC Writer", true),
+            new OfficeModule("sheets", "VCC Sheets", true),
+            new OfficeModule("slides", "VCC Slides", true),
+            new OfficeModule("data", "VCC Data", true)
+        ]);
 
         // The CoreShell default registry intentionally keeps the unfinished
         // applications unavailable, but Avalonia can open its four editors.
