@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Vcc.Office.CoreShell;
+using Vcc.Office.PluginHost;
 
 namespace Vcc.Office.Desktop;
 
@@ -21,7 +22,8 @@ public sealed partial class MainWindow : Window
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
-    private WriterWindow? _writerWindow;
+    private Window? _writerWindow;
+    private readonly OfficePluginHost _plugins = OfficePluginHost.Discover();
     private string _activeDashboard = DashboardIds.Modern;
     private bool _compactLayout;
     private string? _selectedSidebarModuleId;
@@ -509,7 +511,11 @@ public sealed partial class MainWindow : Window
                 _writerWindow.Activate();
                 return;
             }
-            var writer = new WriterWindow();
+            if (!_plugins.TryCreateWindow("writer", AppBranding.LoadWindowIcon(), out var writer) || writer is null)
+            {
+                NotifyFeature("VCC Writer: plugin não instalado ou incompatível");
+                return;
+            }
             writer.Closed += (_, _) =>
             {
                 _writerWindow = null;
