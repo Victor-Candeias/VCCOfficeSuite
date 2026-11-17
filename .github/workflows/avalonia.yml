@@ -14,14 +14,13 @@ concurrency:
 
 jobs:
   desktop:
-    name: ${{ matrix.os }} - ${{ matrix.configuration }}
+    name: ${{ matrix.os }} - Release
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2025, ubuntu-24.04, macos-15]
-        configuration: [Debug, Release]
+        os: [ubuntu-24.04, macos-15]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -34,18 +33,17 @@ jobs:
       - name: Restore canonical Avalonia solution
         run: dotnet restore VCC.Office.sln
       - name: Build canonical Avalonia solution
-        run: dotnet build VCC.Office.sln --configuration ${{ matrix.configuration }} --no-restore --property:ContinuousIntegrationBuild=true
+        run: dotnet build VCC.Office.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
       - name: Test shared CoreShell
-        run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration ${{ matrix.configuration }}
+        run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration Release
       - name: Smoke test Avalonia visual tree without display server
-        run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration ${{ matrix.configuration }}
-      # All OS/configurations still build and run tests. Package only Release
-      # for Linux/macOS; the Windows installer package is built below.
+        run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration Release
+      # Linux and macOS each compile, test and publish a single Release build.
+      # Windows performs the same checks before creating its standalone package.
       - name: Publish desktop (Linux/macOS Release only)
-        if: matrix.configuration == 'Release' && runner.os != 'Windows'
         run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --no-restore --self-contained false --property:PublishTrimmed=false --output artifacts/desktop
       - name: Upload Linux/macOS Release artifact
-        if: matrix.configuration == 'Release' && runner.os != 'Windows' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           name: VCCOfficeDesktop-${{ matrix.os }}-Release
@@ -54,7 +52,7 @@ jobs:
           retention-days: 14
 
   windows-standalone:
-    name: Windows 11 x64 - Release standalone
+    name: Windows - Release
     runs-on: windows-2025
     timeout-minutes: 30
     steps:
@@ -66,6 +64,14 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Verify WPF retirement safety gate
         run: python scripts/check-wpf-retirement.py
+      - name: Restore canonical Avalonia solution
+        run: dotnet restore VCC.Office.sln
+      - name: Build canonical Avalonia solution (Release)
+        run: dotnet build VCC.Office.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
+      - name: Test shared CoreShell (Release)
+        run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration Release
+      - name: Smoke test Avalonia visual tree without display server (Release)
+        run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration Release
       - name: Publish standalone Windows x64 (includes .NET runtime)
         run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true --property:PublishTrimmed=false --property:PublishSingleFile=false --output artifacts/windows-standalone
       - name: Verify runtime is included
