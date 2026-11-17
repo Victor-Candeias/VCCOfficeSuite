@@ -340,7 +340,7 @@ public sealed partial class MainWindow : Window
         root.Children.Add(Text("Aplicações", 20, true));
         AddApplicationCards(root, 12);
         AddConfiguredCards(root);
-        var openCatalog = Nav("Ver todas as 26 aplicações", () => Switch(DashboardIds.Grid));
+        var openCatalog = Nav("Ver todas as aplicações", () => Switch(DashboardIds.Grid));
         root.Children.Add(openCatalog);
     }
 
@@ -381,7 +381,7 @@ public sealed partial class MainWindow : Window
     private void BuildGrid(StackPanel root)
     {
         root.Children.Add(Text("Todas as aplicações", 30, true));
-        root.Children.Add(Text("Explore os 26 módulos do VCC Office.", 14, false, Muted));
+        root.Children.Add(Text("Explore os módulos instalados e disponíveis do VCC Office.", 14, false, Muted));
         AddApplicationCards(root, int.MaxValue);
         AddConfiguredCards(root);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
