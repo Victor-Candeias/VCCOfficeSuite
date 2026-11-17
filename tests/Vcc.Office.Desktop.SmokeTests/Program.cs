@@ -393,7 +393,7 @@ if (writerTopRuler.Name != "WriterTopRuler" ||
     throw new Exception("Dimensões, cor ou réguas da página A4 incorretas.");
 
 writerEditor.Text = "Primeira página de teste";
-if (writerEditor.Text != "Primeira página de teste" || !writerVisualWindow.Title.Contains('*'))
+if (writerEditor.Text != "Primeira página de teste" || writerVisualWindow.Title?.Contains('*') != true)
     throw new Exception("A folha do Writer não permite editar e sinalizar alterações.");
 
 var toggleWriterRulers = typeof(WriterWindow).GetMethod("ToggleRulers",
