@@ -3,7 +3,9 @@ using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
-namespace Vcc.Office.CoreShell;
+using Vcc.Office.CoreShell;
+
+namespace Vcc.Office.Writer;
 
 public enum WriterDocumentState { Draft, Ready, Invalid }
 public sealed record WriterParagraph(string Text, string Style = "Normal");

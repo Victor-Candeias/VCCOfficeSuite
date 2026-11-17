@@ -363,13 +363,38 @@ if (OfficePluginHost.Discover(emptyPluginsRoot).Plugins.Count != 0)
 var pluginHost = OfficePluginHost.Discover();
 if (pluginHost.Errors.Count != 0 ||
     !pluginHost.TryGet("writer", out var writerPlugin) || writerPlugin is null ||
-    writerPlugin.DisplayName != "VCC Writer")
-    throw new Exception("O Writer não foi descoberto como plugin independente.");
+    writerPlugin.DisplayName != "VCC Writer" ||
+    !writerPlugin.ToolTip.Contains("documentos", StringComparison.OrdinalIgnoreCase))
+    throw new Exception("O Writer não forneceu nome e tooltip no contrato do plugin.");
+if (writerPlugin.CreateMenuIcon(32) is not Border writerMenuIcon ||
+    writerMenuIcon.Name != "WriterPluginIcon" ||
+    writerMenuIcon.Width != 32 || writerMenuIcon.Height != 32 ||
+    writerPlugin.CreateWindowIcon() is null)
+    throw new Exception("O Writer não forneceu os seus ícones próprios a partir da DLL.");
 if (!pluginHost.TryCreateWindow("writer", null, out var pluginWriterWindow) ||
     pluginWriterWindow is null ||
-    pluginWriterWindow.GetType().FullName != typeof(WriterWindow).FullName)
-    throw new Exception("A DLL externa do Writer não criou a janela Avalonia.");
+    pluginWriterWindow.GetType().FullName != typeof(WriterWindow).FullName ||
+    pluginWriterWindow.Icon is null)
+    throw new Exception("A DLL externa do Writer não criou janela com ícone próprio.");
 pluginWriterWindow.Close();
+
+var launcherRegistryField = typeof(MainWindow).GetField("_registry",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("O catálogo de aplicações do Launcher não foi encontrado.");
+var launcherRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)launcherRegistryField.GetValue(window)!;
+if (launcherRegistry.Find("writer") is not { IsAvailable: true, Name: "VCC Writer" })
+    throw new Exception("O Launcher não utiliza o nome e disponibilidade fornecidos pela DLL Writer.");
+var sideButtonsField = typeof(MainWindow).GetField("_sidebarModuleButtons",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("O menu lateral de módulos não foi encontrado.");
+var sideButtons = (Dictionary<string, Button>)sideButtonsField.GetValue(window)!;
+if (!sideButtons.TryGetValue("writer", out var writerSideButton) ||
+    ToolTip.GetTip(writerSideButton)?.ToString() != writerPlugin.ToolTip ||
+    writerSideButton.Content is not StackPanel writerSideContent ||
+    writerSideContent.Children[0] is not Border sideWriterIcon ||
+    sideWriterIcon.Name != "WriterPluginIcon")
+    throw new Exception("O menu lateral não apresenta o tooltip e ícone fornecidos pelo plugin.");
+
 
 // Writer visual regression: keep Ribbon, A4 page, rulers and editable text intact.
 var writerVisualWindow = new WriterWindow();
