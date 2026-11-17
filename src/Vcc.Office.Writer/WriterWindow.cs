@@ -39,7 +39,7 @@ public sealed class WriterWindow : Window
     public WriterWindow(WindowIcon? icon = null)
     {
         Title = "VCC Writer — Sem título";
-        Icon = icon;
+        Icon = icon ?? LoadWriterIcon();
         Width = 1200;
         Height = 860;
         MinWidth = 700;
@@ -155,6 +155,13 @@ public sealed class WriterWindow : Window
             _wordCount.Text = CountWords(_editor.Text).ToString() + " palavras";
             UpdateTitle();
         };
+    }
+
+    private static WindowIcon LoadWriterIcon()
+    {
+        using var stream = typeof(WriterWindow).Assembly.GetManifestResourceStream("Vcc.Office.Writer.AppIcon")
+            ?? throw new InvalidOperationException("O ícone do Writer não foi incorporado no plugin.");
+        return new WindowIcon(stream);
     }
 
     private static IBrush Brush(string hex) => new SolidColorBrush(Color.Parse(hex));
