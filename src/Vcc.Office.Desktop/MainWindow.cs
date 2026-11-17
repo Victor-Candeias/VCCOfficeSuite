@@ -15,6 +15,7 @@ public sealed partial class MainWindow : Window
     private readonly Grid _layout = new();
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
+    private StackPanel? _configuredSidebar;
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
@@ -121,7 +122,7 @@ public sealed partial class MainWindow : Window
             Text = previousSearch,
             CornerRadius = new CornerRadius(ControlCornerRadius)
         };
-        _search.TextChanged += (_, _) => RefreshBody();
+        _search.TextChanged += (_, _) => { RefreshBody(); RefreshConfiguredSidebar(); };
 
         _layout.Children.Clear();
         _layout.RowDefinitions = new RowDefinitions("68,*");
@@ -212,17 +213,9 @@ public sealed partial class MainWindow : Window
             item.Click += (_, _) => OpenModule(app);
             navigation.Children.Add(item);
         }
-        var personalized = ConfiguredItems(_search.Text);
-        if (personalized.Count > 0)
-        {
-            navigation.Children.Add(new Border
-            {
-                Height = 1, Background = LineBrush, Margin = new Thickness(0, 15, 0, 8)
-            });
-            navigation.Children.Add(Text("PERSONALIZADOS", 11, true, Muted));
-            foreach (var item in personalized)
-                navigation.Children.Add(ConfiguredItemButton(item));
-        }
+        _configuredSidebar = new StackPanel { Spacing = 3 };
+        navigation.Children.Add(_configuredSidebar);
+        RefreshConfiguredSidebar();
         sidebar.Child = new ScrollViewer { Content = navigation };
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
@@ -382,6 +375,21 @@ public sealed partial class MainWindow : Window
         if (list.Length == 0)
             root.Children.Add(Text("Nenhuma aplicação encontrada.", 14, false, Muted));
         root.Children.Add(cards);
+    }
+
+    private void RefreshConfiguredSidebar()
+    {
+        if (_configuredSidebar is null) return;
+        _configuredSidebar.Children.Clear();
+        var personalized = ConfiguredItems(_search.Text);
+        if (personalized.Count == 0) return;
+        _configuredSidebar.Children.Add(new Border
+        {
+            Height = 1, Background = LineBrush, Margin = new Thickness(0, 15, 0, 8)
+        });
+        _configuredSidebar.Children.Add(Text("PERSONALIZADOS", 11, true, Muted));
+        foreach (var item in personalized)
+            _configuredSidebar.Children.Add(ConfiguredItemButton(item));
     }
 
     private void AddConfiguredCards(StackPanel root)
