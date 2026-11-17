@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "docs" / "VCC-0820-10-retirement-readiness.json"
 WPF_PROJECT = ROOT / "src" / "Vcc.Office.Shell" / "Vcc.Office.Shell.csproj"
 LEGACY_WORKFLOW = ROOT / ".github" / "workflows" / "build.yml"
-CANONICAL_SOLUTION = ROOT / "VCC.Office.sln"
+CANONICAL_SOLUTION = ROOT / "VCC.Office.Avalonia.sln"
 AVALONIA_PROJECT = "src\\Vcc.Office.Desktop\\Vcc.Office.Desktop.csproj"
 REQUIRED_CHECKS = (
     "launcher_and_dashboards",
