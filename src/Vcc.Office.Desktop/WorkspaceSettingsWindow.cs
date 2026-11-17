@@ -274,7 +274,7 @@ public sealed class WorkspaceSettingsWindow : Window
         var width = area?.Width ?? 1920;
         var height = area?.Height ?? 1080;
         await _shell.NavigateWindowAsync(action, left, top, width, height);
-        if (Owner is { } window)
+        if (Owner is Window window)
         {
             var layout = _shell.State.Window;
             window.WindowState = layout.IsMaximized ? WindowState.Maximized : WindowState.Normal;
