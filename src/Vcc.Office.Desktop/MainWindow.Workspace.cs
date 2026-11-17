@@ -1,5 +1,7 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Vcc.Office.CoreShell;
 
 namespace Vcc.Office.Desktop;
@@ -7,6 +9,10 @@ namespace Vcc.Office.Desktop;
 public sealed partial class MainWindow
 {
     private RibbonWindow? _ribbonWindow;
+    private Button? _launcherFocusButton;
+    private Button? _ribbonFocusButton;
+    private bool _initialNavigationFocusApplied;
+    private bool _lastReducedMotion;
     private string _configuredLauncherRevision = "";
 
     private readonly CoreShellService _workspaceShell = new(new ShellStateStore(
@@ -22,13 +28,21 @@ public sealed partial class MainWindow
             {
                 var previousContrast = _workspaceShell.State.HighContrast;
                 await _workspaceShell.InitialiseAsync();
+                var motionChanged = _lastReducedMotion != _workspaceShell.State.ReducedMotion;
+                _lastReducedMotion = _workspaceShell.State.ReducedMotion;
                 var newRevision = string.Join("|", _workspaceShell.State.Launcher.Select(item =>
                     item.Id + ":" + item.Title + ":" + item.Description + ":" + item.Glyph));
-                if (previousContrast != _workspaceShell.State.HighContrast ||
+                if (previousContrast != _workspaceShell.State.HighContrast || motionChanged ||
                     !string.Equals(_configuredLauncherRevision, newRevision, StringComparison.Ordinal))
                 {
                     _configuredLauncherRevision = newRevision;
                     Render();
+                }
+                ApplyWorkspaceNavigation();
+                if (!_initialNavigationFocusApplied)
+                {
+                    _initialNavigationFocusApplied = true;
+                    Dispatcher.UIThread.Post(FocusConfiguredTarget, DispatcherPriority.Input);
                 }
             }
             catch (IOException) { }
@@ -36,6 +50,24 @@ public sealed partial class MainWindow
         };
         KeyDown += WorkspaceKeyDown;
     }
+
+    /// <summary>Apply the same Cycle/Continue policy that the WPF Workspace used.</summary>
+    private void ApplyWorkspaceNavigation()
+    {
+        WorkspaceNavigationAdapter.Apply(_layout, _workspaceShell.State.Navigation,
+            _workspaceShell.State.ReducedMotion);
+    }
+
+    private void FocusConfiguredTarget()
+    {
+        if (_launcherFocusButton is null || _ribbonFocusButton is null ||
+            !WorkspaceNavigationAdapter.InitialFocusTarget(_workspaceShell.State.Navigation,
+                _launcherFocusButton, _ribbonFocusButton).Focus())
+            _search.Focus();
+    }
+
+    private static void SetAccessibleName(Button button, string name) =>
+        AutomationProperties.SetName(button, name);
 
     private IReadOnlyList<LauncherItem> ConfiguredItems(string? query = null) =>
         ConfiguredLauncherPolicy.CustomItems(_workspaceShell.State.Launcher, _registry, query);

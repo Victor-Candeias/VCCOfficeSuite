@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -89,6 +90,7 @@ public sealed class WorkspaceSettingsWindow : Window
             HorizontalAlignment = HorizontalAlignment.Stretch,
             CornerRadius = new CornerRadius(9)
         };
+        AutomationProperties.SetName(field, label);
         panel.Children.Add(field);
         return field;
     }
@@ -100,6 +102,7 @@ public sealed class WorkspaceSettingsWindow : Window
             Content = label, Padding = new Thickness(13, 9),
             CornerRadius = new CornerRadius(9), HorizontalAlignment = HorizontalAlignment.Left
         };
+        AutomationProperties.SetName(button, label);
         button.Click += async (_, _) => await callback();
         panel.Children.Add(button);
         return button;
@@ -206,6 +209,8 @@ public sealed class WorkspaceSettingsWindow : Window
             IsChecked = _shell.State.HighContrast };
         var motion = new CheckBox { Content = "Reduzir movimento e transições",
             IsChecked = _shell.State.ReducedMotion };
+        AutomationProperties.SetName(contrast, "Ativar alto contraste");
+        AutomationProperties.SetName(motion, "Reduzir movimento e transições");
         _accessibility.Children.Add(contrast);
         _accessibility.Children.Add(motion);
         Action(_accessibility, "Guardar acessibilidade", () => ExecuteAsync(async () =>
@@ -232,6 +237,8 @@ public sealed class WorkspaceSettingsWindow : Window
         };
         var wrap = new CheckBox { Content = "Repetir navegação ao chegar ao último controlo",
             IsChecked = _shell.State.Navigation.WrapFocus };
+        AutomationProperties.SetName(focus, "Foco inicial de navegação");
+        AutomationProperties.SetName(wrap, "Repetir navegação ao fim da lista");
         _navigation.Children.Add(focus);
         _navigation.Children.Add(wrap);
         Action(_navigation, "Guardar navegação", () => ExecuteAsync(async () =>

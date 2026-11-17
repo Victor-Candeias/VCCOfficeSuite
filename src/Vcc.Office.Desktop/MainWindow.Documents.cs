@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using Vcc.Office.CoreShell;
 
 namespace Vcc.Office.Desktop;
@@ -41,11 +42,18 @@ public sealed partial class MainWindow
                 };
             }
             await RefreshRecentAsync();
+            await _workspaceShell.InitialiseAsync();
             Render();
+            ApplyWorkspaceNavigation();
+            if (!_initialNavigationFocusApplied)
+            {
+                _initialNavigationFocusApplied = true;
+                Dispatcher.UIThread.Post(FocusConfiguredTarget, DispatcherPriority.Input);
+            }
             RestoreModuleSession();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-            Microsoft.Data.Sqlite.SqliteException)
+            System.Text.Json.JsonException or Microsoft.Data.Sqlite.SqliteException)
         {
             ShowNotice("Não foi possível recuperar as preferências", ex.Message);
         }

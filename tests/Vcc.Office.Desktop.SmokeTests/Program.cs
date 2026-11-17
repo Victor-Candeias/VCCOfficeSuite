@@ -1,5 +1,7 @@
 using System.Reflection;
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Input;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Styling;
@@ -176,6 +178,61 @@ var sessionStoreField = typeof(MainWindow).GetField("_sessionStore",
 var sessionStore = (Vcc.Office.CoreShell.OfficeSessionStore)sessionStoreField.GetValue(window)!;
 if (!sessionStore.FilePath.EndsWith("avalonia-application-session.json", StringComparison.OrdinalIgnoreCase))
     throw new Exception("A sessão Avalonia não pode sobrescrever a sessão WPF.");
+
+// VCC-0820.9: focus policy and accessibility metadata must be present
+// on every freshly created visual tree, not only before the first Render().
+var layoutField = typeof(MainWindow).GetField("_layout", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Árvore de navegação Avalonia em falta.");
+var layout = (Grid)layoutField.GetValue(window)!;
+if (KeyboardNavigation.GetTabNavigation(layout) != KeyboardNavigationMode.Continue)
+    throw new Exception("A navegação predefinida deve continuar sem ciclo de Tab.");
+
+var launcherFocusField = typeof(MainWindow).GetField("_launcherFocusButton",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Foco inicial Launcher não implementado.");
+var ribbonFocusField = typeof(MainWindow).GetField("_ribbonFocusButton",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Foco inicial Ribbon não implementado.");
+var launcherFocus = (Button?)launcherFocusField.GetValue(window);
+var ribbonFocus = (Button?)ribbonFocusField.GetValue(window);
+if (AutomationProperties.GetName(launcherFocus!) != "Abrir Launcher de aplicações" ||
+    AutomationProperties.GetName(ribbonFocus!) != "Abrir Ribbon")
+    throw new Exception("A navegação não expõe nomes acessíveis para Launcher e Ribbon.");
+
+var navigationMethod = typeof(MainWindow).GetMethod("ApplyWorkspaceNavigation",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Preferências de navegação WPF não aplicadas em Avalonia.");
+navigationMethod.Invoke(window, null);
+if (KeyboardNavigation.GetTabNavigation(layout) != KeyboardNavigationMode.Continue)
+    throw new Exception("As preferências de navegação alteraram o comportamento predefinido.");
+
+var searchAfterRender = (TextBox)searchField.GetValue(window)!;
+if (AutomationProperties.GetName(searchAfterRender) != "Pesquisar aplicações")
+    throw new Exception("A caixa de pesquisa do Launcher não tem nome acessível.");
+
+// VCC-0820.9: verify both configurations, not only the default state.
+var adapterGrid = new Grid();
+var firstTarget = new Button { Content = "Launcher" };
+var lastTarget = new Button { Content = "Ribbon" };
+adapterGrid.Children.Add(firstTarget);
+adapterGrid.Children.Add(lastTarget);
+var wrapSetting = new Vcc.Office.CoreShell.NavigationSettings(
+    Vcc.Office.CoreShell.NavigationFocusTarget.Ribbon, true);
+WorkspaceNavigationAdapter.Apply(adapterGrid, wrapSetting, reducedMotion: true);
+if (KeyboardNavigation.GetTabNavigation(adapterGrid) != KeyboardNavigationMode.Cycle ||
+    WorkspaceNavigationAdapter.InitialFocusTarget(wrapSetting, firstTarget, lastTarget) != lastTarget)
+    throw new Exception("O ciclo de Tab e foco inicial Ribbon não foram aplicados.");
+if (WorkspaceNavigationAdapter.InitialFocusTarget(
+        new Vcc.Office.CoreShell.NavigationSettings(
+            Vcc.Office.CoreShell.NavigationFocusTarget.Launcher, false),
+        firstTarget, lastTarget) != firstTarget)
+    throw new Exception("O foco inicial Launcher não foi respeitado.");
+WorkspaceNavigationAdapter.Apply(adapterGrid,
+    new Vcc.Office.CoreShell.NavigationSettings(
+        Vcc.Office.CoreShell.NavigationFocusTarget.Launcher, false),
+    reducedMotion: false);
+if (KeyboardNavigation.GetTabNavigation(adapterGrid) != KeyboardNavigationMode.Continue)
+    throw new Exception("Não foi possível desativar o ciclo de Tab.");
 
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
