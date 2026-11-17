@@ -48,6 +48,9 @@ public sealed partial class MainWindow : Window
         MinHeight = 540;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Content = _layout;
+        // Non-plugin editors remain integrated in the launcher until migrated.
+        _registry.Register(new OfficeModule("sheets", "VCC Sheets", true));
+        _registry.Register(new OfficeModule("slides", "VCC Slides", true));
         // Installed plugins own the names shown by the launcher.
         foreach (var plugin in _plugins.Plugins)
             _registry.RegisterPlugin(new OfficeModule(plugin.Id, plugin.DisplayName, true));
