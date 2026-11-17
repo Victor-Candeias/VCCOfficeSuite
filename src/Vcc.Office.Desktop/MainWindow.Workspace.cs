@@ -2,6 +2,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Vcc.Office.CoreShell;
 
 namespace Vcc.Office.Desktop;
@@ -53,6 +54,14 @@ public sealed partial class MainWindow
     {
         KeyboardNavigation.SetTabNavigation(_layout, _workspaceShell.State.Navigation.WrapFocus
             ? KeyboardNavigationMode.Cycle : KeyboardNavigationMode.Continue);
+        if (_workspaceShell.State.ReducedMotion)
+        {
+            // Disable property transitions on existing Launcher controls.
+            // This leaves native OS effects and other module windows unchanged.
+            _layout.Transitions = null;
+            foreach (var control in _layout.GetVisualDescendants().OfType<Control>())
+                control.Transitions = null;
+        }
     }
 
     private void FocusConfiguredTarget()
