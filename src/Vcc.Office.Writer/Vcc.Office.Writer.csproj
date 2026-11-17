@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <ProjectReference Include="../Vcc.Office.CoreShell/Vcc.Office.CoreShell.csproj" />
+    <ProjectReference Include="../Vcc.Office.Plugin.Abstractions/Vcc.Office.Plugin.Abstractions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../Vcc.Office.Desktop/Assets/VccOfficeSuite.ico" LogicalName="Vcc.Office.Writer.AppIcon" />
+  </ItemGroup>
+</Project>

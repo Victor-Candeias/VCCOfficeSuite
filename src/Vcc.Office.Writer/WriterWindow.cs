@@ -5,7 +5,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Vcc.Office.CoreShell;
 
-namespace Vcc.Office.Desktop;
+namespace Vcc.Office.Writer;
 
 /// <summary>Editor Writer com Ribbon e folha A4 visual; mantém os formatos de texto existentes.</summary>
 public sealed class WriterWindow : Window
@@ -36,10 +36,10 @@ public sealed class WriterWindow : Window
     private string? _currentPath;
     private bool _dirty;
 
-    public WriterWindow()
+    public WriterWindow(WindowIcon? icon = null)
     {
         Title = "VCC Writer — Sem título";
-        Icon = AppBranding.LoadWindowIcon();
+        Icon = icon ?? LoadWriterIcon();
         Width = 1200;
         Height = 860;
         MinWidth = 700;
@@ -155,6 +155,13 @@ public sealed class WriterWindow : Window
             _wordCount.Text = CountWords(_editor.Text).ToString() + " palavras";
             UpdateTitle();
         };
+    }
+
+    private static WindowIcon LoadWriterIcon()
+    {
+        using var stream = typeof(WriterWindow).Assembly.GetManifestResourceStream("Vcc.Office.Writer.AppIcon")
+            ?? throw new InvalidOperationException("O ícone do Writer não foi incorporado no plugin.");
+        return new WindowIcon(stream);
     }
 
     private static IBrush Brush(string hex) => new SolidColorBrush(Color.Parse(hex));
@@ -362,7 +369,7 @@ public sealed class WriterWindow : Window
         var confirm = new Window
         {
             Title = "Alterações por guardar",
-            Icon = AppBranding.LoadWindowIcon(),
+            Icon = Icon,
             Width = 420,
             Height = 165,
             WindowStartupLocation = WindowStartupLocation.CenterOwner

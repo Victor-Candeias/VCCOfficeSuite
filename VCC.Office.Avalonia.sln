@@ -10,6 +10,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.CoreShell.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.Desktop.SmokeTests", "tests\Vcc.Office.Desktop.SmokeTests\Vcc.Office.Desktop.SmokeTests.csproj", "{DB6E2B2F-3C18-47D3-96F5-A096A0F8B850}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.Plugin.Abstractions", "src\Vcc.Office.Plugin.Abstractions\Vcc.Office.Plugin.Abstractions.csproj", "{A5FBA04D-E0C0-4D1D-BC1B-59899DE2DD11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.PluginHost", "src\Vcc.Office.PluginHost\Vcc.Office.PluginHost.csproj", "{B5FBA04D-E0C0-4D1D-BC1B-59899DE2DD12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.Writer", "src\Vcc.Office.Writer\Vcc.Office.Writer.csproj", "{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD13}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,5 +38,17 @@ Global
 		{DB6E2B2F-3C18-47D3-96F5-A096A0F8B850}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB6E2B2F-3C18-47D3-96F5-A096A0F8B850}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB6E2B2F-3C18-47D3-96F5-A096A0F8B850}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5FBA04D-E0C0-4D1D-BC1B-59899DE2DD11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5FBA04D-E0C0-4D1D-BC1B-59899DE2DD11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5FBA04D-E0C0-4D1D-BC1B-59899DE2DD11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5FBA04D-E0C0-4D1D-BC1B-59899DE2DD11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5FBA04D-E0C0-4D1D-BC1B-59899DE2DD12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5FBA04D-E0C0-4D1D-BC1B-59899DE2DD12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5FBA04D-E0C0-4D1D-BC1B-59899DE2DD12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5FBA04D-E0C0-4D1D-BC1B-59899DE2DD12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD13}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
