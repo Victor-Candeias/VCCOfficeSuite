@@ -1,9 +1,6 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Themes.Fluent;
-using Avalonia.Markup.Xaml.Styling;
-using ReactiveUI;
-using ReactiveUI.Avalonia;
 using Avalonia.Threading;
 
 namespace Vcc.Office.Desktop;
@@ -20,19 +17,7 @@ internal static class Program
 
         AppBuilder.Configure<Application>()
             .UsePlatformDetect()
-            .AfterSetup(builder =>
-            {
-                RxSchedulers.MainThreadScheduler = AvaloniaScheduler.Instance;
-                if (builder.Instance is { } app)
-                {
-                    app.Styles.Add(new FluentTheme());
-                    // Only the Writer hosts a ribbon; its theme is registered for that module.
-                    app.Styles.Add(new StyleInclude(new Uri("avares://ProEdit.Ribbon.Avalonia/"))
-                    {
-                        Source = new Uri("avares://ProEdit.Ribbon.Avalonia/WordRibbonTheme.axaml")
-                    });
-                }
-            })
+            .AfterSetup(builder => builder.Instance?.Styles.Add(new FluentTheme()))
             .SetupWithLifetime(lifetime);
 
         // Iniciar com o splash antes de construir a janela principal.
