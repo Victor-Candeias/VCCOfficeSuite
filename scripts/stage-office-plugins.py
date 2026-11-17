@@ -34,7 +34,8 @@ for manifest_path in manifests:
     binary = manifest_path.parent / "bin" / configuration / "net10.0" / assembly
     if not binary.is_file():
         raise SystemExit(f"Plugin not compiled: {binary}")
-    output = destination / plugin_id
+    # Preserve the existing Plugins/Writer release layout on case-sensitive systems.
+    output = destination / (plugin_id[0].upper() + plugin_id[1:])
     output.mkdir(parents=True, exist_ok=True)
     shutil.copy2(manifest_path, output / "plugin.json")
     shutil.copy2(binary, output / assembly)
