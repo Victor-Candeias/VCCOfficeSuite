@@ -352,5 +352,59 @@ if (typeof(MainWindow).GetMethod("WorkspaceKeyDown",
         BindingFlags.Instance | BindingFlags.NonPublic) is null)
     throw new Exception("Atalho de pesquisa global não está implementado.");
 
+// Writer visual regression: keep Ribbon, A4 page, rulers and editable text intact.
+var writer = new WriterWindow();
+var writerRoot = writer.Content as DockPanel
+    ?? throw new Exception("O Writer deixou de utilizar o layout principal.");
+var writerRibbon = writerRoot.Children.OfType<Border>()
+    .FirstOrDefault(item => item.Name == "WriterRibbon")
+    ?? throw new Exception("Falta o Ribbon do Writer.");
+var writerTabs = writerRibbon.Child as TabControl
+    ?? throw new Exception("O Ribbon não contém separadores.");
+if (writerTabs.Items.Count != 3 ||
+    writerTabs.Items.OfType<TabItem>().Select(tab => tab.Header?.ToString())
+        .SequenceEqual(new[] { "Ficheiro", "Base", "Ver" }) == false)
+    throw new Exception("Os separadores Ficheiro, Base e Ver não estão disponíveis.");
+
+var writerScroll = writerRoot.Children.OfType<ScrollViewer>().Single();
+if (writerScroll.HorizontalScrollBarVisibility != ScrollBarVisibility.Auto ||
+    writerScroll.VerticalScrollBarVisibility != ScrollBarVisibility.Auto)
+    throw new Exception("O Writer não suporta scroll numa página A4 maior do que a janela.");
+
+var writerWorkspace = writerScroll.Content as StackPanel
+    ?? throw new Exception("O espaço de edição do Writer não foi encontrado.");
+var writerTop = (StackPanel)writerWorkspace.Children[0];
+var writerPageRow = (StackPanel)writerWorkspace.Children[1];
+var writerBottom = (StackPanel)writerWorkspace.Children[2];
+var writerTopRuler = (Border)writerTop.Children[1];
+var writerBottomRuler = (Border)writerBottom.Children[1];
+var writerVerticalRuler = (Border)writerPageRow.Children[0];
+var writerPage = (Border)writerPageRow.Children[1];
+var writerEditor = writerPage.Child as TextBox
+    ?? throw new Exception("A folha A4 não contém uma área de texto editável.");
+if (writerTopRuler.Name != "WriterTopRuler" ||
+    writerBottomRuler.Name != "WriterBottomRuler" ||
+    writerVerticalRuler.Name != "WriterVerticalRuler" ||
+    writerPage.Name != "WriterPage" ||
+    writerEditor.Name != "WriterEditor" ||
+    writerPage.Width != 794 || writerPage.Height != 1123 ||
+    writerPage.Background?.ToString() != Avalonia.Media.Brushes.White.ToString() ||
+    writerPage.Padding.Left != 76)
+    throw new Exception("Dimensões, cor ou réguas da página A4 incorretas.");
+
+writerEditor.Text = "Primeira página de teste";
+if (writerEditor.Text != "Primeira página de teste" || !writer.Title.Contains('*'))
+    throw new Exception("A folha do Writer não permite editar e sinalizar alterações.");
+
+var toggleWriterRulers = typeof(WriterWindow).GetMethod("ToggleRulers",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Não é possível alternar a visualização das réguas.");
+toggleWriterRulers.Invoke(writer, null);
+if (writerTopRuler.IsVisible || writerBottomRuler.IsVisible || writerVerticalRuler.IsVisible)
+    throw new Exception("Ocultar réguas não alterou as três réguas.");
+toggleWriterRulers.Invoke(writer, null);
+if (!writerTopRuler.IsVisible || !writerBottomRuler.IsVisible || !writerVerticalRuler.IsVisible)
+    throw new Exception("Mostrar réguas não restaurou as três réguas.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
