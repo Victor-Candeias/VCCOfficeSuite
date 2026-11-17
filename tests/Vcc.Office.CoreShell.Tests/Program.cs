@@ -33,6 +33,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("tema configura e persiste", ConfiguresTheme)
     ,("acessibilidade configura e persiste", ConfiguresAccessibility)
     ,("navegação configura e persiste", ConfiguresNavigation)
+    ,("VCC-0820.9 acessibilidade e foco WPF persistem entre arranques Avalonia", TestsAccessibilityNavigationRoundTrip)
     ,("Launcher é consultado e navegado", QueriesAndNavigatesLauncher)
     ,("VCC-0820.7 módulos personalizados são filtrados e pesquisados sem simular instalação", TestsConfiguredLauncherPolicy)
     ,("janelas são consultadas e navegadas", NavigatesWindows)
@@ -1294,4 +1295,37 @@ static Task ValidatesAvaloniaSessionMigration()
         Directory.Delete(directory, recursive: true);
     }
     return Task.CompletedTask;
+}
+
+static async Task TestsAccessibilityNavigationRoundTrip()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var path = Path.Combine(directory, "shell-state.json");
+        var oldWorkspace = new CoreShellService(new ShellStateStore(path));
+        await oldWorkspace.InitialiseAsync();
+        await oldWorkspace.ConfigureNavigationAsync(
+            new NavigationSettings(NavigationFocusTarget.Ribbon, true));
+        await oldWorkspace.ConfigureAccessibilityAsync(true, true);
+
+        var avalonia = new CoreShellService(new ShellStateStore(path));
+        await avalonia.InitialiseAsync();
+        if (avalonia.State.Navigation.InitialFocus != NavigationFocusTarget.Ribbon ||
+            !avalonia.State.Navigation.WrapFocus ||
+            !avalonia.State.HighContrast ||
+            !avalonia.State.ReducedMotion)
+            throw new Exception("As opções de foco e acessibilidade do WPF não foram recuperadas.");
+
+        await avalonia.ConfigureNavigationAsync(
+            new NavigationSettings(NavigationFocusTarget.Launcher, false));
+        await avalonia.ConfigureAccessibilityAsync(false, false);
+        var reloaded = new CoreShellService(new ShellStateStore(path));
+        await reloaded.InitialiseAsync();
+        if (reloaded.State.Navigation.InitialFocus != NavigationFocusTarget.Launcher ||
+            reloaded.State.Navigation.WrapFocus || reloaded.State.HighContrast ||
+            reloaded.State.ReducedMotion)
+            throw new Exception("A desativação de opções de acessibilidade/navegação não persistiu.");
+    }
+    finally { Directory.Delete(directory, recursive: true); }
 }
