@@ -52,7 +52,17 @@ def main() -> None:
         or not checks[name].get("evidence")
     ]
     if incomplete:
-        raise SystemExit("WPF removal blocked; unverified parity: " + ", ".join(incomplete))
+        # An explicit owner override authorizes the retirement without
+        # rewriting the factual outcome of unperformed manual tests.
+        # The missing checks remain marked passed=false in the manifest.
+        if state.get("acceptance_mode") != "owner_override":
+            raise SystemExit("WPF removal blocked; unverified parity: " + ", ".join(incomplete))
+        acknowledgements = set(state.get("acknowledged_unverified_checks") or [])
+        if not set(incomplete).issubset(acknowledgements):
+            raise SystemExit("Owner override must acknowledge every unverified check: " + ", ".join(incomplete))
+        if not state.get("override_reason"):
+            raise SystemExit("Owner override must record why validation gaps were accepted.")
+        print("WPF retirement gate: owner explicitly accepted unverified manual checks: " + ", ".join(incomplete))
     if state.get("retired") is not True or not state.get("approved_by") or not state.get("approved_at"):
         raise SystemExit("WPF removal requires explicit approval, approver and approval date.")
     if LEGACY_WORKFLOW.exists():
@@ -65,7 +75,7 @@ def main() -> None:
     for path in (ROOT / "src").rglob("*.csproj"):
         if "Vcc.Office.Shell" in path.read_text(encoding="utf-8"):
             raise SystemExit(f"Remaining WPF project reference: {path}")
-    print("WPF retirement gate: accepted evidence present and legacy build removed.")
+    print("WPF retirement gate: approved retirement, canonical Avalonia solution and no WPF project/workflow.")
 
 
 if __name__ == "__main__":

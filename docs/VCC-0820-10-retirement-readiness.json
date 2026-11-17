@@ -1,7 +1,7 @@
 {
-  "retired": false,
-  "approved_by": null,
-  "approved_at": null,
+  "retired": true,
+  "approved_by": "Proprietário do repositório (aprovação explícita em conversa de 2026-11-17)",
+  "approved_at": "2026-11-17",
   "checks": {
     "launcher_and_dashboards": {
       "passed": false,
@@ -55,5 +55,22 @@
       "passed": false,
       "evidence": null
     }
-  }
+  },
+  "acceptance_mode": "owner_override",
+  "override_reason": "O proprietário confirmou «por mim está tudo ok.. podes remover tudo de wpf»; autoriza a retirada do código WPF sem afirmar que todos os 13 testes manuais foram realizados.",
+  "acknowledged_unverified_checks": [
+    "launcher_and_dashboards",
+    "writer_and_documents",
+    "sheets_and_workbooks",
+    "slides_and_presentations",
+    "data_forms_and_reports",
+    "recent_files_and_favorites",
+    "workspace_settings_and_shortcuts",
+    "accessibility_and_keyboard",
+    "window_geometry_and_dpi",
+    "legacy_data_import_and_rollback",
+    "windows_real_ui_acceptance",
+    "linux_real_ui_acceptance",
+    "macos_real_ui_acceptance"
+  ]
 }

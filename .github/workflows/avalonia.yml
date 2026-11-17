@@ -31,10 +31,10 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Verify WPF retirement safety gate
         run: python scripts/check-wpf-retirement.py
-      - name: Restore Avalonia-only solution
-        run: dotnet restore VCC.Office.Avalonia.sln
-      - name: Build Avalonia-only solution
-        run: dotnet build VCC.Office.Avalonia.sln --configuration ${{ matrix.configuration }} --no-restore --property:ContinuousIntegrationBuild=true
+      - name: Restore canonical Avalonia solution
+        run: dotnet restore VCC.Office.sln
+      - name: Build canonical Avalonia solution
+        run: dotnet build VCC.Office.sln --configuration ${{ matrix.configuration }} --no-restore --property:ContinuousIntegrationBuild=true
       - name: Test shared CoreShell
         run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration ${{ matrix.configuration }}
       - name: Smoke test Avalonia visual tree without display server
