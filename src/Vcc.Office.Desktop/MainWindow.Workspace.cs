@@ -6,6 +6,7 @@ namespace Vcc.Office.Desktop;
 
 public sealed partial class MainWindow
 {
+    private RibbonWindow? _ribbonWindow;
     private readonly CoreShellService _workspaceShell = new(new ShellStateStore(
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VCC Office", "shell-state.json")));
@@ -22,6 +23,21 @@ public sealed partial class MainWindow
         KeyDown += WorkspaceKeyDown;
     }
 
+    private void OpenRibbon()
+    {
+        if (_ribbonWindow is not null)
+        {
+            if (_ribbonWindow.WindowState == WindowState.Minimized)
+                _ribbonWindow.WindowState = WindowState.Normal;
+            _ribbonWindow.Activate();
+            return;
+        }
+        var ribbon = new RibbonWindow(_workspaceShell);
+        ribbon.Closed += (_, _) => _ribbonWindow = null;
+        _ribbonWindow = ribbon;
+        ribbon.Show(this);
+    }
+
     private void WorkspaceKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.KeyModifiers == KeyModifiers.None) return;
@@ -36,6 +52,7 @@ public sealed partial class MainWindow
                 string.Join('+', parts), out var command)) return;
         if (command == "open-settings") ShowLauncherSettings();
         else if (command == "open-launcher") Switch(DashboardIds.Grid);
+        else if (command == "open-ribbon") OpenRibbon();
         else return; // No silent claim that arbitrary configured commands were executed.
         e.Handled = true;
     }
