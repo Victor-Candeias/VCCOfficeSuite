@@ -1222,6 +1222,8 @@ static async Task TestsConfiguredLauncherPolicy()
             Path.Combine(directory, "shell-state.json")));
         await restored.InitialiseAsync();
         var registry = new OfficeApplicationRegistry();
+        // Only the installed Writer plugin is considered an application entry.
+        registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         var custom = ConfiguredLauncherPolicy.CustomItems(restored.State.Launcher, registry);
         if (custom.Count != 2 || custom[0].Id != "vcc-tasks" ||
             custom[1].Id != "vcc-inventory")
