@@ -105,6 +105,14 @@ public sealed partial class MainWindow
             Render();
             dialog.Close();
         };
+        var advanced = new Button { Content = "Configuração avançada", MinWidth = 170 };
+        advanced.Click += (_, _) =>
+        {
+            var workspace = new WorkspaceSettingsWindow();
+            workspace.Show(this);
+            dialog.Close();
+        };
+        footer.Children.Add(advanced);
         footer.Children.Add(cancel);
         footer.Children.Add(save);
         panel.Children.Add(footer);
