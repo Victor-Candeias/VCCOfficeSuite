@@ -14,7 +14,7 @@ namespace Vcc.Office.Desktop;
 public sealed class RibbonWindow : Window
 {
     private readonly CoreShellService _shell;
-    private readonly TextBox _search = new() { Watermark = "Pesquisar separadores e comandos..." };
+    private readonly TextBox _search = new() { PlaceholderText = "Pesquisar separadores e comandos..." };
     private readonly ComboBox _tabs = new() { MinWidth = 170 };
     private readonly StackPanel _commands = new() { Spacing = 9 };
     private readonly TextBlock _status = new() { Text = "A carregar Ribbon..." };
