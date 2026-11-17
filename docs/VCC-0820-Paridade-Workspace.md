@@ -10,12 +10,12 @@
 | Dashboard moderno, clássico, grelha | `MainWindow` | `MainWindow` | Implementado; validação manual por plataforma necessária |
 | Recentes, favoritos, seleção de ficheiros | `MainWindow` | `MainWindow.Documents` | Implementado; abertura externa e recuperação a rever |
 | Tema e dashboard inicial | Janelas de settings WPF | `MainWindow.Settings` | Implementado |
-| Ribbon: separadores, comandos e pesquisa | `WorkspaceWindow` | Editor de configuração em `WorkspaceSettingsWindow` | **Parcial**: falta ribbon funcional visível, pesquisa e despacho de comandos |
+| Ribbon: separadores, comandos e pesquisa | `WorkspaceWindow` | `RibbonWindow` pesquisável e configuração em `WorkspaceSettingsWindow` | **Parcial**: navegação persistida; comandos de edição não estão ligados aos editores |
 | Launcher personalizável e pesquisa | `WorkspaceWindow` | Editor de configuração e launcher Avalonia | **Parcial**: módulos configurados no shell-state não alimentam ainda o catálogo visual de 26 módulos |
 | Atalhos configuráveis | `WorkspaceWindow` | Editor e despacho de open-settings/open-launcher | **Parcial**: comandos arbitrários não são executados, têm de ter handlers reais |
-| Acessibilidade: alto contraste, movimento reduzido | `WorkspaceWindow` | Preferências guardadas | **Parcial**: aplicação efetiva do contraste/movimento em toda a UI ainda por validar |
+| Acessibilidade: alto contraste, movimento reduzido | `WorkspaceWindow` | Preferências guardadas; alto contraste aplicado às superfícies principais do Launcher | **Parcial**: verificar editor, movimento reduzido, leitores de ecrã e contraste de todos os controlos |
 | Navegação: foco inicial e wrap | `WorkspaceWindow` | Preferências guardadas | **Parcial**: política de foco e ciclo ainda não está aplicada no UI |
-| Layout da janela e ações centrar/restaurar/maximizar | `WorkspaceWindow` | Preferências de dimensões | **Parcial**: ações e recuperação geométrica ainda por implementar |
+| Layout da janela e ações centrar/restaurar/maximizar | `WorkspaceWindow` | Dimensões guardadas e ações aplicadas à janela proprietária | **Parcial**: recuperação automática da posição no arranque e DPI múltiplos ainda a validar |
 | Data: tabelas, SQL, importação/exportação CSV | `WorkspaceWindow` | `DataWindow` | Implementado, validar resultados e erros |
 | Data: formulários e relatórios | `WorkspaceWindow` | `DataWindow` | Implementado, validar paridade e dados existentes |
 | Writer: TXT/DOCX inicial | CoreShell + implementação inicial Avalonia | `WriterWindow` | Editável em Avalonia; fidelidade de DOCX e edição rica incompletas |
@@ -40,3 +40,15 @@
 6. Executar CI Debug e Release nas três plataformas e distribuição autónoma Windows; merge apenas com testes a verde.
 
 **Estado da VCC-0820: em curso. O WPF permanece nesta fase, sem remoção prematura.**
+
+## Fase 5 — Ribbon, janela e contraste
+
+- [x] Ribbon visível e pesquisável em Avalonia, com persistência de seleção de comandos no CoreShell.
+- [x] Atalho configurável `open-ribbon` e entrada na navegação lateral.
+- [x] Ações Centrar/Maximizar/Restaurar preservam política `WindowNavigationPolicy` e aplicam-se à janela proprietária.
+- [x] Alto contraste passa a afetar as superfícies principais do Launcher após carregamento da preferência.
+- [ ] Comandos de edição com execução real nos respetivos módulos.
+- [ ] Foco inicial e ciclo de navegação, recuperação de geometria e acessibilidade global em todos os módulos.
+- [ ] Testes manuais e de regressão de todos os fluxos num Windows 11 real, macOS e Linux.
+
+**Não interpretar a Fase 5 como equivalência completa nem eliminar WPF.**

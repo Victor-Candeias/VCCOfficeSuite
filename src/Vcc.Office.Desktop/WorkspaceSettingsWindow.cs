@@ -261,5 +261,31 @@ public sealed class WorkspaceSettingsWindow : Window
                 new WindowLayout(w, h, state.Left, state.Top, max.IsChecked == true)));
             _status.Text = "Dimensões de janela guardadas.";
         }));
+        Action(_window, "Centrar janela", () => NavigateWindowAsync(WindowNavigationAction.Center));
+        Action(_window, "Maximizar janela", () => NavigateWindowAsync(WindowNavigationAction.Maximize));
+        Action(_window, "Restaurar janela", () => NavigateWindowAsync(WindowNavigationAction.Restore));
     }
+
+    private Task NavigateWindowAsync(WindowNavigationAction action) => ExecuteAsync(async () =>
+    {
+        var area = Owner?.Screens.Primary?.WorkingArea;
+        var left = area?.X ?? 0;
+        var top = area?.Y ?? 0;
+        var width = area?.Width ?? 1920;
+        var height = area?.Height ?? 1080;
+        await _shell.NavigateWindowAsync(action, left, top, width, height);
+        if (Owner is Window window)
+        {
+            var layout = _shell.State.Window;
+            window.WindowState = layout.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+            if (!layout.IsMaximized)
+            {
+                window.Width = layout.Width;
+                window.Height = layout.Height;
+                window.Position = new PixelPoint((int)Math.Round(layout.Left), (int)Math.Round(layout.Top));
+            }
+        }
+        RenderWindow();
+        _status.Text = "Ação de janela aplicada: " + action;
+    });
 }

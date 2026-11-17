@@ -136,5 +136,17 @@ var labels = (tabs.ItemsSource as IEnumerable<TabItem>)?.Select(tab => tab.Heade
 foreach (var label in new[] { "Launcher", "Ribbon", "Atalhos", "Acessibilidade", "Navegação", "Janela" })
     if (!labels.Contains(label)) throw new Exception("Área WPF sem migração: " + label);
 
+// Ribbon visual surface must exist without WPF references.
+var ribbonService = new Vcc.Office.CoreShell.CoreShellService(
+    new Vcc.Office.CoreShell.ShellStateStore(
+        Path.Combine(Path.GetTempPath(), "vcc-ribbon-" + Guid.NewGuid().ToString("N") + ".json")));
+var ribbonWindow = new RibbonWindow(ribbonService);
+if (ribbonWindow.Icon is null || ribbonWindow.Title?.Contains("Ribbon", StringComparison.Ordinal) != true)
+    throw new Exception("A interface Ribbon Avalonia não foi inicializada.");
+var ribbonSearchField = typeof(RibbonWindow).GetField("_search", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("A pesquisa Ribbon está em falta.");
+if (((TextBox)ribbonSearchField.GetValue(ribbonWindow)!).PlaceholderText is null)
+    throw new Exception("A pesquisa Ribbon não tem indicação acessível.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
