@@ -22,11 +22,12 @@ public sealed partial class MainWindow : Window
     private string _activeDashboard = DashboardIds.Modern;
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-    private IBrush Surface => Brush.Parse(Dark ? "#172439" : "#FFFFFF");
-    private IBrush Page => Brush.Parse(Dark ? "#0B1422" : "#F5F8FD");
-    private IBrush ForegroundBrush => Brush.Parse(Dark ? "#F2F6FF" : "#16253B");
-    private IBrush Muted => Brush.Parse(Dark ? "#A7B7D1" : "#62718B");
-    private IBrush LineBrush => Brush.Parse(Dark ? "#33445F" : "#DDE4EF");
+    private bool HighContrast => _workspaceShell.State.HighContrast;
+    private IBrush Surface => Brush.Parse(HighContrast ? "#000000" : Dark ? "#172439" : "#FFFFFF");
+    private IBrush Page => Brush.Parse(HighContrast ? "#000000" : Dark ? "#0B1422" : "#F5F8FD");
+    private IBrush ForegroundBrush => Brush.Parse(HighContrast ? "#FFFFFF" : Dark ? "#F2F6FF" : "#16253B");
+    private IBrush Muted => Brush.Parse(HighContrast ? "#FFFF00" : Dark ? "#A7B7D1" : "#62718B");
+    private IBrush LineBrush => Brush.Parse(HighContrast ? "#FFFFFF" : Dark ? "#33445F" : "#DDE4EF");
 
     public MainWindow()
     {
@@ -88,7 +89,7 @@ public sealed partial class MainWindow : Window
             Margin = new Thickness(0, 3),
             Padding = new Thickness(14, 8),
             Foreground = selected ? Brushes.White : ForegroundBrush,
-            Background = selected ? Brush.Parse("#2158AD") : Brush.Parse(Dark ? "#172439" : "#EEF3FA"),
+            Background = selected ? Brush.Parse(HighContrast ? "#003399" : "#2158AD") : Brush.Parse(HighContrast ? "#000000" : Dark ? "#172439" : "#EEF3FA"),
             BorderThickness = new Thickness(0)
         };
         button.Click += (_, _) => action();
@@ -174,7 +175,7 @@ public sealed partial class MainWindow : Window
 
         var sidebar = new Border
         {
-            Background = Brush.Parse(Dark ? "#101B2D" : "#EEF3FA"),
+            Background = Brush.Parse(HighContrast ? "#000000" : Dark ? "#101B2D" : "#EEF3FA"),
             BorderBrush = LineBrush,
             BorderThickness = new Thickness(0, 0, 1, 0),
             Padding = new Thickness(13)
