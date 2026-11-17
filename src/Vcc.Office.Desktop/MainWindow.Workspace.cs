@@ -13,6 +13,7 @@ public sealed partial class MainWindow
     private Button? _launcherFocusButton;
     private Button? _ribbonFocusButton;
     private bool _initialNavigationFocusApplied;
+    private bool _lastReducedMotion;
     private string _configuredLauncherRevision = "";
 
     private readonly CoreShellService _workspaceShell = new(new ShellStateStore(
@@ -28,9 +29,11 @@ public sealed partial class MainWindow
             {
                 var previousContrast = _workspaceShell.State.HighContrast;
                 await _workspaceShell.InitialiseAsync();
+                var motionChanged = _lastReducedMotion != _workspaceShell.State.ReducedMotion;
+                _lastReducedMotion = _workspaceShell.State.ReducedMotion;
                 var newRevision = string.Join("|", _workspaceShell.State.Launcher.Select(item =>
                     item.Id + ":" + item.Title + ":" + item.Description + ":" + item.Glyph));
-                if (previousContrast != _workspaceShell.State.HighContrast ||
+                if (previousContrast != _workspaceShell.State.HighContrast || motionChanged ||
                     !string.Equals(_configuredLauncherRevision, newRevision, StringComparison.Ordinal))
                 {
                     _configuredLauncherRevision = newRevision;
