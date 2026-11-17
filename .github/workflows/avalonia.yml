@@ -30,6 +30,8 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Verify WPF retirement safety gate
         run: python scripts/check-wpf-retirement.py
+      - name: Verify plugin boundaries
+        run: python scripts/check-host-plugin-boundaries.py
       - name: Restore canonical Avalonia solution
         run: dotnet restore VCC.Office.Avalonia.sln
       - name: Build canonical Avalonia solution
@@ -68,6 +70,8 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Verify WPF retirement safety gate
         run: python scripts/check-wpf-retirement.py
+      - name: Verify plugin boundaries
+        run: python scripts/check-host-plugin-boundaries.py
       - name: Restore canonical Avalonia solution
         run: dotnet restore VCC.Office.Avalonia.sln
       - name: Build canonical Avalonia solution (Release)
