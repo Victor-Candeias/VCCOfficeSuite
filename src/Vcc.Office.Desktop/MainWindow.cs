@@ -48,6 +48,10 @@ public sealed partial class MainWindow : Window
         MinHeight = 540;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Content = _layout;
+        // Installed plugins own the names shown by the launcher.
+        foreach (var plugin in _plugins.Plugins)
+            if (_registry.Find(plugin.Id) is not null)
+                _registry.Register(new OfficeModule(plugin.Id, plugin.DisplayName, true));
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
         EnableWorkspaceShortcuts();
@@ -229,7 +233,7 @@ public sealed partial class MainWindow : Window
         foreach (var app in _registry.GetAll())
         {
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
-            line.Children.Add(ModuleVisuals.Badge(app.Id, 25));
+            line.Children.Add(ModuleIcon(app.Id, 25));
             line.Children.Add(Text(app.Name.Replace("VCC ", ""), 13));
             var selected = app.Id == _selectedSidebarModuleId;
             var item = new Button
@@ -244,6 +248,7 @@ public sealed partial class MainWindow : Window
                 Margin = new Thickness(0, 2)
             };
             AutomationProperties.SetName(item, "Abrir " + app.Name);
+            ToolTip.SetTip(item, ModuleTooltip(app));
             item.Click += (_, _) => OpenModule(app);
             _sidebarModuleButtons[app.Id] = item;
             navigation.Children.Add(item);
@@ -351,7 +356,7 @@ public sealed partial class MainWindow : Window
         foreach (var app in _registry.GetAll().Where(m => m.Id is "writer" or "sheets" or "slides" or "data"))
         {
             var tile = new StackPanel { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Stretch };
-            var tileIcon = ModuleVisuals.Badge(app.Id, 40);
+            var tileIcon = ModuleIcon(app.Id, 40);
             tileIcon.HorizontalAlignment = HorizontalAlignment.Center;
             tile.Children.Add(tileIcon);
             tile.Children.Add(CenteredText(app.Name, 15, true));
@@ -363,6 +368,7 @@ public sealed partial class MainWindow : Window
                 Margin = new Thickness(0, 0, 10, 0),
                 Background = Surface
             };
+            ToolTip.SetTip(action, ModuleTooltip(app));
             action.Click += (_, _) => OpenModule(app);
             creation.Children.Add(action);
         }
@@ -394,7 +400,7 @@ public sealed partial class MainWindow : Window
         foreach (var module in list)
         {
             var box = new StackPanel { Spacing = 5, HorizontalAlignment = HorizontalAlignment.Stretch };
-            var moduleIcon = ModuleVisuals.Badge(module.Id, _activeDashboard == DashboardIds.Grid ? 42 : 34);
+            var moduleIcon = ModuleIcon(module.Id, _activeDashboard == DashboardIds.Grid ? 42 : 34);
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
@@ -411,6 +417,7 @@ public sealed partial class MainWindow : Window
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(0)
             };
+            ToolTip.SetTip(card, ModuleTooltip(module));
             card.Click += (_, _) => OpenModule(module);
             cards.Children.Add(card);
         }
@@ -497,6 +504,16 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private Control ModuleIcon(string id, double size) =>
+        _plugins.TryGet(id, out var plugin) && plugin is not null
+            ? plugin.CreateMenuIcon(size)
+            : ModuleVisuals.Badge(id, size);
+
+    private string ModuleTooltip(OfficeModule module) =>
+        _plugins.TryGet(module.Id, out var plugin) && plugin is not null
+            ? plugin.ToolTip
+            : module.Name;
+
     private void OpenModule(OfficeModule? module)
     {
         if (module is not null) SelectSidebarModule(module.Id);
@@ -511,7 +528,7 @@ public sealed partial class MainWindow : Window
                 _writerWindow.Activate();
                 return;
             }
-            if (!_plugins.TryCreateWindow("writer", AppBranding.LoadWindowIcon(), out var writer) || writer is null)
+            if (!_plugins.TryCreateWindow("writer", null, out var writer) || writer is null)
             {
                 NotifyFeature("VCC Writer: plugin não instalado ou incompatível");
                 return;
