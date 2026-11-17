@@ -39,12 +39,16 @@ jobs:
         run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration ${{ matrix.configuration }}
       - name: Smoke test Avalonia visual tree without display server
         run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration ${{ matrix.configuration }}
-      - name: Publish desktop
-        run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration ${{ matrix.configuration }} --no-restore --self-contained false --property:PublishTrimmed=false --output artifacts/desktop
-      - name: Upload binary artifact
+      # All OS/configurations still build and run tests. Package only Release
+      # for Linux/macOS; the Windows installer package is built below.
+      - name: Publish desktop (Linux/macOS Release only)
+        if: matrix.configuration == 'Release' && runner.os != 'Windows'
+        run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --no-restore --self-contained false --property:PublishTrimmed=false --output artifacts/desktop
+      - name: Upload Linux/macOS Release artifact
+        if: matrix.configuration == 'Release' && runner.os != 'Windows' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
         uses: actions/upload-artifact@v7
         with:
-          name: VCCOfficeDesktop-${{ matrix.os }}-${{ matrix.configuration }}
+          name: VCCOfficeDesktop-${{ matrix.os }}-Release
           path: artifacts/desktop/
           if-no-files-found: error
           retention-days: 14
@@ -74,6 +78,7 @@ jobs:
             throw 'Windows executable missing.'
           }
       - name: Upload standalone Windows x64 artifact
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           name: VCCOfficeDesktop-Windows11-x64-Standalone-Release
