@@ -108,5 +108,18 @@ var slidesNotes = typeof(SlidesWindow).GetField("_notes", BindingFlags.NonPublic
 if (!((TextBox)slidesNotes.GetValue(slidesWindow)!).AcceptsReturn)
     throw new Exception("Slides deve permitir notas multilinha.");
 
+// VCC Writer opens without native display, supports multiline editing and preserves a single editor.
+var writer = new WriterWindow();
+if (writer.Icon is null || writer.Title?.StartsWith("VCC Writer", StringComparison.Ordinal) != true)
+    throw new Exception("A janela Writer não foi inicializada corretamente.");
+var editorField = typeof(WriterWindow).GetField("_editor", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Editor Writer não encontrado.");
+var editor = (TextBox)editorField.GetValue(writer)!;
+if (!editor.AcceptsReturn || !editor.AcceptsTab)
+    throw new Exception("O Writer deve suportar edição de múltiplas linhas e tabulação.");
+editor.Text = "Primeira linha\\nSegunda linha";
+if (editor.Text != "Primeira linha\\nSegunda linha")
+    throw new Exception("O conteúdo editado não foi preservado.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
