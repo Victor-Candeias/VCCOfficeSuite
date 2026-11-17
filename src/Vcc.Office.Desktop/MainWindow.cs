@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -94,6 +95,7 @@ public sealed partial class MainWindow : Window
             Background = selected ? Brush.Parse(HighContrast ? "#003399" : "#2158AD") : Brush.Parse(HighContrast ? "#000000" : Dark ? "#172439" : "#EEF3FA"),
             BorderThickness = new Thickness(0)
         };
+        AutomationProperties.SetName(button, label);
         button.Click += (_, _) => action();
         return button;
     }
@@ -123,6 +125,7 @@ public sealed partial class MainWindow : Window
             Text = previousSearch,
             CornerRadius = new CornerRadius(ControlCornerRadius)
         };
+        AutomationProperties.SetName(_search, "Pesquisar aplicações");
         _search.TextChanged += (_, _) => { RefreshBody(); RefreshConfiguredSidebar(); };
 
         _layout.Children.Clear();
@@ -185,14 +188,18 @@ public sealed partial class MainWindow : Window
         var navigation = new StackPanel { Spacing = 3 };
         navigation.Children.Add(Nav("⌂   Início", () => Switch(DashboardIds.Modern),
             _activeDashboard == DashboardIds.Modern));
-        navigation.Children.Add(Nav("▦   Todas as aplicações", () => Switch(DashboardIds.Grid),
-            _activeDashboard == DashboardIds.Grid));
+        _launcherFocusButton = Nav("▦   Todas as aplicações", () => Switch(DashboardIds.Grid),
+            _activeDashboard == DashboardIds.Grid);
+        SetAccessibleName(_launcherFocusButton, "Abrir Launcher de aplicações");
+        navigation.Children.Add(_launcherFocusButton);
         navigation.Children.Add(Nav("▣   Dashboard clássico", () => Switch(DashboardIds.Classic),
             _activeDashboard == DashboardIds.Classic));
         navigation.Children.Add(Nav("◷   Ficheiros recentes", () => ShowRecentPage(false)));
         navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
-        navigation.Children.Add(Nav("▤   Ribbon", OpenRibbon));
+        _ribbonFocusButton = Nav("▤   Ribbon", OpenRibbon);
+        SetAccessibleName(_ribbonFocusButton, "Abrir Ribbon");
+        navigation.Children.Add(_ribbonFocusButton);
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
         foreach (var app in _registry.GetAll())
@@ -211,6 +218,7 @@ public sealed partial class MainWindow : Window
                 Padding = new Thickness(7, 5),
                 Margin = new Thickness(0, 2)
             };
+            AutomationProperties.SetName(item, "Abrir " + app.Name);
             item.Click += (_, _) => OpenModule(app);
             navigation.Children.Add(item);
         }
@@ -227,6 +235,7 @@ public sealed partial class MainWindow : Window
         Grid.SetRow(scroll, 1);
         Grid.SetColumn(scroll, 1);
         _layout.Children.Add(scroll);
+        ApplyWorkspaceNavigation();
     }
 
     private void RefreshBody()
