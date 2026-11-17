@@ -515,10 +515,8 @@ public sealed partial class MainWindow : Window
 
     private void OpenDefaultDocumentEditor()
     {
-        // The launcher uses capabilities supplied by installed plugins instead of a
-        // hardcoded Writer ID. Until document types are negotiated through the API,
-        // the shortcut opens the first available plugin.
-        var plugin = _plugins.Plugins.FirstOrDefault();
+        // Find a suitable installed editor through plugin capabilities.
+        var plugin = _plugins.Plugins.FirstOrDefault(module => module.SupportsNewDocument);
         if (plugin is null)
         {
             NotifyFeature("Não existem aplicações instaladas");
