@@ -1,5 +1,7 @@
 using System.Reflection;
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Input;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Styling;
@@ -176,6 +178,37 @@ var sessionStoreField = typeof(MainWindow).GetField("_sessionStore",
 var sessionStore = (Vcc.Office.CoreShell.OfficeSessionStore)sessionStoreField.GetValue(window)!;
 if (!sessionStore.FilePath.EndsWith("avalonia-application-session.json", StringComparison.OrdinalIgnoreCase))
     throw new Exception("A sessão Avalonia não pode sobrescrever a sessão WPF.");
+
+// VCC-0820.9: focus policy and accessibility metadata must be present
+// on every freshly created visual tree, not only before the first Render().
+var layoutField = typeof(MainWindow).GetField("_layout", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Árvore de navegação Avalonia em falta.");
+var layout = (Grid)layoutField.GetValue(window)!;
+if (KeyboardNavigation.GetTabNavigation(layout) != KeyboardNavigationMode.Continue)
+    throw new Exception("A navegação predefinida deve continuar sem ciclo de Tab.");
+
+var launcherFocusField = typeof(MainWindow).GetField("_launcherFocusButton",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Foco inicial Launcher não implementado.");
+var ribbonFocusField = typeof(MainWindow).GetField("_ribbonFocusButton",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Foco inicial Ribbon não implementado.");
+var launcherFocus = (Button?)launcherFocusField.GetValue(window);
+var ribbonFocus = (Button?)ribbonFocusField.GetValue(window);
+if (AutomationProperties.GetName(launcherFocus!) != "Abrir Launcher de aplicações" ||
+    AutomationProperties.GetName(ribbonFocus!) != "Abrir Ribbon")
+    throw new Exception("A navegação não expõe nomes acessíveis para Launcher e Ribbon.");
+
+var navigationMethod = typeof(MainWindow).GetMethod("ApplyWorkspaceNavigation",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Preferências de navegação WPF não aplicadas em Avalonia.");
+navigationMethod.Invoke(window, null);
+if (KeyboardNavigation.GetTabNavigation(layout) != KeyboardNavigationMode.Continue)
+    throw new Exception("As preferências de navegação alteraram o comportamento predefinido.");
+
+var searchAfterRender = (TextBox)searchField.GetValue(window)!;
+if (AutomationProperties.GetName(searchAfterRender) != "Pesquisar aplicações")
+    throw new Exception("A caixa de pesquisa do Launcher não tem nome acessível.");
 
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
