@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>VCC Office Suite</AssemblyName>
-    <ApplicationIcon>../Vcc.Office.Shell/Assets/VccOfficeSuite.ico</ApplicationIcon>
+    <ApplicationIcon>Assets/VccOfficeSuite.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.6" />
@@ -14,7 +14,7 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="../Vcc.Office.Shell/Assets/VccOfficeSuite.ico" LogicalName="Vcc.Office.Desktop.AppIcon" />
+    <EmbeddedResource Include="Assets/VccOfficeSuite.ico" LogicalName="Vcc.Office.Desktop.AppIcon" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Vcc.Office.CoreShell/Vcc.Office.CoreShell.csproj" />
