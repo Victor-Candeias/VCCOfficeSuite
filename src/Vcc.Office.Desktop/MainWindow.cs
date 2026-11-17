@@ -40,6 +40,7 @@ public sealed partial class MainWindow : Window
         Content = _layout;
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
+        EnableWorkspaceShortcuts();
         Render();
         Opened += async (_, _) => await RestoreLauncherAsync();
     }
