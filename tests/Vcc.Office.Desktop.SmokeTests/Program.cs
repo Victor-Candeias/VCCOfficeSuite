@@ -234,5 +234,40 @@ WorkspaceNavigationAdapter.Apply(adapterGrid,
 if (KeyboardNavigation.GetTabNavigation(adapterGrid) != KeyboardNavigationMode.Continue)
     throw new Exception("Não foi possível desativar o ciclo de Tab.");
 
+// VCC-0820: concrete WPF parity for window geometry, Ctrl+K,
+// document-module filtering and responsive layout.
+foreach (var name in new[] { "RestoreWorkspaceWindow", "SaveWorkspaceWindow" })
+    if (typeof(MainWindow).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic) is null)
+        throw new Exception("A paridade de geometria WPF não está implementada: " + name);
+
+var filterMethod = typeof(MainWindow).GetMethod("SetRecentModuleFilter",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("Falta o filtro de recentes por módulo.");
+filterMethod.Invoke(window, ["writer"]);
+var moduleField = typeof(MainWindow).GetField("_recentModuleFilter",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("Estado de filtro de módulo ausente.");
+if ((string?)moduleField.GetValue(window) != "writer")
+    throw new Exception("O filtro de recentes não preservou o módulo escolhido.");
+filterMethod.Invoke(window, [null]);
+if (moduleField.GetValue(window) is not null)
+    throw new Exception("Não foi possível limpar o filtro de recentes.");
+
+var compactField = typeof(MainWindow).GetField("_compactLayout",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("O dashboard não suporta layout compacto.");
+compactField.SetValue(window, true);
+render.Invoke(window, null);
+var columns = (Grid)layoutField.GetValue(window)!;
+if (columns.ColumnDefinitions[0].Width.Value != 175)
+    throw new Exception("Largura compacta da navegação não aplicada.");
+compactField.SetValue(window, false);
+render.Invoke(window, null);
+if (columns.ColumnDefinitions[0].Width.Value != 228)
+    throw new Exception("Layout padrão não foi recuperado.");
+if (typeof(MainWindow).GetMethod("WorkspaceKeyDown",
+        BindingFlags.Instance | BindingFlags.NonPublic) is null)
+    throw new Exception("Atalho de pesquisa global não está implementado.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;

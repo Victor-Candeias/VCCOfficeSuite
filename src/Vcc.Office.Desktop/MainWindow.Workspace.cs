@@ -126,6 +126,14 @@ public sealed partial class MainWindow
 
     private void WorkspaceKeyDown(object? sender, KeyEventArgs e)
     {
+        // WPF global-search shortcut: it must work even without a configured
+        // CoreShell command and must not open an external window.
+        if (e.Key == Key.K && e.KeyModifiers == KeyModifiers.Control)
+        {
+            _search.Focus();
+            e.Handled = true;
+            return;
+        }
         if (e.KeyModifiers == KeyModifiers.None) return;
         var parts = new List<string>();
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) parts.Add("Ctrl");

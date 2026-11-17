@@ -22,6 +22,7 @@ public sealed partial class MainWindow : Window
     private SlidesWindow? _slidesWindow;
     private WriterWindow? _writerWindow;
     private string _activeDashboard = DashboardIds.Modern;
+    private bool _compactLayout;
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
     private bool HighContrast => _workspaceShell.State.HighContrast;
@@ -45,6 +46,14 @@ public sealed partial class MainWindow : Window
             app.ActualThemeVariantChanged += (_, _) => Render();
         EnableWorkspaceShortcuts();
         ConfigureModuleSession();
+        Closing += (_, _) => SaveWorkspaceWindow();
+        SizeChanged += (_, _) =>
+        {
+            var compact = Bounds.Width > 0 && Bounds.Width < 1080;
+            if (compact == _compactLayout) return;
+            _compactLayout = compact;
+            Render();
+        };
         Render();
         Opened += async (_, _) => await RestoreLauncherAsync();
     }
@@ -121,7 +130,7 @@ public sealed partial class MainWindow : Window
         _search = new TextBox
         {
             PlaceholderText = "Pesquisar aplicações...",
-            MinWidth = 180,
+            MinWidth = _compactLayout ? 135 : 180,
             Text = previousSearch,
             CornerRadius = new CornerRadius(ControlCornerRadius)
         };
@@ -130,7 +139,7 @@ public sealed partial class MainWindow : Window
 
         _layout.Children.Clear();
         _layout.RowDefinitions = new RowDefinitions("68,*");
-        _layout.ColumnDefinitions = new ColumnDefinitions("228,*");
+        _layout.ColumnDefinitions = new ColumnDefinitions(_compactLayout ? "175,*" : "228,*");
         _layout.Background = Page;
 
         var header = new Border
@@ -172,7 +181,7 @@ public sealed partial class MainWindow : Window
             VerticalAlignment = VerticalAlignment.Center
         };
         brand.Children.Add(AppBranding.HeaderIcon(30));
-        brand.Children.Add(Text("VCC OFFICE SUITE", 23, true));
+        brand.Children.Add(Text(_compactLayout ? "VCC OFFICE" : "VCC OFFICE SUITE", _compactLayout ? 17 : 23, true));
         headerContent.Children.Add(brand);
         header.Child = headerContent;
         Grid.SetColumnSpan(header, 2);
@@ -281,7 +290,7 @@ public sealed partial class MainWindow : Window
             Child = bannerContent
         });
 
-        var shortcuts = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+        var shortcuts = new WrapPanel { Orientation = Orientation.Horizontal };
         shortcuts.Children.Add(Nav("＋  Novo documento", () => NotifyUnavailable("writer")));
         shortcuts.Children.Add(Nav("▱  Abrir ficheiro", () => _ = ChooseLocalFileAsync()));
         shortcuts.Children.Add(Nav("▦  Modelos", () => NotifyUnavailable("templates")));
@@ -293,7 +302,7 @@ public sealed partial class MainWindow : Window
         var shared = Card(Text("♧  Partilhados comigo: fonte de colaboração não configurada.", 14, false, Muted));
         foreach (var panel in new[] { recent, favorites, shared })
         {
-            panel.Width = 285;
+            panel.Width = _compactLayout ? 240 : 285;
             panel.MinHeight = 178;
             panel.Margin = new Thickness(0, 0, 14, 10);
             panels.Children.Add(panel);
@@ -372,7 +381,7 @@ public sealed partial class MainWindow : Window
                 Content = Card(box, new Thickness(18)),
                 CornerRadius = new CornerRadius(ControlCornerRadius),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Width = _activeDashboard == DashboardIds.Classic ? 250 : 206,
+                Width = _compactLayout ? 175 : _activeDashboard == DashboardIds.Classic ? 250 : 206,
                 Height = _activeDashboard == DashboardIds.Grid ? 158 : 143,
                 Margin = new Thickness(0, 0, 12, 12),
                 Background = Brushes.Transparent,
