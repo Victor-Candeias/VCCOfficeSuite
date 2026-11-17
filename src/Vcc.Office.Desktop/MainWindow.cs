@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
+    private WriterWindow? _writerWindow;
     private string _activeDashboard = DashboardIds.Modern;
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
@@ -345,7 +346,7 @@ public sealed partial class MainWindow : Window
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
-            box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : module.Id is "sheets" or "slides" ? "Editor inicial · offline" : "Em migração", 12, false, Muted));
+            box.Children.Add(CenteredText(module.Id == "data" ? "Disponível · offline" : module.Id is "writer" or "sheets" or "slides" ? "Editor inicial · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(18)),
@@ -371,6 +372,23 @@ public sealed partial class MainWindow : Window
 
     private void OpenModule(OfficeModule? module)
     {
+        if (module?.Id == "writer")
+        {
+            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
+            _ = SaveLauncherAsync();
+            if (_writerWindow is not null)
+            {
+                if (_writerWindow.WindowState == WindowState.Minimized)
+                    _writerWindow.WindowState = WindowState.Normal;
+                _writerWindow.Activate();
+                return;
+            }
+            var writer = new WriterWindow();
+            writer.Closed += (_, _) => _writerWindow = null;
+            _writerWindow = writer;
+            writer.Show(this);
+            return;
+        }
         if (module?.Id == "sheets")
         {
             _launcherState = _launcherState with { LastSelectedModuleId = module.Id };

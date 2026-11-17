@@ -91,6 +91,54 @@ public sealed class VccWriterService
         return await AddAsync(new WriterDocument(id, title, paragraphs, [new WriterStyle("Normal")], [], [], new(), [], true), cancellationToken);
     }
 
+    /// <summary>Exporta os parágrafos para um DOCX simples, válido e editável.</summary>
+    /// <remarks>Este formato inicial não preserva tabelas, imagens nem estilos por seleção.</remarks>
+    public async Task ExportDocxAsync(string id, string path, CancellationToken cancellationToken = default)
+    {
+        var document = Navigate(id);
+        using var buffer = new MemoryStream();
+        using (var archive = new ZipArchive(buffer, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            static async Task AddXmlAsync(ZipArchive zip, string name, XDocument xml, CancellationToken token)
+            {
+                var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
+                await using var stream = entry.Open();
+                await xml.SaveAsync(stream, SaveOptions.DisableFormatting, token);
+            }
+
+            XNamespace ct = "http://schemas.openxmlformats.org/package/2006/content-types";
+            await AddXmlAsync(archive, "[Content_Types].xml",
+                new XDocument(new XElement(ct + "Types",
+                    new XElement(ct + "Default", new XAttribute("Extension", "rels"),
+                        new XAttribute("ContentType", "application/vnd.openxmlformats-package.relationships+xml")),
+                    new XElement(ct + "Default", new XAttribute("Extension", "xml"),
+                        new XAttribute("ContentType", "application/xml")),
+                    new XElement(ct + "Override", new XAttribute("PartName", "/word/document.xml"),
+                        new XAttribute("ContentType", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")))),
+                cancellationToken);
+
+            XNamespace relationships = "http://schemas.openxmlformats.org/package/2006/relationships";
+            await AddXmlAsync(archive, "_rels/.rels",
+                new XDocument(new XElement(relationships + "Relationships",
+                    new XElement(relationships + "Relationship",
+                        new XAttribute("Id", "rId1"),
+                        new XAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"),
+                        new XAttribute("Target", "word/document.xml")))), cancellationToken);
+
+            XNamespace word = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+            await AddXmlAsync(archive, "word/document.xml",
+                new XDocument(new XElement(word + "document",
+                    new XAttribute(XNamespace.Xmlns + "w", word.NamespaceName),
+                    new XElement(word + "body",
+                        document.Paragraphs.Select(paragraph =>
+                            new XElement(word + "p", new XElement(word + "r",
+                                new XElement(word + "t",
+                                    new XAttribute(XNamespace.Xml + "space", "preserve"), paragraph.Text))))))),
+                cancellationToken);
+        }
+        await _files.WriteAsync(path, buffer.ToArray(), cancellationToken);
+    }
+
     public async Task ExportPdfAsync(string id, string path, CancellationToken cancellationToken = default)
     {
         var document = Navigate(id);
