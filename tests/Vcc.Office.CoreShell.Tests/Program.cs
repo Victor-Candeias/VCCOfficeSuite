@@ -824,16 +824,21 @@ static Task ValidatesOfficeApplicationRegistry()
 {
     var registry = new OfficeApplicationRegistry();
     var all = registry.GetAll();
-    if (all.Count != 26 || all.Select(m => m.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 26)
-        throw new Exception("O catálogo deve conter 26 módulos únicos.");
+    if (all.Count != 25 || all.Select(m => m.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 25)
+        throw new Exception("O catálogo base deve conter 25 módulos únicos; o Writer é instalado por plugin.");
     var manager = new OfficeApplicationManager(registry);
     if (!manager.TryResolve("DATA", out var data) || data?.Id != "data")
         throw new Exception("VCC Data deve abrir no Launcher.");
     if (manager.TryResolve("writer", out _) || manager.TryResolve("desconhecido", out _))
         throw new Exception("Módulos sem interface não podem ser anunciados como disponíveis.");
-    registry.Register(new OfficeModule("writer", "VCC Writer", true));
+    registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
     if (!manager.TryResolve("writer", out _))
         throw new Exception("O registo dinâmico deve permitir disponibilizar futuros módulos.");
+    if (registry.GetAll().Count != 26 || registry.Find("writer")?.Name != "VCC Writer")
+        throw new Exception("O plugin deve ser descoberto sem alterar o catálogo base.");
+    registry.RegisterPlugin(new OfficeModule("writer", "Writer externo", true));
+    if (registry.GetAll().Count != 26 || registry.Find("writer")?.Name != "Writer externo")
+        throw new Exception("Atualização de plugin não deve duplicar entradas.");
     try
     {
         registry.Register(new OfficeModule("unknown", "Inexistente", true));
@@ -869,7 +874,7 @@ static Task ValidatesOfficeSessionRecovery()
             store.Load(registry).LastModuleId != "data")
             throw new Exception("Uma janela fechada não deve reabrir, mas a última aplicação deve ser recordada.");
 
-        registry.Register(new OfficeModule("writer", "VCC Writer", true));
+        registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         var multi = OfficeSessionPolicy.Open(closed, "writer", registry);
         multi = OfficeSessionPolicy.Open(multi, "data", registry);
         store.Save(multi, registry);
