@@ -395,6 +395,9 @@ if (writerTopRuler.Name != "WriterTopRuler" ||
     writerPage.Padding.Left <= 0 || writerPage.Padding.Left >= writerPage.Width / 2)
     throw new Exception("Dimensões, cor ou réguas da página A4 incorretas.");
 
+// Attach the window to the headless visual tree before simulating user editing.
+// Avalonia TextBox notifications can be deferred until the control is attached.
+writerVisualWindow.Show();
 writerEditor.Text = "Primeira página de teste";
 if (writerEditor.Text != "Primeira página de teste" || writerVisualWindow.Title?.Contains('*') != true)
     throw new Exception("A folha do Writer não permite editar e sinalizar alterações.");
