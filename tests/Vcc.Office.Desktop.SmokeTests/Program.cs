@@ -31,6 +31,26 @@ var navButton = (Button)nav.Invoke(window, ["Verificação", (Action)(() => { })
 if (navButton.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch)
     throw new Exception("Os botões do menu não ocupam toda a largura da barra lateral.");
 
+// Regression: all sidebar entries must stretch within the scroll viewport,
+// with a reserved right gutter so backgrounds never overlap the scrollbar.
+var sidebar = ((Grid)window.Content!).Children.OfType<Border>()
+    .FirstOrDefault(border => border.Child is ScrollViewer viewer
+        && viewer.Content is StackPanel panel
+        && panel.Children.OfType<Button>().Any(button =>
+            button.Content?.ToString()?.Contains("Início", StringComparison.Ordinal) == true))
+    ?? throw new Exception("A barra lateral com scroll não foi encontrada.");
+var sidebarScroll = (ScrollViewer)sidebar.Child!;
+var sidebarPanel = (StackPanel)sidebarScroll.Content!;
+if (sidebarScroll.HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled ||
+    sidebarScroll.VerticalScrollBarVisibility != ScrollBarVisibility.Auto ||
+    sidebarPanel.Margin.Right < 10 ||
+    sidebarPanel.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch)
+    throw new Exception("O menu lateral não reserva espaço antes da scrollbar.");
+var sidebarButtons = sidebarPanel.Children.OfType<Button>().ToArray();
+if (sidebarButtons.Length < 8 ||
+    sidebarButtons.Any(button => button.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch))
+    throw new Exception("Os botões de navegação e aplicações devem ocupar a mesma largura disponível.");
+
 // The previous crash occurred on the second Render() call after restoring session.
 // This tests repeated visual-tree rebuilds without reparenting the search box.
 TextBox? lastSearch = null;
