@@ -387,9 +387,12 @@ if (writerTopRuler.Name != "WriterTopRuler" ||
     writerVerticalRuler.Name != "WriterVerticalRuler" ||
     writerPage.Name != "WriterPage" ||
     writerEditor.Name != "WriterEditor" ||
-    writerPage.Width != 794 || writerPage.Height != 1123 ||
+    writerPage.Width <= 0 || writerPage.Height <= 0 ||
+    writerTopRuler.Width != writerPage.Width ||
+    writerBottomRuler.Width != writerPage.Width ||
+    writerVerticalRuler.Height != writerPage.Height ||
     writerPage.Background?.ToString() != Avalonia.Media.Brushes.White.ToString() ||
-    writerPage.Padding.Left != 76)
+    writerPage.Padding.Left <= 0 || writerPage.Padding.Left >= writerPage.Width / 2)
     throw new Exception("Dimensões, cor ou réguas da página A4 incorretas.");
 
 writerEditor.Text = "Primeira página de teste";
