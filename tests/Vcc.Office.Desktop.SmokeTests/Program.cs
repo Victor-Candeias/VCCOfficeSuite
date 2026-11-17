@@ -352,5 +352,19 @@ if (typeof(MainWindow).GetMethod("WorkspaceKeyDown",
         BindingFlags.Instance | BindingFlags.NonPublic) is null)
     throw new Exception("Atalho de pesquisa global não está implementado.");
 
+// VCC Writer ProEdit POC: confirm the embedded editor owns Ribbon, rulers and a paginated editing surface.
+var writerPoc = new WriterWindow();
+if (writerPoc.Icon is null || writerPoc.Content is not ProEdit.Word.Avalonia.WordEditorControl proEdit ||
+    proEdit.Name != "VccWriterProEditEditor" ||
+    proEdit.OwnerWindow != writerPoc)
+    throw new Exception("O Writer não integrou o editor ProEdit na janela VCC.");
+if (proEdit.FindControl<ProEdit.Word.Avalonia.DocumentView>("EditorView") is null ||
+    proEdit.FindControl<ProEdit.Word.Avalonia.HorizontalRuler>("HorizontalRuler") is null ||
+    proEdit.FindControl<ProEdit.Word.Avalonia.VerticalRuler>("VerticalRuler") is null)
+    throw new Exception("O Writer não apresenta documento editável ou réguas ProEdit.");
+if (proEdit.FindControl<Avalonia.Controls.Control>("Ribbon") is null)
+    throw new Exception("O Ribbon do Writer não foi criado.");
+writerPoc.Close();
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;
