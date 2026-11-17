@@ -148,5 +148,15 @@ var ribbonSearchField = typeof(RibbonWindow).GetField("_search", BindingFlags.No
 if (((TextBox)ribbonSearchField.GetValue(ribbonWindow)!).PlaceholderText is null)
     throw new Exception("A pesquisa Ribbon não tem indicação acessível.");
 
+// Customized Launcher button must have a label and an explicit description.
+var customButtonFactory = typeof(MainWindow).GetMethod("ConfiguredItemButton",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Personalização visual do Launcher não integrada.");
+var customButton = (Button)customButtonFactory.Invoke(window,
+    [new Vcc.Office.CoreShell.LauncherItem("custom-test", "Módulo Teste", "Ainda sem app", "★")])!;
+if (customButton.Content?.ToString()?.Contains("Módulo Teste", StringComparison.Ordinal) != true ||
+    ToolTip.GetTip(customButton)?.ToString()?.Contains("sem aplicação associada", StringComparison.Ordinal) != true)
+    throw new Exception("Módulo personalizado sem título ou aviso de disponibilidade.");
+
 Console.WriteLine("PASS Avalonia smoke: arranque, reconstrução, pesquisa, dashboards, temas e alinhamento visual");
 return 0;

@@ -15,6 +15,7 @@ public sealed partial class MainWindow : Window
     private readonly Grid _layout = new();
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
+    private StackPanel? _configuredSidebar;
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
@@ -121,7 +122,7 @@ public sealed partial class MainWindow : Window
             Text = previousSearch,
             CornerRadius = new CornerRadius(ControlCornerRadius)
         };
-        _search.TextChanged += (_, _) => RefreshBody();
+        _search.TextChanged += (_, _) => { RefreshBody(); RefreshConfiguredSidebar(); };
 
         _layout.Children.Clear();
         _layout.RowDefinitions = new RowDefinitions("68,*");
@@ -212,6 +213,9 @@ public sealed partial class MainWindow : Window
             item.Click += (_, _) => OpenModule(app);
             navigation.Children.Add(item);
         }
+        _configuredSidebar = new StackPanel { Spacing = 3 };
+        navigation.Children.Add(_configuredSidebar);
+        RefreshConfiguredSidebar();
         sidebar.Child = new ScrollViewer { Content = navigation };
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
@@ -289,6 +293,7 @@ public sealed partial class MainWindow : Window
             root.Children.Add(Text("Última aplicação selecionada: " + previous.Name, 13, false, Muted));
         root.Children.Add(Text("Aplicações", 20, true));
         AddApplicationCards(root, 12);
+        AddConfiguredCards(root);
         var openCatalog = Nav("Ver todas as 26 aplicações", () => Switch(DashboardIds.Grid));
         root.Children.Add(openCatalog);
     }
@@ -321,6 +326,7 @@ public sealed partial class MainWindow : Window
         }
         root.Children.Add(Card(creation));
         AddApplicationCards(root, 15);
+        AddConfiguredCards(root);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
         root.Children.Add(DocumentPanel(_favoritesOnly ? "★  Favoritos" : "◷  Ficheiros recentes", _favoritesOnly, 30));
     }
@@ -330,6 +336,7 @@ public sealed partial class MainWindow : Window
         root.Children.Add(Text("Todas as aplicações", 30, true));
         root.Children.Add(Text("Explore os 26 módulos do VCC Office.", 14, false, Muted));
         AddApplicationCards(root, int.MaxValue);
+        AddConfiguredCards(root);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
         root.Children.Add(DocumentPanel("◷  Ficheiros recentes", false, 8));
     }
@@ -367,6 +374,53 @@ public sealed partial class MainWindow : Window
         }
         if (list.Length == 0)
             root.Children.Add(Text("Nenhuma aplicação encontrada.", 14, false, Muted));
+        root.Children.Add(cards);
+    }
+
+    private void RefreshConfiguredSidebar()
+    {
+        if (_configuredSidebar is null) return;
+        _configuredSidebar.Children.Clear();
+        var personalized = ConfiguredItems(_search.Text);
+        if (personalized.Count == 0) return;
+        _configuredSidebar.Children.Add(new Border
+        {
+            Height = 1, Background = LineBrush, Margin = new Thickness(0, 15, 0, 8)
+        });
+        _configuredSidebar.Children.Add(Text("PERSONALIZADOS", 11, true, Muted));
+        foreach (var item in personalized)
+            _configuredSidebar.Children.Add(ConfiguredItemButton(item));
+    }
+
+    private void AddConfiguredCards(StackPanel root)
+    {
+        var items = ConfiguredItems(_search.Text);
+        if (items.Count == 0) return;
+        root.Children.Add(Text("Módulos personalizados", 20, true));
+        root.Children.Add(Text(
+            "Entradas configuradas no Workspace. A criação de uma entrada não instala uma aplicação.",
+            13, false, Muted));
+        var cards = new WrapPanel { Orientation = Orientation.Horizontal };
+        foreach (var item in items)
+        {
+            var details = new StackPanel { Spacing = 7 };
+            details.Children.Add(CenteredText(item.Glyph, 25, true));
+            details.Children.Add(CenteredText(item.Title, 15, true));
+            details.Children.Add(CenteredText(item.Description, 12, false, Muted));
+            details.Children.Add(CenteredText("Sem aplicação associada", 11, false, Muted));
+            var button = new Button
+            {
+                Content = Card(details, new Thickness(14)),
+                CornerRadius = new CornerRadius(ControlCornerRadius),
+                Width = 206, Height = 154,
+                Margin = new Thickness(0, 0, 12, 12),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(0)
+            };
+            button.Click += (_, _) => _ = OpenConfiguredAsync(item);
+            cards.Children.Add(button);
+        }
         root.Children.Add(cards);
     }
 
