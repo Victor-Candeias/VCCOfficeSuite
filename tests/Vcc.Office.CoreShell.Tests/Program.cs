@@ -46,6 +46,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("licenças são validadas e consultadas", ValidatesLicensing)
     ,("Writer cria, edita, navega e persiste documentos", ExercisesWriter)
     ,("Writer exporta PDF e preserva acessibilidade", ExportsWriter)
+    ,("Writer DOCX: ida e volta Unicode, parágrafos e XML", RoundTripsWriterDocx)
     ,("Sheets calcula, filtra, persiste e exporta CSV", ExercisesSheets)
     ,("Sheets seleciona, recalcula, copia e limpa intervalos", ExercisesSheetRanges)
     ,("Sheets exporta PDF e Slides cria, apresenta e persiste", ExercisesSlides)
@@ -1075,6 +1076,31 @@ static async Task TestsSlidesAvaloniaWorkflow()
             loaded.Slides[1].Notes != "Notas do segundo diapositivo" ||
             loaded.Slides[1].Objects.Single().Content != "Agenda")
             throw new Exception("O estado dos Slides não foi preservado.");
+    }
+    finally { Directory.Delete(directory, recursive: true); }
+}
+
+static async Task RoundTripsWriterDocx()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var path = Path.Combine(directory, "writer-roundtrip.docx");
+        var service = new VccWriterService();
+        await service.CreateAsync("docx-a", "Teste DOCX");
+        await service.SetRichTextAsync("docx-a", "Olá, mundo!\n\nÁrvore & ciência <2026>\nÚltima linha");
+        await service.ExportDocxAsync("docx-a", path);
+        using (var archive = System.IO.Compression.ZipFile.OpenRead(path))
+        {
+            if (archive.GetEntry("[Content_Types].xml") is null ||
+                archive.GetEntry("_rels/.rels") is null ||
+                archive.GetEntry("word/document.xml") is null)
+                throw new InvalidOperationException("Ficheiro DOCX sem estrutura OpenXML obrigatória.");
+        }
+        var imported = await new VccWriterService().ImportDocxAsync("docx-b", "Recuperado", path);
+        var original = service.Navigate("docx-a");
+        if (!original.Paragraphs.Select(p => p.Text).SequenceEqual(imported.Paragraphs.Select(p => p.Text)))
+            throw new InvalidOperationException("Parágrafos Unicode não sobreviveram ao DOCX.");
     }
     finally { Directory.Delete(directory, recursive: true); }
 }
