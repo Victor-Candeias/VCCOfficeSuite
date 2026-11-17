@@ -955,6 +955,8 @@ static async Task TestsDesktopLauncherState()
         var database = new CoreDatabase(StoragePaths.ForLocalApplication(root));
         var dashboards = new DashboardRegistry();
         var modules = new OfficeApplicationRegistry();
+        // Test only: simulate the dynamically discovered Writer plugin.
+        modules.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         var store = new DesktopLauncherStateStore(database, dashboards, modules);
         var initial = await store.LoadAsync();
         if (initial != DesktopLauncherState.Default)
