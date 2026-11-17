@@ -8,14 +8,12 @@ namespace Vcc.Office.Writer;
 /// <summary>Writer's independent visual identity, compiled directly into its plugin DLL.</summary>
 internal static class WriterBranding
 {
-    // A dedicated 32x32 blue Writer icon with a white W, stored in this assembly.
-    // This is not the host application's logo.
-    private const string IconIcoBase64 =
-        "AAABAAEAICAAAAAAIADoAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAK9JREFUeJztl9sNQEAQRa34pQPtUZP26EADfBFZ89yxVmLmh8TsvWceIUI7zFtVMOqS5g7gAA7wfYB16h8xoXSaXKaUbjcu5z07AisQd/4GcKXLEbF+8hLGlaV2SgSAmWFXDRQIoBmDpnJIVz0CzlA7CjGAVliajwJA7YJELXkkwFthAjiqsrw7SABKOH6myRUDvBFJAFhFKaNgAazfBu68uAPShdMuZvA/Iwf4PcAOxZdFQZs3OrkAAAAASUVORK5CYII=";
-
+    // The icon is an actual .ico embedded in Vcc.Office.Writer.dll.
     public static WindowIcon CreateWindowIcon()
     {
-        using var stream = new MemoryStream(Convert.FromBase64String(IconIcoBase64));
+        using var stream = typeof(WriterBranding).Assembly
+            .GetManifestResourceStream("Vcc.Office.Writer.Icon")
+            ?? throw new InvalidOperationException("O ícone do plugin Writer não foi incorporado na DLL.");
         return new WindowIcon(stream);
     }
 
