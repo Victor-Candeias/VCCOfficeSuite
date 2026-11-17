@@ -147,6 +147,33 @@ foreach (var cardButton in cards.Children.OfType<Button>())
         throw new Exception("Ícone ou textos do cartão não estão centrados, ou cantos por arredondar.");
 }
 
+// Compact dashboard: shortcuts fit their content without excess vertical space.
+var buildClassic = typeof(MainWindow).GetMethod("BuildClassic", BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Dashboard clássico não encontrado.");
+var classicRoot = new StackPanel();
+buildClassic.Invoke(window, [classicRoot]);
+var quickPanel = classicRoot.Children.OfType<Border>()
+    .FirstOrDefault(border => border.Child is WrapPanel wrap &&
+        wrap.Children.OfType<Button>().Any(button => button.Width == 160));
+if (quickPanel?.Child is not WrapPanel quickApps || quickPanel.Padding.Top > 12 ||
+    quickPanel.Padding.Bottom > 12 || quickApps.Children.OfType<Button>().Count() != 4 ||
+    quickApps.Children.OfType<Button>().Any(button => button.Height > 100))
+    throw new Exception("Os quatro atalhos do dashboard clássico devem ter altura compacta.");
+var classicCards = classicRoot.Children.OfType<WrapPanel>()
+    .FirstOrDefault(panel => panel.Children.OfType<Button>().Any());
+if (classicCards is null || classicCards.Children.OfType<Button>()
+    .Any(button => button.Height > 125 || button.Width > 225))
+    throw new Exception("Cartões do dashboard clássico demasiado grandes.");
+
+switchDashboard.Invoke(window, ["grid"]);
+var gridRoot = new StackPanel();
+cardsMethod.Invoke(window, [gridRoot, 6]);
+var gridCards = gridRoot.Children.OfType<WrapPanel>().Single();
+if (gridCards.Children.OfType<Button>().Any(button =>
+    button.Height > 135 || button.Width > 195))
+    throw new Exception("Cartões do catálogo não respeitam dimensões compactas.");
+switchDashboard.Invoke(window, ["modern"]);
+
 // New Avalonia Sheets and Slides surfaces must initialise and expose usable editors.
 var sheetsWindow = new SheetsWindow();
 if (sheetsWindow.Icon is null || sheetsWindow.Title?.Contains("Sheets", StringComparison.Ordinal) != true)
