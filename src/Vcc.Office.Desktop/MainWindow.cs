@@ -43,6 +43,7 @@ public sealed partial class MainWindow : Window
         if (Application.Current is { } app)
             app.ActualThemeVariantChanged += (_, _) => Render();
         EnableWorkspaceShortcuts();
+        ConfigureModuleSession();
         Render();
         Opened += async (_, _) => await RestoreLauncherAsync();
     }
@@ -441,9 +442,14 @@ public sealed partial class MainWindow : Window
                 return;
             }
             var writer = new WriterWindow();
-            writer.Closed += (_, _) => _writerWindow = null;
+            writer.Closed += (_, _) =>
+            {
+                _writerWindow = null;
+                TrackModuleClosed("writer");
+            };
             _writerWindow = writer;
             writer.Show(this);
+            TrackModuleOpened("writer");
             return;
         }
         if (module?.Id == "sheets")
@@ -458,9 +464,14 @@ public sealed partial class MainWindow : Window
                 return;
             }
             var sheets = new SheetsWindow();
-            sheets.Closed += (_, _) => _sheetsWindow = null;
+            sheets.Closed += (_, _) =>
+            {
+                _sheetsWindow = null;
+                TrackModuleClosed("sheets");
+            };
             _sheetsWindow = sheets;
             sheets.Show(this);
+            TrackModuleOpened("sheets");
             return;
         }
         if (module?.Id == "slides")
@@ -475,9 +486,14 @@ public sealed partial class MainWindow : Window
                 return;
             }
             var slides = new SlidesWindow();
-            slides.Closed += (_, _) => _slidesWindow = null;
+            slides.Closed += (_, _) =>
+            {
+                _slidesWindow = null;
+                TrackModuleClosed("slides");
+            };
             _slidesWindow = slides;
             slides.Show(this);
+            TrackModuleOpened("slides");
             return;
         }
         if (module?.Id == "data")
@@ -494,9 +510,14 @@ public sealed partial class MainWindow : Window
 
             var data = new DataWindow(new VccDataService(_documentsDatabase));
             data.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            data.Closed += (_, _) => _dataWindow = null;
+            data.Closed += (_, _) =>
+            {
+                _dataWindow = null;
+                TrackModuleClosed("data");
+            };
             _dataWindow = data;
             data.Show(this);
+            TrackModuleOpened("data");
             return;
         }
         NotifyUnavailable(module);
