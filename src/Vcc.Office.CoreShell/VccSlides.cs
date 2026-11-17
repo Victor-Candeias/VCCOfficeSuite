@@ -36,6 +36,22 @@ public sealed class VccSlidesService
     public async Task<SlideDeck> CreateAsync(string id, string title, CancellationToken cancellationToken = default) => await AddAsync(new SlideDeck(id, title, [new VccSlide("slide-1", "Título", [], "", new SlideLayout())], new()), cancellationToken);
     public SlideDeck Navigate(string id) => _decks.FirstOrDefault(item => item.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException("A apresentação não existe.", nameof(id));
     public IReadOnlyList<SlideDeck> Query(string? text = null) => string.IsNullOrWhiteSpace(text) ? Decks : Decks.Where(item => item.Title.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase) || item.Slides.Any(slide => slide.Title.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase))).ToArray();
+    public Task<SlideDeck> AddSlideAsync(string id, string title, CancellationToken cancellationToken = default) =>
+        UpdateAsync(id, deck =>
+        {
+            var slide = new VccSlide(Guid.NewGuid().ToString("N"), title, [], "", new SlideLayout());
+            return deck with { Slides = deck.Slides.Append(slide).ToArray(), CurrentSlide = deck.Slides.Count };
+        }, cancellationToken);
+
+    public Task<SlideDeck> SetSlideTitleAsync(string id, int slideIndex, string title, CancellationToken cancellationToken = default) =>
+        UpdateAsync(id, deck =>
+        {
+            _ = GetSlide(deck, slideIndex);
+            var slides = deck.Slides.ToArray();
+            slides[slideIndex] = slides[slideIndex] with { Title = title };
+            return deck with { Slides = slides };
+        }, cancellationToken);
+
     public Task<SlideDeck> AddObjectAsync(string id, int slideIndex, SlideObject item, CancellationToken cancellationToken = default) => UpdateAsync(id, deck => { var slide = GetSlide(deck, slideIndex); var slides = deck.Slides.ToArray(); slides[slideIndex] = slide with { Objects = slide.Objects.Append(item).ToArray() }; return deck with { Slides = slides }; }, cancellationToken);
     public Task<SlideDeck> SetNotesAsync(string id, int slideIndex, string notes, CancellationToken cancellationToken = default) => UpdateAsync(id, deck => { var slides = deck.Slides.ToArray(); slides[slideIndex] = GetSlide(deck, slideIndex) with { Notes = notes ?? "" }; return deck with { Slides = slides }; }, cancellationToken);
     public Task<SlideDeck> SetThemeAsync(string id, SlideTheme theme, CancellationToken cancellationToken = default) => UpdateAsync(id, deck => deck with { Theme = theme }, cancellationToken);
