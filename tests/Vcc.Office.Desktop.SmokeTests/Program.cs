@@ -353,8 +353,8 @@ if (typeof(MainWindow).GetMethod("WorkspaceKeyDown",
     throw new Exception("Atalho de pesquisa global não está implementado.");
 
 // Writer visual regression: keep Ribbon, A4 page, rulers and editable text intact.
-var writer = new WriterWindow();
-var writerRoot = writer.Content as DockPanel
+var writerVisualWindow = new WriterWindow();
+var writerRoot = writerVisualWindow.Content as DockPanel
     ?? throw new Exception("O Writer deixou de utilizar o layout principal.");
 var writerRibbon = writerRoot.Children.OfType<Border>()
     .FirstOrDefault(item => item.Name == "WriterRibbon")
@@ -393,16 +393,16 @@ if (writerTopRuler.Name != "WriterTopRuler" ||
     throw new Exception("Dimensões, cor ou réguas da página A4 incorretas.");
 
 writerEditor.Text = "Primeira página de teste";
-if (writerEditor.Text != "Primeira página de teste" || !writer.Title.Contains('*'))
+if (writerEditor.Text != "Primeira página de teste" || !writerVisualWindow.Title.Contains('*'))
     throw new Exception("A folha do Writer não permite editar e sinalizar alterações.");
 
 var toggleWriterRulers = typeof(WriterWindow).GetMethod("ToggleRulers",
     BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new Exception("Não é possível alternar a visualização das réguas.");
-toggleWriterRulers.Invoke(writer, null);
+toggleWriterRulers.Invoke(writerVisualWindow, null);
 if (writerTopRuler.IsVisible || writerBottomRuler.IsVisible || writerVerticalRuler.IsVisible)
     throw new Exception("Ocultar réguas não alterou as três réguas.");
-toggleWriterRulers.Invoke(writer, null);
+toggleWriterRulers.Invoke(writerVisualWindow, null);
 if (!writerTopRuler.IsVisible || !writerBottomRuler.IsVisible || !writerVerticalRuler.IsVisible)
     throw new Exception("Mostrar réguas não restaurou as três réguas.");
 
