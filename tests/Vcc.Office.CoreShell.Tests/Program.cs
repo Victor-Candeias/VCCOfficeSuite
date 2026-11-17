@@ -6,7 +6,7 @@ using System.Text;
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
-    ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
+    ("VCC-0815 catálogo base e plugins dinâmicos", ValidatesOfficeApplicationRegistry),
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
     ("VCC-0820.8 sessões Avalonia: migração WPF, duplicados, fecho e backup", ValidatesAvaloniaSessionMigration),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
@@ -1230,6 +1230,7 @@ static async Task TestsConfiguredLauncherPolicy()
         if (filtered.Count != 1 || filtered[0].Id != "vcc-tasks")
             throw new InvalidOperationException("Pesquisa por descrição falhou.");
 
+        registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         if (!ConfiguredLauncherPolicy.IsBuiltIn("WRITER", registry) ||
             !ConfiguredLauncherPolicy.IsBuiltIn("settings", registry) ||
             ConfiguredLauncherPolicy.IsBuiltIn("vcc-tasks", registry))
