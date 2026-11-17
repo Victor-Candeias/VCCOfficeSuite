@@ -36,3 +36,11 @@ O manifesto contém `id`, `assembly`, `entryType` e `apiVersion`. O launcher usa
 ## Verificação
 
 Compilar `VCC.Office.Avalonia.sln` em Release e executar os smoke tests. Em Windows/Linux/macOS, verificar que o pacote contém `Plugins/Writer/Vcc.Office.Writer.dll` e `Plugins/Writer/plugin.json`. O teste de integração verifica descoberta e abertura dinâmica a partir desse diretório, bem como funcionamento sem plugins.
+
+## Identidade e metadados do plugin
+
+Cada implementação de `IOfficePlugin` fornece o seu `Id`, `DisplayName`, `ToolTip`, `CreateMenuIcon(size)` e `CreateWindowIcon()`. O Launcher consome estes valores diretamente da DLL para compor o menu lateral, o dashboard clássico, as grelhas de aplicações e os tooltips. O nome deixa de ser determinado pelo Launcher para plugins instalados.
+
+O VCC Writer inclui o seu próprio ícone azul com **W** branco compilado no projeto `Vcc.Office.Writer`, sem carregar o ícone do executável principal. O recurso de ícone de janela e os elementos vetoriais de menu pertencem ao plugin. Tal não muda necessariamente o ícone genérico que o Explorador do Windows utiliza para visualizar o próprio ficheiro `.dll`; o ícone da aplicação é usado na interface do launcher e na janela do Writer.
+
+Sem o plugin, o Launcher continua a abrir e apresenta a entrada de catálogo como indisponível, preservando o funcionamento dos restantes módulos. Um plugin de terceiros continua a ser código de confiança executado no processo da suite.
