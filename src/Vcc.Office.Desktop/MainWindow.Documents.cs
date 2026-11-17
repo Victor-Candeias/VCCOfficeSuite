@@ -24,6 +24,7 @@ public sealed partial class MainWindow
     private DesktopLauncherState _launcherState = DesktopLauncherState.Default;
     private IReadOnlyList<RecentDocument> _recentEntries = [];
     private bool _favoritesOnly;
+    private string? _recentModuleFilter;
 
     private async Task RestoreLauncherAsync()
     {
@@ -43,6 +44,7 @@ public sealed partial class MainWindow
             }
             await RefreshRecentAsync();
             await _workspaceShell.InitialiseAsync();
+            RestoreWorkspaceWindow();
             Render();
             ApplyWorkspaceNavigation();
             if (!_initialNavigationFocusApplied)
@@ -168,13 +170,47 @@ public sealed partial class MainWindow
         }
     }
 
+    private void SetRecentModuleFilter(string? moduleId)
+    {
+        _recentModuleFilter = string.IsNullOrWhiteSpace(moduleId) ? null : moduleId;
+        RefreshBody();
+    }
+
+    private void AddRecentModuleFilters(StackPanel content)
+    {
+        var modules = _recentEntries
+            .Where(item => !string.IsNullOrWhiteSpace(item.ModuleId))
+            .Select(item => item.ModuleId!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(item => item, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var filters = new WrapPanel { Orientation = Orientation.Horizontal };
+        foreach (var id in new[] { (string?)null }.Concat(modules.Cast<string?>()))
+        {
+            var selected = string.Equals(id, _recentModuleFilter, StringComparison.OrdinalIgnoreCase);
+            var label = id is null ? "Todos" : _registry.Find(id)?.Name ?? id;
+            var button = new Button
+            {
+                Content = (selected ? "● " : "○ ") + label,
+                Margin = new Thickness(0, 0, 7, 7),
+                Padding = new Thickness(10, 6)
+            };
+            button.Click += (_, _) => SetRecentModuleFilter(id);
+            filters.Children.Add(button);
+        }
+        content.Children.Add(filters);
+    }
+
     private Border DocumentPanel(string title, bool favoritesOnly, int limit = 6)
     {
         var content = new StackPanel { Spacing = 10 };
         content.Children.Add(Text(title, 17, true));
         content.Children.Add(new Border { Height = 1, Background = LineBrush });
+        if (limit >= 8) AddRecentModuleFilters(content);
         var filtered = _recentEntries
             .Where(document => (!favoritesOnly || document.IsFavorite) &&
+                (_recentModuleFilter is null ||
+                    string.Equals(document.ModuleId, _recentModuleFilter, StringComparison.OrdinalIgnoreCase)) &&
                 (string.IsNullOrWhiteSpace(_search.Text) ||
                  document.FileName.Contains(_search.Text.Trim(), StringComparison.OrdinalIgnoreCase) ||
                  document.FullPath.Contains(_search.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
@@ -226,6 +262,7 @@ public sealed partial class MainWindow
     private void ShowRecentPage(bool favoritesOnly)
     {
         _favoritesOnly = favoritesOnly;
+        _recentModuleFilter = null;
         _activeDashboard = DashboardIds.Classic;
         _launcherState = _launcherState with { DashboardId = _activeDashboard };
         _ = SaveLauncherAsync();
