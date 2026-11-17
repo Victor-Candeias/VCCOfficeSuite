@@ -22,7 +22,6 @@ public static class OfficeSessionPolicy
             .Where(id => id is not null && registry.Find(id)?.IsAvailable == true)
             .Cast<string>()
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(26)
             .ToArray();
 
         var last = registry.Find(session.LastModuleId);
