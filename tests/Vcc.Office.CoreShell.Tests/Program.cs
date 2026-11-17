@@ -33,6 +33,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ,("acessibilidade configura e persiste", ConfiguresAccessibility)
     ,("navegação configura e persiste", ConfiguresNavigation)
     ,("Launcher é consultado e navegado", QueriesAndNavigatesLauncher)
+    ,("VCC-0820.7 módulos personalizados são filtrados e pesquisados sem simular instalação", TestsConfiguredLauncherPolicy)
     ,("janelas são consultadas e navegadas", NavigatesWindows)
     ,("Ribbon é consultado e navegado", QueriesAndNavigatesRibbon)
     ,("SQLite aplica migrações e persiste definições", PersistsDatabaseSetting)
@@ -1191,4 +1192,44 @@ static async Task TestsLegacyDashboardPreferences()
         }
     }
     finally { Directory.Delete(root, recursive: true); }
+}
+
+static async Task TestsConfiguredLauncherPolicy()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var shell = new CoreShellService(new ShellStateStore(
+            Path.Combine(directory, "shell-state.json")));
+        await shell.InitialiseAsync();
+        await shell.ConfigureLauncherAsync([
+            .. shell.State.Launcher,
+            new LauncherItem("vcc-tasks", "VCC Tasks", "Gestão de tarefas", "✓"),
+            new LauncherItem("vcc-inventory", "Inventário", "Controlo de stock", "□")
+        ]);
+
+        var restored = new CoreShellService(new ShellStateStore(
+            Path.Combine(directory, "shell-state.json")));
+        await restored.InitialiseAsync();
+        var registry = new OfficeApplicationRegistry();
+        var custom = ConfiguredLauncherPolicy.CustomItems(restored.State.Launcher, registry);
+        if (custom.Count != 2 || custom[0].Id != "vcc-tasks" ||
+            custom[1].Id != "vcc-inventory")
+            throw new InvalidOperationException("Os módulos personalizados não foram recuperados em ordem.");
+
+        var filtered = ConfiguredLauncherPolicy.CustomItems(
+            restored.State.Launcher, registry, "TAREFAS");
+        if (filtered.Count != 1 || filtered[0].Id != "vcc-tasks")
+            throw new InvalidOperationException("Pesquisa por descrição falhou.");
+
+        if (!ConfiguredLauncherPolicy.IsBuiltIn("WRITER", registry) ||
+            !ConfiguredLauncherPolicy.IsBuiltIn("settings", registry) ||
+            ConfiguredLauncherPolicy.IsBuiltIn("vcc-tasks", registry))
+            throw new InvalidOperationException("A distinção entre módulos internos e personalizados falhou.");
+
+        await restored.NavigateLauncherAsync("vcc-tasks");
+        if (restored.State.LastSection != "launcher:vcc-tasks")
+            throw new InvalidOperationException("A seleção do módulo personalizado não foi persistida.");
+    }
+    finally { Directory.Delete(directory, recursive: true); }
 }
