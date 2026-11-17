@@ -145,8 +145,12 @@ public sealed class WriterWindow : Window
 
         Content = root;
 
-        _editor.TextChanged += (_, _) =>
+        // Listen to the Text property directly: this fires synchronously for both
+        // typed and programmatically loaded text, including in headless tests.
+        _editor.PropertyChanged += (_, change) =>
         {
+            if (change.Property != TextBox.TextProperty)
+                return;
             _dirty = true;
             _wordCount.Text = CountWords(_editor.Text).ToString() + " palavras";
             UpdateTitle();
