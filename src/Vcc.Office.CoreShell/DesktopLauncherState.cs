@@ -83,7 +83,7 @@ public sealed class DesktopLauncherStateStore
         {
             var legacy = LegacyDashboardPreferencesReader.TryRead(_legacyPath, _legacyUser, _dashboards);
             return legacy is null ? DesktopLauncherState.Default : new DesktopLauncherState(
-                DashboardPolicy.ResolveStartup(legacy, _dashboards), legacy.Theme, null, null)
+                legacy.LastDashboardId ?? DashboardPolicy.ResolveStartup(legacy, _dashboards), legacy.Theme, null, null)
             {
                 PreferredDashboardId = legacy.PreferredDashboardId,
                 StartupMode = legacy.StartupMode
