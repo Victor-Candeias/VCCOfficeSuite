@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Data.Sqlite;
 
 namespace Vcc.Office.CoreShell;
 
@@ -12,6 +13,9 @@ public sealed record DesktopLauncherState(
     string? LastSelectedModuleId,
     string? LastOpenedDocumentPath)
 {
+    public string PreferredDashboardId { get; init; } = DashboardIds.Modern;
+    public DashboardStartupMode StartupMode { get; init; } = DashboardStartupMode.Last;
+
     public static DesktopLauncherState Default { get; } =
         new(DashboardIds.Modern, ThemeMode.System, null, null);
 }
@@ -19,6 +23,11 @@ public sealed record DesktopLauncherState(
 /// <summary>Normaliza identificadores antes de os apresentar ou persistir.</summary>
 public static class DesktopLauncherStatePolicy
 {
+    /// <summary>Resolves last-vs-preferred startup consistently with the original WPF policy.</summary>
+    public static string ResolveStartup(DesktopLauncherState state, IDashboardRegistry dashboards) =>
+        DashboardPolicy.ResolveStartup(new DashboardPreferences(
+            state.PreferredDashboardId, state.DashboardId, state.StartupMode, state.Theme), dashboards);
+
     public static DesktopLauncherState Normalize(
         DesktopLauncherState? state,
         IDashboardRegistry dashboards,
@@ -32,7 +41,12 @@ public static class DesktopLauncherStatePolicy
             Enum.IsDefined(state.Theme) ? state.Theme : ThemeMode.System,
             modules.Find(state.LastSelectedModuleId)?.Id,
             string.IsNullOrWhiteSpace(state.LastOpenedDocumentPath)
-                ? null : state.LastOpenedDocumentPath);
+                ? null : state.LastOpenedDocumentPath)
+        {
+            PreferredDashboardId = dashboards.Contains(state.PreferredDashboardId)
+                ? state.PreferredDashboardId : DashboardIds.Modern,
+            StartupMode = Enum.IsDefined(state.StartupMode) ? state.StartupMode : DashboardStartupMode.Last
+        };
     }
 }
 
@@ -48,19 +62,33 @@ public sealed class DesktopLauncherStateStore
     private readonly IDashboardRegistry _dashboards;
     private readonly OfficeApplicationRegistry _modules;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly string _legacyPath;
+    private readonly string _legacyUser;
 
     public DesktopLauncherStateStore(CoreDatabase database, IDashboardRegistry dashboards,
-        OfficeApplicationRegistry modules)
+        OfficeApplicationRegistry modules, string? legacyPath = null, string? legacyUser = null)
     {
         _database = database ?? throw new ArgumentNullException(nameof(database));
         _dashboards = dashboards ?? throw new ArgumentNullException(nameof(dashboards));
         _modules = modules ?? throw new ArgumentNullException(nameof(modules));
+        _legacyPath = legacyPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "VCC Office", "dashboards.sqlite");
+        _legacyUser = legacyUser ?? Environment.UserName;
     }
 
     public async Task<DesktopLauncherState> LoadAsync(CancellationToken cancellationToken = default)
     {
         var stored = await _database.GetSettingAsync(SettingsKey, cancellationToken);
-        if (string.IsNullOrWhiteSpace(stored)) return DesktopLauncherState.Default;
+        if (string.IsNullOrWhiteSpace(stored))
+        {
+            var legacy = LegacyDashboardPreferencesReader.TryRead(_legacyPath, _legacyUser, _dashboards);
+            return legacy is null ? DesktopLauncherState.Default : new DesktopLauncherState(
+                legacy.LastDashboardId ?? DashboardPolicy.ResolveStartup(legacy, _dashboards), legacy.Theme, null, null)
+            {
+                PreferredDashboardId = legacy.PreferredDashboardId,
+                StartupMode = legacy.StartupMode
+            };
+        }
         try
         {
             return DesktopLauncherStatePolicy.Normalize(
@@ -86,5 +114,45 @@ public sealed class DesktopLauncherStateStore
         {
             _gate.Release();
         }
+    }
+}
+
+/// <summary>
+/// Read-only WPF dashboard settings import. Never creates or modifies the legacy DB.
+/// Avalonia-specific preferences take precedence if they already exist.
+/// </summary>
+public static class LegacyDashboardPreferencesReader
+{
+    public static DashboardPreferences? TryRead(string path, string userId, IDashboardRegistry registry)
+    {
+        ArgumentNullException.ThrowIfNull(registry);
+        if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(userId) || !File.Exists(path))
+            return null;
+        try
+        {
+            var builder = new SqliteConnectionStringBuilder
+            {
+                DataSource = Path.GetFullPath(path),
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false
+            };
+            using var connection = new SqliteConnection(builder.ToString());
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT PreferredDashboardId, LastDashboardId, StartupMode, Theme FROM DashboardSettings WHERE UserId = $user LIMIT 1";
+            command.Parameters.AddWithValue("$user", userId);
+            using var reader = command.ExecuteReader();
+            if (!reader.Read()) return null;
+            var startup = Enum.TryParse<DashboardStartupMode>(reader.GetString(2), true, out var selectedStartup)
+                ? selectedStartup : DashboardStartupMode.Last;
+            var theme = Enum.TryParse<ThemeMode>(reader.GetString(3), true, out var selectedTheme)
+                ? selectedTheme : ThemeMode.System;
+            return DashboardPolicy.ValidateOrDefault(new DashboardPreferences(
+                reader.GetString(0), reader.IsDBNull(1) ? null : reader.GetString(1),
+                startup, theme), registry);
+        }
+        catch (SqliteException) { return null; }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
     }
 }

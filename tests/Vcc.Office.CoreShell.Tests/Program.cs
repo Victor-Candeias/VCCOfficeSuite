@@ -9,6 +9,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
+    ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
     ("Ribbon predefinido é válido", ValidatesDefaultRibbon),
     ("estado inválido é rejeitado", RejectsInvalidState),
@@ -1138,4 +1139,56 @@ static async Task TestsLegacyWorkspaceParity()
             throw new Exception("O estado persistido contém dependências de WPF.");
     }
     finally { Directory.Delete(directory, recursive: true); }
+}
+
+static async Task TestsLegacyDashboardPreferences()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var legacyPath = Path.Combine(root, "legacy-dashboards.sqlite");
+        var cs = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+        {
+            DataSource = legacyPath,
+            Pooling = false
+        };
+        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(cs.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                CREATE TABLE DashboardSettings (
+                    UserId TEXT PRIMARY KEY, PreferredDashboardId TEXT NOT NULL,
+                    LastDashboardId TEXT, StartupMode TEXT NOT NULL, Theme TEXT NOT NULL);
+                INSERT INTO DashboardSettings (UserId,PreferredDashboardId,LastDashboardId,StartupMode,Theme)
+                VALUES ('test-user','grid','classic','preferred','dark');
+                """;
+            command.ExecuteNonQuery();
+        }
+        var dashboards = new DashboardRegistry();
+        var registry = new OfficeApplicationRegistry();
+        var database = new CoreDatabase(new StoragePaths(Path.Combine(root, "avalonia")));
+        var stateStore = new DesktopLauncherStateStore(database, dashboards, registry,
+            legacyPath, "test-user");
+        var imported = await stateStore.LoadAsync();
+        if (imported.DashboardId != DashboardIds.Classic ||
+            imported.PreferredDashboardId != DashboardIds.Grid ||
+            imported.StartupMode != DashboardStartupMode.Preferred ||
+            imported.Theme != ThemeMode.Dark ||
+            DesktopLauncherStatePolicy.ResolveStartup(imported, dashboards) != DashboardIds.Grid)
+            throw new InvalidOperationException("A migração das preferências WPF alterou a seleção inicial.");
+        await stateStore.SaveAsync(imported with { StartupMode = DashboardStartupMode.Last });
+        var recovered = await stateStore.LoadAsync();
+        if (DesktopLauncherStatePolicy.ResolveStartup(recovered, dashboards) != DashboardIds.Classic)
+            throw new InvalidOperationException("O modo último dashboard não foi respeitado.");
+        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(cs.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT StartupMode || ':' || Theme FROM DashboardSettings WHERE UserId='test-user'";
+            if ((string?)command.ExecuteScalar() != "preferred:dark")
+                throw new InvalidOperationException("As preferências WPF originais foram alteradas.");
+        }
+    }
+    finally { Directory.Delete(root, recursive: true); }
 }

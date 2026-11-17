@@ -30,7 +30,7 @@ public sealed partial class MainWindow
         try
         {
             _launcherState = await _launcherStateStore.LoadAsync();
-            _activeDashboard = _launcherState.DashboardId;
+            _activeDashboard = DesktopLauncherStatePolicy.ResolveStartup(_launcherState, _dashboards);
             if (Application.Current is { } app)
             {
                 app.RequestedThemeVariant = _launcherState.Theme switch
