@@ -16,7 +16,13 @@ public sealed partial class MainWindow
     {
         Activated += async (_, _) =>
         {
-            try { await _workspaceShell.InitialiseAsync(); }
+            try
+            {
+                var previousContrast = _workspaceShell.State.HighContrast;
+                await _workspaceShell.InitialiseAsync();
+                if (previousContrast != _workspaceShell.State.HighContrast)
+                    Render();
+            }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         };
