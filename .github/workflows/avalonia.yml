@@ -31,9 +31,9 @@ jobs:
       - name: Verify WPF retirement safety gate
         run: python scripts/check-wpf-retirement.py
       - name: Restore canonical Avalonia solution
-        run: dotnet restore VCC.Office.sln
+        run: dotnet restore VCC.Office.Avalonia.sln
       - name: Build canonical Avalonia solution
-        run: dotnet build VCC.Office.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
+        run: dotnet build VCC.Office.Avalonia.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
       - name: Test shared CoreShell
         run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration Release
       - name: Smoke test Avalonia visual tree without display server
@@ -65,9 +65,9 @@ jobs:
       - name: Verify WPF retirement safety gate
         run: python scripts/check-wpf-retirement.py
       - name: Restore canonical Avalonia solution
-        run: dotnet restore VCC.Office.sln
+        run: dotnet restore VCC.Office.Avalonia.sln
       - name: Build canonical Avalonia solution (Release)
-        run: dotnet build VCC.Office.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
+        run: dotnet build VCC.Office.Avalonia.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
       - name: Test shared CoreShell (Release)
         run: dotnet run --project tests/Vcc.Office.CoreShell.Tests/Vcc.Office.CoreShell.Tests.csproj --configuration Release
       - name: Smoke test Avalonia visual tree without display server (Release)

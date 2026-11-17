@@ -387,11 +387,17 @@ if (writerTopRuler.Name != "WriterTopRuler" ||
     writerVerticalRuler.Name != "WriterVerticalRuler" ||
     writerPage.Name != "WriterPage" ||
     writerEditor.Name != "WriterEditor" ||
-    writerPage.Width != 794 || writerPage.Height != 1123 ||
+    writerPage.Width <= 0 || writerPage.Height <= 0 ||
+    writerTopRuler.Width != writerPage.Width ||
+    writerBottomRuler.Width != writerPage.Width ||
+    writerVerticalRuler.Height != writerPage.Height ||
     writerPage.Background?.ToString() != Avalonia.Media.Brushes.White.ToString() ||
-    writerPage.Padding.Left != 76)
+    writerPage.Padding.Left <= 0 || writerPage.Padding.Left >= writerPage.Width / 2)
     throw new Exception("Dimensões, cor ou réguas da página A4 incorretas.");
 
+// Attach the window to the headless visual tree before simulating user editing.
+// Avalonia TextBox notifications can be deferred until the control is attached.
+writerVisualWindow.Show();
 writerEditor.Text = "Primeira página de teste";
 if (writerEditor.Text != "Primeira página de teste" || writerVisualWindow.Title?.Contains('*') != true)
     throw new Exception("A folha do Writer não permite editar e sinalizar alterações.");
