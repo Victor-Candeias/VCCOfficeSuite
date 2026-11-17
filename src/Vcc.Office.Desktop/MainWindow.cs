@@ -45,6 +45,7 @@ public sealed partial class MainWindow : Window
             app.ActualThemeVariantChanged += (_, _) => Render();
         EnableWorkspaceShortcuts();
         ConfigureModuleSession();
+        Closing += (_, _) => SaveWorkspaceWindow();
         Render();
         Opened += async (_, _) => await RestoreLauncherAsync();
     }
