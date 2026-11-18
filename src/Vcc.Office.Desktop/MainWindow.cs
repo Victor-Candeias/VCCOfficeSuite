@@ -299,7 +299,7 @@ public sealed partial class MainWindow : Window
 
     private void BuildModern(StackPanel root)
     {
-        var bannerContent = new StackPanel { Spacing = 8, Margin = new Thickness(25, 21) };
+        var bannerContent = new StackPanel { Spacing = 5, Margin = new Thickness(25, 12) };
         var hour = DateTime.Now.Hour;
         bannerContent.Children.Add(Text(hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite",
             32, true, Brushes.White));
@@ -318,7 +318,7 @@ public sealed partial class MainWindow : Window
                 }
             },
             CornerRadius = new CornerRadius(15),
-            MinHeight = 150,
+            MinHeight = 106,
             Child = bannerContent
         });
 
