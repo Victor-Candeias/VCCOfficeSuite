@@ -18,7 +18,7 @@ public sealed partial class MainWindow : Window
     private readonly Grid _layout = new();
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
-    private StackPanel? _configuredSidebar;
+    private StackPanel? _configuredSidebar = null;
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
