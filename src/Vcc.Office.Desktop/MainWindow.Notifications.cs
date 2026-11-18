@@ -22,6 +22,7 @@ public sealed partial class MainWindow
 
     private void ShowNotificationsPage()
     {
+        _diagnosticsPage = false;
         _notificationsPage = true;
         _documentsPage = false;
         _templatesPage = false;
