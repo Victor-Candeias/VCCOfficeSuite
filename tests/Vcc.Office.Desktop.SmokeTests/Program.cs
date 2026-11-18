@@ -409,6 +409,21 @@ var singleLauncher = new MainWindow(singleRoot);
 var singleInstalled = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(singleLauncher)!;
 if (singleInstalled.Count != 1 || singleInstalled[0].Id != "writer")
     throw new Exception("O Launcher deve mostrar apenas o único plugin instalado.");
+var managedHost = OfficePluginHost.Discover(singleRoot);
+if (managedHost.GetInventory().Count != 1 || !managedHost.IsEnabled("writer"))
+    throw new Exception("O inventário de plugins não reconhece o Writer.");
+managedHost.SetEnabled("writer", false);
+if (managedHost.Plugins.Count != 0 || managedHost.TryGet("writer", out _))
+    throw new Exception("Um plugin desativado não pode ser iniciado.");
+var persistedDisabled = OfficePluginHost.Discover(singleRoot);
+if (persistedDisabled.Plugins.Count != 0 || persistedDisabled.InstalledPlugins.Count != 1)
+    throw new Exception("A desativação do plugin não foi persistida.");
+persistedDisabled.SetEnabled("writer", true);
+if (!OfficePluginHost.Discover(singleRoot).IsEnabled("writer"))
+    throw new Exception("A reativação do plugin não foi persistida.");
+var managerWindow = new PluginManagerWindow(managedHost, (_, _) => { });
+if (managerWindow.Title?.Contains("Gestão de plugins", StringComparison.Ordinal) != true)
+    throw new Exception("A interface de gestão de plugins não abre.");
 if (installed.Count != 4 || !installed.Any(m => m.Id == "data") || !installed.Any(m => m.Id == "slides") || !installed.Any(m => m.Id == "sheets") || !installed.Any(m => m.Id == "writer" ))
     throw new Exception("A vista deve mostrar apenas os plugins realmente instalados.");
 var pluginWindowsField = typeof(MainWindow).GetField("_pluginWindows",
