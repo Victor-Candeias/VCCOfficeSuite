@@ -58,6 +58,29 @@ if (sidebarButtons.Length < 6 ||
     sidebarButtons.Any(button => button.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch))
     throw new Exception("Os botões de navegação e aplicações devem ocupar a mesma largura disponível.");
 
+// VCC-0834: diagnostics is reachable and can rebuild without recycling controls.
+if (!sidebarButtons.Any(button => button.Content?.ToString()?.Contains("Diagnóstico",
+        StringComparison.Ordinal) == true))
+    throw new Exception("A navegação de diagnóstico não existe.");
+var showDiagnostics = typeof(MainWindow).GetMethod("ShowDiagnosticsPage",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("A página de diagnóstico não existe.");
+showDiagnostics.Invoke(window, null);
+var diagnosticsActive = typeof(MainWindow).GetField("_diagnosticsPage",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Estado da página de diagnóstico não encontrado.");
+if (diagnosticsActive.GetValue(window) is not true)
+    throw new Exception("O centro de diagnóstico não abriu.");
+render.Invoke(window, null);
+var diagnosticsBody = typeof(MainWindow).GetField("_body",
+    BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(window) as StackPanel;
+if (diagnosticsBody?.Children.OfType<TextBlock>().Any(t =>
+        t.Text?.Contains("Diagnóstico e recuperação", StringComparison.Ordinal) == true) != true)
+    throw new Exception("O centro de diagnóstico não foi renderizado.");
+switchDashboard.Invoke(window, ["modern"]);
+if (diagnosticsActive.GetValue(window) is not false)
+    throw new Exception("O diagnóstico permanece selecionado ao voltar ao dashboard.");
+
 // Active module highlight must move to the clicked app, not stay on the saved app.
 var selectSidebarModule = typeof(MainWindow).GetMethod("SelectSidebarModule",
     BindingFlags.NonPublic | BindingFlags.Instance)
