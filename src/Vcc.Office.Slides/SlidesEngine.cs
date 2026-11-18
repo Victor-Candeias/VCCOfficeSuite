@@ -3,7 +3,9 @@ using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
-namespace Vcc.Office.CoreShell;
+using Vcc.Office.CoreShell;
+
+namespace Vcc.Office.Slides;
 
 public enum SlideObjectKind { Text, Image, Shape }
 public sealed record SlideObject(string Id, SlideObjectKind Kind, double X, double Y, double Width, double Height, string Content, string AltText = "");

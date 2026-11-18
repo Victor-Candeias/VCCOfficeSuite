@@ -11,6 +11,7 @@
     <ProjectReference Include="../../src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj" />
     <ProjectReference Include="../../src/Vcc.Office.Writer/Vcc.Office.Writer.csproj" />
     <ProjectReference Include="../../src/Vcc.Office.Sheets/Vcc.Office.Sheets.csproj" />
+    <ProjectReference Include="../../src/Vcc.Office.Slides/Vcc.Office.Slides.csproj" />
     <ProjectReference Include="../../src/Vcc.Office.PluginHost/Vcc.Office.PluginHost.csproj" />
   </ItemGroup>
   <!-- The smoke runner has its own BaseDirectory; stage the same plugin as the actual launcher. -->
@@ -21,5 +22,8 @@
     <MakeDir Directories="$(TargetDir)Plugins/Sheets" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Sheets/bin/$(Configuration)/net10.0/Vcc.Office.Sheets.dll" DestinationFolder="$(TargetDir)Plugins/Sheets" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Sheets/plugin.json" DestinationFolder="$(TargetDir)Plugins/Sheets" />
+    <MakeDir Directories="$(TargetDir)Plugins/Slides" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Slides/bin/$(Configuration)/net10.0/Vcc.Office.Slides.dll" DestinationFolder="$(TargetDir)Plugins/Slides" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Slides/plugin.json" DestinationFolder="$(TargetDir)Plugins/Slides" />
   </Target>
 </Project>

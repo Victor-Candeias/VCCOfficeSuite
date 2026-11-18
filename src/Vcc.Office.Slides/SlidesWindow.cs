@@ -5,9 +5,9 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Vcc.Office.CoreShell;
 
-namespace Vcc.Office.Desktop;
+namespace Vcc.Office.Slides;
 
-/// <summary>Avalonia slide editor backed by the cross-platform CoreShell service.</summary>
+/// <summary>Avalonia slide editor backed by the cross-platform Slides service.</summary>
 public sealed class SlidesWindow : Window
 {
     private readonly VccSlidesService _slides;
@@ -26,14 +26,14 @@ public sealed class SlidesWindow : Window
         var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VCC Office");
         _slides = new VccSlidesService(Path.Combine(directory, "slides-avalonia.json"));
         Title = "VCC Slides — Avalonia";
-        Icon = AppBranding.LoadWindowIcon();
+        Icon = new SlidesPlugin().CreateWindowIcon();
         Width = 1040; Height = 770; MinWidth = 650; MinHeight = 480;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
         var root = new DockPanel();
         var top = new StackPanel { Spacing = 8, Margin = new Thickness(20, 14) };
         top.Children.Add(new TextBlock { Text = "VCC Slides", FontSize = 27, FontWeight = FontWeight.SemiBold });
-        top.Children.Add(new TextBlock { Text = "Apresentações, títulos, notas e objetos de texto · CoreShell" });
+        top.Children.Add(new TextBlock { Text = "Apresentações, títulos, notas e objetos de texto · motor autónomo Slides" });
         var toolbar = new WrapPanel();
         toolbar.Children.Add(_decks);
         toolbar.Children.Add(Action("Nova apresentação", () => _ = RunAsync(CreateAsync)));
