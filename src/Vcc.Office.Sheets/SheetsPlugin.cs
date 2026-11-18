@@ -7,12 +7,18 @@ using Vcc.Office.Plugin.Abstractions;
 namespace Vcc.Office.Sheets;
 
 /// <summary>Fully independent Sheets application and plugin metadata.</summary>
-public sealed class SheetsPlugin : IOfficePlugin
+public sealed class SheetsPlugin : IOfficeDocumentPlugin
 {
     public string Id => "sheets";
     public string DisplayName => "VCC Sheets";
     public string ToolTip => "Criar, editar e exportar folhas de cálculo, fórmulas e tabelas.";
     public bool SupportsNewDocument => true;
+    public IReadOnlyCollection<string> SupportedExtensions { get; } = [".xlsx"];
+
+    public Task OpenDocumentAsync(Window window, string filePath) =>
+        window is SheetsWindow editor ? editor.OpenDocumentAsync(filePath)
+            : throw new ArgumentException("A janela não pertence ao plugin SheetsPlugin.", nameof(window));
+
     public Control CreateMenuIcon(double size)
     {
         if (size <= 0 || double.IsNaN(size) || double.IsInfinity(size))

@@ -386,23 +386,34 @@ public sealed class WriterWindow : Window
         if (!await ConfirmDiscardAsync()) return;
         var items = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Abrir documento Writer",
-            AllowMultiple = false,
+            Title = "Abrir documento Writer", AllowMultiple = false,
             FileTypeFilter = [new FilePickerFileType("Documentos Writer") { Patterns = ["*.txt", "*.docx"] }]
         });
         if (items.Count == 0) return;
-        var path = items[0].TryGetLocalPath();
-        if (path is null) throw new InvalidOperationException("Apenas são suportados ficheiros locais.");
+        var path = items[0].TryGetLocalPath() ??
+            throw new InvalidOperationException("Apenas são suportados ficheiros locais.");
+        await OpenDocumentAsync(path);
+    });
+
+    /// <summary>Called by the generic Launcher; DOCX remains a text-only import.</summary>
+    public async Task OpenDocumentAsync(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!File.Exists(path)) throw new FileNotFoundException("Documento não encontrado.", path);
+        var ext = Path.GetExtension(path);
+        if (!ext.Equals(".txt", StringComparison.OrdinalIgnoreCase) &&
+            !ext.Equals(".docx", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("Formato não suportado pelo Writer.");
         var id = Guid.NewGuid().ToString("N");
-        var title = System.IO.Path.GetFileName(path);
+        var title = Path.GetFileName(path);
         string text;
-        if (System.IO.Path.GetExtension(path).Equals(".docx", StringComparison.OrdinalIgnoreCase))
+        if (ext.Equals(".docx", StringComparison.OrdinalIgnoreCase))
         {
             var doc = await _writer.ImportDocxAsync(id, title, path);
             text = string.Join(Environment.NewLine, doc.Paragraphs.Select(p => p.Text));
-            // Importação DOCX é apenas de texto: guardar no mesmo ficheiro seria destrutivo.
+            // Do not overwrite DOCX: styles, images and tables are not round-tripped.
             _currentPath = null;
-            Status("DOCX importado como texto. Use Exportar DOCX para criar uma cópia; estilos, tabelas e imagens não são preservados.");
+            Status("DOCX importado como texto. Use Exportar DOCX para criar uma cópia; a formatação original não é preservada.");
         }
         else
         {
@@ -415,7 +426,7 @@ public sealed class WriterWindow : Window
         _editor.Text = text;
         _dirty = false;
         UpdateTitle();
-    });
+    }
 
     private async Task SaveAsync() => await ExecuteAsync(async () =>
     {

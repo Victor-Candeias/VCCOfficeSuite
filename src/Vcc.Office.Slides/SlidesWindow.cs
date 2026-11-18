@@ -74,12 +74,31 @@ public sealed class SlidesWindow : Window
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         root.Children.Add(new ScrollViewer { Content = _objects, Margin = new Thickness(20) });
         Content = root;
-        Opened += async (_, _) => await RunAsync(async () =>
-        {
-            await _slides.LoadAsync();
-            if (_slides.Decks.Count == 0) await CreateAsync();
-            else Reload();
-        });
+        Opened += async (_, _) => await RunAsync(EnsureInitializedAsync);
+    }
+
+    private Task? _initialization;
+    private Task EnsureInitializedAsync() => _initialization ??= InitializeAsync();
+
+    private async Task InitializeAsync()
+    {
+        await _slides.LoadAsync();
+        if (_slides.Decks.Count == 0) await CreateAsync();
+        else Reload();
+    }
+
+    public async Task OpenDocumentAsync(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!Path.GetExtension(path).Equals(".pptx", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("O Slides importa atualmente apenas PPTX.");
+        if (!File.Exists(path)) throw new FileNotFoundException("Documento não encontrado.", path);
+        await EnsureInitializedAsync();
+        var deck = await _slides.ImportPptxAsync(Guid.NewGuid().ToString("N"), Path.GetFileName(path), path);
+        _currentId = deck.Id;
+        _slideIndex = 0;
+        Reload();
+        _status.Text = "PPTX importado. Confirme a fidelidade de estilos, animações e objetos.";
     }
 
     private static Button Action(string caption, Action action)
@@ -189,9 +208,7 @@ public sealed class SlidesWindow : Window
             FileTypeFilter = [new FilePickerFileType("PowerPoint PPTX") { Patterns = ["*.pptx"] }] });
         if (files.Count == 0) return;
         var path = files[0].TryGetLocalPath() ?? throw new InvalidOperationException("Apenas ficheiros locais.");
-        var deck = await _slides.ImportPptxAsync(Guid.NewGuid().ToString("N"), Path.GetFileName(path), path);
-        _currentId = deck.Id; _slideIndex = 0; Reload();
-        _status.Text = "PPTX importado. Confirme a fidelidade de estilos, animações e objetos.";
+        await OpenDocumentAsync(path);
     }
 
     private async Task ExportAsync() => await ExportWithAsync("PPTX", "pptx",

@@ -7,12 +7,18 @@ using Vcc.Office.Plugin.Abstractions;
 namespace Vcc.Office.Slides;
 
 /// <summary>Independent presentation editor, engine and plugin metadata.</summary>
-public sealed class SlidesPlugin : IOfficePlugin
+public sealed class SlidesPlugin : IOfficeDocumentPlugin
 {
     public string Id => "slides";
     public string DisplayName => "VCC Slides";
     public string ToolTip => "Criar, editar e exportar apresentações, objetos, notas e transições.";
     public bool SupportsNewDocument => true;
+    public IReadOnlyCollection<string> SupportedExtensions { get; } = [".pptx"];
+
+    public Task OpenDocumentAsync(Window window, string filePath) =>
+        window is SlidesWindow editor ? editor.OpenDocumentAsync(filePath)
+            : throw new ArgumentException("A janela não pertence ao plugin SlidesPlugin.", nameof(window));
+
     public Control CreateMenuIcon(double size)
     {
         if (size <= 0 || double.IsNaN(size) || double.IsInfinity(size))

@@ -120,6 +120,10 @@ public sealed class OfficePluginHost
         return host;
     }
 
+    /// <summary>Only enabled plugins with an actual document import capability.</summary>
+    public IReadOnlyList<IOfficeDocumentPlugin> DocumentHandlers(string filePath) =>
+        DocumentPluginRouter.GetCandidates(Plugins, filePath);
+
     public bool TryGet(string id, out IOfficePlugin? plugin)
     {
         if (_disabled.Contains(id)) { plugin = null; return false; }

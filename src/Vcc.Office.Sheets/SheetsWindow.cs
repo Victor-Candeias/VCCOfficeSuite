@@ -60,12 +60,30 @@ public sealed class SheetsWindow : Window
         DockPanel.SetDock(bottom, Dock.Bottom); root.Children.Add(bottom);
         root.Children.Add(new ScrollViewer { Content = _preview, Margin = new Thickness(18) });
         Content = root;
-        Opened += async (_, _) => await RunAsync(async () =>
-        {
-            await _sheets.LoadAsync();
-            if (_sheets.Sheets.Count == 0) await CreateAsync();
-            else Reload();
-        });
+        Opened += async (_, _) => await RunAsync(EnsureInitializedAsync);
+    }
+
+    private Task? _initialization;
+    private Task EnsureInitializedAsync() => _initialization ??= InitializeAsync();
+
+    private async Task InitializeAsync()
+    {
+        await _sheets.LoadAsync();
+        if (_sheets.Sheets.Count == 0) await CreateAsync();
+        else Reload();
+    }
+
+    public async Task OpenDocumentAsync(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!Path.GetExtension(path).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("O Sheets importa atualmente apenas XLSX.");
+        if (!File.Exists(path)) throw new FileNotFoundException("Documento não encontrado.", path);
+        await EnsureInitializedAsync();
+        var sheet = await _sheets.ImportXlsxAsync(Guid.NewGuid().ToString("N"), Path.GetFileName(path), path);
+        _currentId = sheet.Id;
+        Reload();
+        _status.Text = "XLSX importado (primeira folha; verifique fórmulas e formatos).";
     }
 
     private static Button Action(string caption, Action click)
@@ -165,9 +183,7 @@ public sealed class SheetsWindow : Window
             [new FilePickerFileType("Excel XLSX") { Patterns = ["*.xlsx"] }] });
         if (picked.Count == 0) return;
         var path = picked[0].TryGetLocalPath() ?? throw new InvalidOperationException("Apenas ficheiros locais.");
-        var sheet = await _sheets.ImportXlsxAsync(Guid.NewGuid().ToString("N"), Path.GetFileName(path), path);
-        _currentId = sheet.Id; Reload();
-        _status.Text = "XLSX importado (primeira folha; verifique fórmulas e formatos).";
+        await OpenDocumentAsync(path);
     }
 
     private async Task ExportAsync() => await ExportWithAsync("CSV", "csv",

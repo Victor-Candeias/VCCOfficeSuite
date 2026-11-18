@@ -362,6 +362,33 @@ var emptyPluginsRoot = Path.Combine(Path.GetTempPath(), "vcc-office-plugin-empty
 if (OfficePluginHost.Discover(emptyPluginsRoot).Plugins.Count != 0)
     throw new Exception("Um launcher sem plugins deve arrancar com catálogo vazio.");
 
+// VCC-0830: the host routes only supported formats to enabled document plugins.
+var documentedHost = OfficePluginHost.Discover();
+foreach (var pair in new[] { (Ext: ".txt", Id: "writer"), (Ext: ".docx", Id: "writer"),
+    (Ext: ".xlsx", Id: "sheets"), (Ext: ".pptx", Id: "slides") })
+{
+    var candidate = documentedHost.DocumentHandlers("TEST" + pair.Ext.ToUpperInvariant());
+    if (candidate.Count != 1 || candidate[0].Id != pair.Id)
+        throw new Exception("Encaminhamento incorreto para " + pair.Ext);
+}
+foreach (var unsupported in new[] { "legacy.doc", "legacy.xls", "legacy.ppt",
+    "data.csv", "old.odt", "unknown.abc", "database.sqlite" })
+    if (documentedHost.DocumentHandlers(unsupported).Count != 0)
+        throw new Exception("O Launcher anunciou importação não suportada: " + unsupported);
+var txt = Path.Combine(Path.GetTempPath(), "vcc-0830-" + Guid.NewGuid().ToString("N") + ".txt");
+await File.WriteAllTextAsync(txt, "Documento aberto pelo plugin Writer");
+try
+{
+    var plugin = documentedHost.DocumentHandlers(txt).Single();
+    var documentWindow = plugin.CreateWindow(plugin.CreateWindowIcon());
+    await plugin.OpenDocumentAsync(documentWindow, txt);
+    var field = documentWindow.GetType().GetField("_editor", BindingFlags.Instance | BindingFlags.NonPublic);
+    if (field?.GetValue(documentWindow) is not TextBox { Text: "Documento aberto pelo plugin Writer" })
+        throw new Exception("O Writer não recebeu o documento enviado pelo Launcher.");
+    documentWindow.Close();
+}
+finally { File.Delete(txt); }
+
 var pluginHost = OfficePluginHost.Discover();
 if (pluginHost.Errors.Count != 0 ||
     !pluginHost.TryGet("writer", out var writerPlugin) || writerPlugin is null ||
