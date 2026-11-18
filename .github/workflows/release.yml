@@ -5,6 +5,12 @@ on:
     tags:
       - 'v[0-9]*'
   workflow_dispatch:
+    inputs:
+      test_self_signed:
+        description: 'Test repository self-signed PFX on Windows (no public release)'
+        type: boolean
+        required: false
+        default: false
   pull_request:
 
 permissions:
@@ -74,19 +80,19 @@ jobs:
       - name: Verify plugin payload
         run: python scripts/check-writer-plugin-package.py artifacts/release
       - name: Sign and verify Windows binaries (required for published tags)
-        if: matrix.name == 'win-x64' && startsWith(github.ref, 'refs/tags/v')
+        if: matrix.name == 'win-x64' && (startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.test_self_signed == true && runner.environment == 'github-hosted'))
         shell: pwsh
         env:
+          SELF_SIGNED_TEST: ${{ inputs.test_self_signed }}
           WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
           WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
         run: |
           $ErrorActionPreference = 'Stop'
           $isRelease = $env:GITHUB_REF -like 'refs/tags/v*'
+          $validationMode = if ($isRelease) { 'TrustedRelease' } else { 'SelfSignedTest' }
           if ([string]::IsNullOrWhiteSpace($env:WINDOWS_SIGNING_PFX_BASE64) -or
               [string]::IsNullOrWhiteSpace($env:WINDOWS_SIGNING_PFX_PASSWORD)) {
-            if ($isRelease) { throw 'Windows signing secrets are required to publish an official release.' }
-            Write-Host 'Unsigned dry-run only; official release is blocked without signing credentials.'
-            exit 0
+            throw 'Windows signing secrets are required for the selected signing validation.'
           }
           $pfxPath = Join-Path $env:RUNNER_TEMP ('vcc-signing-' + [Guid]::NewGuid().ToString('N') + '.pfx')
           try {
@@ -99,11 +105,15 @@ jobs:
             $targets = @(Join-Path 'artifacts/release' 'VCC Office Suite.exe')
             $targets += @(Get-ChildItem 'artifacts/release/Plugins' -Recurse -File -Filter 'Vcc.Office.*.dll' | Select-Object -ExpandProperty FullName)
             foreach ($target in $targets) {
-              & $tool.FullName sign /fd SHA256 /tr https://timestamp.digicert.com /td SHA256 /f $pfxPath /p $env:WINDOWS_SIGNING_PFX_PASSWORD $target
+              if ($isRelease) {
+                & $tool.FullName sign /fd SHA256 /tr https://timestamp.digicert.com /td SHA256 /f $pfxPath /p $env:WINDOWS_SIGNING_PFX_PASSWORD $target
+              } else {
+                & $tool.FullName sign /fd SHA256 /f $pfxPath /p $env:WINDOWS_SIGNING_PFX_PASSWORD $target
+              }
               if ($LASTEXITCODE -ne 0) { throw "Authenticode signing failed for $target" }
-              $signature = Get-AuthenticodeSignature $target
-              if ($signature.Status -ne 'Valid') { throw "Invalid Authenticode signature for $target: $($signature.Status)" }
-              Write-Host "PASS signed $target"
+              & ./scripts/verify-code-signature.ps1 -FilePath $target -PfxPath $pfxPath -Mode $validationMode
+              if (-not $?) { throw "Signature verification failed for $target" }
+              Write-Host "PASS signed $target in $validationMode mode"
             }
           }
           finally {
