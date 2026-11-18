@@ -422,7 +422,7 @@ if (!pluginHost.TryGet("sheets", out var sheetsPlugin) || sheetsPlugin is null |
     !pluginHost.TryCreateWindow("sheets", null, out var sheetsPluginWindow) ||
     sheetsPluginWindow?.GetType().FullName != typeof(SheetsWindow).FullName)
     throw new Exception("A DLL autonoma do Sheets nao fornece interface e identidade.");
-sheetsPluginWindow.Close();
+sheetsPluginWindow!.Close();
 
 // Writer visual regression: keep Ribbon, A4 page, rulers and editable text intact.
 var writerVisualWindow = new WriterWindow();
