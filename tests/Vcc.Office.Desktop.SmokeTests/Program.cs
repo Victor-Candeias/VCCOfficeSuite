@@ -420,7 +420,7 @@ if (!pluginHost.TryGet("sheets", out var sheetsPlugin) || sheetsPlugin is null |
     sheetsPlugin.CreateWindowIcon() is null ||
     sheetsPlugin.CreateMenuIcon(24) is not Border { Name: "SheetsPluginIcon" } ||
     !pluginHost.TryCreateWindow("sheets", null, out var sheetsPluginWindow) ||
-    sheetsPluginWindow is not SheetsWindow)
+    sheetsPluginWindow?.GetType().FullName != typeof(SheetsWindow).FullName)
     throw new Exception("A DLL autonoma do Sheets nao fornece interface e identidade.");
 sheetsPluginWindow.Close();
 
