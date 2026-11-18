@@ -9,7 +9,7 @@
 
 O motor `VccWriterService` foi removido de `Vcc.Office.CoreShell` para impedir que o serviço específico do Writer fique no núcleo do launcher.
 
-O projeto do launcher referencia o Writer apenas como **dependência de build** (`ReferenceOutputAssembly=false`) para compilar e colocar a DLL na distribuição. Em execução, descobre módulos por manifesto.
+O Launcher não referencia o Writer como dependência de compilação. A solução compila o Writer como projeto independente e o script genérico efetua o empacotamento.
 
 ## Distribuição
 
@@ -56,3 +56,10 @@ A recuperação de sessões é construída a partir das aplicações efetivament
 
 Para executar localmente após um build da solução, colocar os plugins na pasta de saída do executável com o mesmo script, por exemplo:
 `python scripts/stage-office-plugins.py src/Vcc.Office.Desktop/bin/Debug/net10.0 Debug`.
+
+
+## VCC-0821 — Regra de visibilidade
+
+O Launcher apresenta nos menus e cartões exclusivamente os plugins DLL efetivamente descobertos. Sheets, Slides e Data permanecem no código durante a migração mas não surgem como aplicações instaladas até terem os respetivos plugins. Entradas personalizadas não são apresentadas como aplicações. A recuperação da sessão exclui módulos sem plugin instalado.
+
+O empacotamento copia também o manifesto `.deps.json` e as DLLs privadas do plugin. Bibliotecas partilhadas pelo Host (Avalonia, CoreShell, contrato) não são duplicadas dentro do plugin.

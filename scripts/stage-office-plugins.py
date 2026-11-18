@@ -39,4 +39,16 @@ for manifest_path in manifests:
     output.mkdir(parents=True, exist_ok=True)
     shutil.copy2(manifest_path, output / "plugin.json")
     shutil.copy2(binary, output / assembly)
+    # AssemblyDependencyResolver requires the plugin deps manifest for package libraries.
+    dependency_manifest = binary.with_suffix(".deps.json")
+    if dependency_manifest.is_file():
+        shutil.copy2(dependency_manifest, output / dependency_manifest.name)
+    # Keep plugin-private managed dependencies beside the entry assembly. Shared
+    # Avalonia and host contracts must retain one type identity from the host.
+    for dependency in binary.parent.glob("*.dll"):
+        if dependency.name == assembly or dependency.name.startswith("Avalonia.") or dependency.name in (
+            "Vcc.Office.Plugin.Abstractions.dll", "Vcc.Office.CoreShell.dll", "Vcc.Office.PluginHost.dll"
+        ):
+            continue
+        shutil.copy2(dependency, output / dependency.name)
     print(f"Staged {plugin_id}: {output / assembly}")

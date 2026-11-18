@@ -50,7 +50,7 @@ if (sidebarScroll.HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled 
     sidebarPanel.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch)
     throw new Exception("O menu lateral não reserva espaço antes da scrollbar.");
 var sidebarButtons = sidebarPanel.Children.OfType<Button>().ToArray();
-if (sidebarButtons.Length < 8 ||
+if (sidebarButtons.Length < 6 ||
     sidebarButtons.Any(button => button.HorizontalAlignment != Avalonia.Layout.HorizontalAlignment.Stretch))
     throw new Exception("Os botões de navegação e aplicações devem ocupar a mesma largura disponível.");
 
@@ -67,25 +67,22 @@ var sidebarDashboardsField = typeof(MainWindow).GetField("_sidebarDashboardButto
 var moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
 var dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
 var selectedDashboardBackground = dashboardButtons["modern"].Background?.ToString();
+if (moduleButtons.Keys.Any(id => !string.Equals(id, "writer", StringComparison.OrdinalIgnoreCase)))
+    throw new Exception("O menu lateral deve conter apenas plugins instalados.");
 selectSidebarModule.Invoke(window, ["writer"]);
 var writerBackground = moduleButtons["writer"].Background?.ToString();
-if (writerBackground == moduleButtons["sheets"].Background?.ToString() ||
-    dashboardButtons["modern"].Background?.ToString() == selectedDashboardBackground)
-    throw new Exception("O Writer não ficou selecionado de forma exclusiva.");
-selectSidebarModule.Invoke(window, ["sheets"]);
-if (moduleButtons["sheets"].Background?.ToString() != writerBackground ||
-    moduleButtons["writer"].Background?.ToString() == writerBackground)
-    throw new Exception("A seleção não passou de Writer para Sheets.");
+if (dashboardButtons["modern"].Background?.ToString() == selectedDashboardBackground)
+    throw new Exception("A selecao do plugin nao desativou a selecao do dashboard.");
 render.Invoke(window, null);
 moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
-if (moduleButtons["sheets"].Background?.ToString() != writerBackground)
-    throw new Exception("A seleção da aplicação perdeu-se ao reconstruir o menu.");
+if (moduleButtons["writer"].Background?.ToString() != writerBackground)
+    throw new Exception("A selecao do plugin perdeu-se ao reconstruir o menu.");
 switchDashboard.Invoke(window, ["classic"]);
 moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
 dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
-if (moduleButtons["sheets"].Background?.ToString() == writerBackground ||
+if (moduleButtons["writer"].Background?.ToString() == writerBackground ||
     dashboardButtons["classic"].Background?.ToString() != selectedDashboardBackground)
-    throw new Exception("Selecionar um dashboard deve remover a seleção da aplicação.");
+    throw new Exception("Selecionar um dashboard deve remover a selecao da aplicacao.");
 
 // The previous crash occurred on the second Render() call after restoring session.
 // This tests repeated visual-tree rebuilds without reparenting the search box.
@@ -158,9 +155,9 @@ var quickPanel = classicRoot.Children.OfType<Border>()
     .FirstOrDefault(border => border.Child is WrapPanel wrap &&
         wrap.Children.OfType<Button>().Any(button => button.Width == 160));
 if (quickPanel?.Child is not WrapPanel quickApps || quickPanel.Padding.Top > 12 ||
-    quickPanel.Padding.Bottom > 12 || quickApps.Children.OfType<Button>().Count() != 4 ||
+    quickPanel.Padding.Bottom > 12 || quickApps.Children.OfType<Button>().Count() != 1 ||
     quickApps.Children.OfType<Button>().Any(button => button.Height > 100))
-    throw new Exception("Os quatro atalhos do dashboard clássico devem ter altura compacta.");
+    throw new Exception("Os atalhos dos plugins do dashboard clássico devem ter altura compacta.");
 var classicCards = classicRoot.Children.OfType<WrapPanel>()
     .FirstOrDefault(panel => panel.Children.OfType<Button>().Any());
 if (classicCards is null || classicCards.Children.OfType<Button>()
@@ -251,7 +248,7 @@ var sessionRegistryProperty = typeof(MainWindow).GetProperty("SessionRegistry",
 var sessionRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)sessionRegistryProperty.GetValue(window)!;
 var availableIds = sessionRegistry.GetAll().Where(item => item.IsAvailable).Select(item => item.Id)
     .OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToArray();
-if (!availableIds.SequenceEqual(new[] { "data", "sheets", "slides", "writer" }))
+if (!availableIds.SequenceEqual(new[] { "writer" }))
     throw new Exception("A sessão Avalonia deve reconhecer apenas os editores disponíveis, incluindo plugins.");
 foreach (var name in new[] { "RestoreModuleSession", "TrackModuleOpened", "TrackModuleClosed" })
     if (typeof(MainWindow).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance) is null)
@@ -387,8 +384,15 @@ if (launcherRegistry.Find("writer") is not { IsAvailable: true, Name: "VCC Write
     throw new Exception("O Launcher não utiliza o nome e disponibilidade fornecidos pela DLL Writer.");
 if (!writerPlugin.SupportsNewDocument)
     throw new Exception("O plugin Writer deve anunciar a capacidade Novo documento.");
-if (launcherRegistry.GetAll().Count != 26)
-    throw new Exception("Os 25 módulos base devem ser complementados pelo plugin Writer, sem duplicações.");
+if (launcherRegistry.GetAll().Count(module => module.IsAvailable) != 2 ||
+    !launcherRegistry.GetAll().Any(module => module.Id == "data"))
+    throw new Exception("O catálogo conserva o legado internamente mas a vista só expõe plugins.");
+var installedApplicationsProperty = typeof(MainWindow).GetProperty("InstalledApplications",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("A vista de aplicações instaladas não foi encontrada.");
+var installed = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(window)!;
+if (installed.Count != 1 || installed[0].Id != "writer")
+    throw new Exception("A vista deve mostrar apenas os plugins realmente instalados.");
 var pluginWindowsField = typeof(MainWindow).GetField("_pluginWindows",
     BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new Exception("O Launcher não tem gestão genérica de janelas de plugins.");
@@ -401,6 +405,8 @@ var sideButtonsField = typeof(MainWindow).GetField("_sidebarModuleButtons",
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("O menu lateral de módulos não foi encontrado.");
 var sideButtons = (Dictionary<string, Button>)sideButtonsField.GetValue(window)!;
+if (sideButtons.Keys.Any(id => id != "writer"))
+    throw new Exception("O menu lateral contém aplicações sem DLL de plugin.");
 if (!sideButtons.TryGetValue("writer", out var writerSideButton) ||
     ToolTip.GetTip(writerSideButton)?.ToString() != writerPlugin.ToolTip ||
     writerSideButton.Content is not StackPanel writerSideContent ||

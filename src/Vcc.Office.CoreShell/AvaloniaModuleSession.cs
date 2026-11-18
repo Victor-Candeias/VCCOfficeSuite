@@ -14,6 +14,8 @@ public static class AvaloniaModuleSession
     {
         ArgumentNullException.ThrowIfNull(available);
         var registry = new OfficeApplicationRegistry();
+        // Legacy Data is available in the internal registry but has no installed DLL plugin.
+        registry.Register(new OfficeModule("data", "VCC Data", false));
         foreach (var module in available.Where(module => module.IsAvailable))
             registry.RegisterPlugin(module);
         return registry;

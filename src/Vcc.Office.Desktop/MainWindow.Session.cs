@@ -8,7 +8,7 @@ namespace Vcc.Office.Desktop;
 /// </summary>
 public sealed partial class MainWindow
 {
-    private OfficeApplicationRegistry SessionRegistry => AvaloniaModuleSession.AvailableModules(_registry.GetAll());
+    private OfficeApplicationRegistry SessionRegistry => AvaloniaModuleSession.AvailableModules(InstalledApplications);
     private readonly OfficeSessionStore _sessionStore = new(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "VCC Office", "avalonia-application-session.json"));

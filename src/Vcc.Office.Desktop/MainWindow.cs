@@ -18,7 +18,7 @@ public sealed partial class MainWindow : Window
     private readonly Grid _layout = new();
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
-    private StackPanel? _configuredSidebar;
+    private StackPanel? _configuredSidebar = null;
     private DataWindow? _dataWindow;
     private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
@@ -29,6 +29,10 @@ public sealed partial class MainWindow : Window
     private string? _selectedSidebarModuleId;
     private readonly Dictionary<string, Button> _sidebarModuleButtons = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Button> _sidebarDashboardButtons = new(StringComparer.OrdinalIgnoreCase);
+
+    private IReadOnlyList<OfficeModule> InstalledApplications =>
+        _plugins.Plugins.Select(plugin => _registry.Find(plugin.Id))
+            .OfType<OfficeModule>().Where(module => module.IsAvailable).ToArray();
 
     private bool Dark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
     private bool HighContrast => _workspaceShell.State.HighContrast;
@@ -48,9 +52,8 @@ public sealed partial class MainWindow : Window
         MinHeight = 540;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Content = _layout;
-        // Non-plugin editors remain integrated in the launcher until migrated.
-        _registry.Register(new OfficeModule("sheets", "VCC Sheets", true));
-        _registry.Register(new OfficeModule("slides", "VCC Slides", true));
+        // Only installed DLL plugins are exposed as Launcher applications.
+        // Legacy editors stay in the codebase until their independent migration.
         // Installed plugins own the names shown by the launcher.
         foreach (var plugin in _plugins.Plugins)
             _registry.RegisterPlugin(new OfficeModule(plugin.Id, plugin.DisplayName, true));
@@ -232,7 +235,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
-        foreach (var app in _registry.GetAll())
+        foreach (var app in InstalledApplications)
         {
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
             line.Children.Add(ModuleIcon(app.Id, 25));
@@ -255,9 +258,7 @@ public sealed partial class MainWindow : Window
             _sidebarModuleButtons[app.Id] = item;
             navigation.Children.Add(item);
         }
-        _configuredSidebar = new StackPanel { Spacing = 3 };
-        navigation.Children.Add(_configuredSidebar);
-        RefreshConfiguredSidebar();
+        // Configured shortcuts are not installed DLL plugins and are not applications.
         RefreshSidebarSelection();
         sidebar.Child = new ScrollViewer
         {
@@ -338,11 +339,10 @@ public sealed partial class MainWindow : Window
             panels.Children.Add(panel);
         }
         root.Children.Add(panels);
-        if (_registry.Find(_launcherState.LastSelectedModuleId) is { } previous)
+        if (InstalledApplications.FirstOrDefault(m => m.Id == _launcherState.LastSelectedModuleId) is { } previous)
             root.Children.Add(Text("Última aplicação selecionada: " + previous.Name, 13, false, Muted));
         root.Children.Add(Text("Aplicações", 20, true));
         AddApplicationCards(root, 12);
-        AddConfiguredCards(root);
         var openCatalog = Nav("Ver todas as aplicações", () => Switch(DashboardIds.Grid));
         root.Children.Add(openCatalog);
     }
@@ -355,7 +355,7 @@ public sealed partial class MainWindow : Window
             root.Children.Add(Text("Último documento: " +
                 System.IO.Path.GetFileName(_launcherState.LastOpenedDocumentPath), 13, false, Muted));
         var creation = new WrapPanel { Orientation = Orientation.Horizontal };
-        foreach (var app in _registry.GetAll().Where(m => m.IsAvailable))
+        foreach (var app in InstalledApplications)
         {
             var tile = new StackPanel { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Stretch };
             var tileIcon = ModuleIcon(app.Id, 40);
@@ -393,7 +393,7 @@ public sealed partial class MainWindow : Window
 
     private void AddApplicationCards(StackPanel root, int maximum)
     {
-        var list = _registry.GetAll()
+        var list = InstalledApplications
             .Where(module => string.IsNullOrWhiteSpace(_search.Text) ||
                 module.Name.Contains(_search.Text.Trim(), StringComparison.OrdinalIgnoreCase))
             .Take(maximum)
@@ -558,6 +558,7 @@ public sealed partial class MainWindow : Window
 
     private void OpenModule(OfficeModule? module)
     {
+        if (module is not null && !_plugins.TryGet(module.Id, out _)) return;
         if (module is not null) SelectSidebarModule(module.Id);
         if (module is not null && _plugins.TryGet(module.Id, out _))
         {
