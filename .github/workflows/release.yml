@@ -112,7 +112,7 @@ jobs:
       - name: Package and internally verify SHA-256 manifests
         shell: bash
         run: |
-          python scripts/release_security.py pack --source artifacts/release --output "dist/VCCOfficeSuite-${{ github.ref_name }}-${{ matrix.name }}.zip"
+          python scripts/release_security.py pack --source artifacts/release --output "dist/VCCOfficeSuite-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}-${{ matrix.name }}.zip"
       - name: Upload verified release package
         uses: actions/upload-artifact@v7
         with:
