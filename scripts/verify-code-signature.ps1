@@ -51,6 +51,7 @@ try {
     # root, which cannot safely be interpreted as proof of a valid PE hash.
     # On a short-lived, dedicated Actions runner, temporarily trust ONLY this
     # pinned public certificate, verify using Windows, and remove it immediately.
+    Write-Host 'VERIFY: opening temporary current-user root store on ephemeral runner'
     $root = [System.Security.Cryptography.X509Certificates.X509Store]::new(
       [System.Security.Cryptography.X509Certificates.StoreName]::Root,
       [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
@@ -63,8 +64,10 @@ try {
       if ($already.Count -ne 0) {
         throw 'Self-signed test refuses to modify a root certificate already trusted by this runner'
       }
+      Write-Host 'VERIFY: temporarily trusting pinned test certificate'
       $root.Add($expected)
       $added = $true
+      Write-Host 'VERIFY: checking Authenticode signer and PE digest'
       $sig = Get-AuthenticodeSignature -LiteralPath $FilePath
       if ($null -eq $sig.SignerCertificate -or $sig.SignerCertificate.Thumbprint -ne $expected.Thumbprint) {
         throw 'Signer thumbprint does not match the expected PFX'
@@ -73,7 +76,7 @@ try {
         throw "Authenticode PE signature/hash failed in isolated test: $($sig.Status)"
       }
     } finally {
-      if ($added) { $root.Remove($expected) }
+      if ($added) { Write-Host 'VERIFY: removing temporary test trust'; $root.Remove($expected) }
       $root.Close()
       $root.Dispose()
     }
