@@ -45,6 +45,10 @@ public sealed class MigrationRunner
         );
         CREATE INDEX IF NOT EXISTS ix_recent_documents_opened ON recent_documents(opened_at DESC);
         CREATE INDEX IF NOT EXISTS ix_recent_documents_favorites ON recent_documents(is_favorite, opened_at DESC);
+        """),
+        (5, """
+        ALTER TABLE recent_documents ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0;
+        CREATE INDEX IF NOT EXISTS ix_recent_documents_pinned ON recent_documents(is_pinned, opened_at DESC);
         """)
     ];
 

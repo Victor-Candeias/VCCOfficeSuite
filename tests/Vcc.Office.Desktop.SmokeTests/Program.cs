@@ -327,6 +327,18 @@ foreach (var name in new[] { "RestoreWorkspaceWindow", "SaveWorkspaceWindow" })
     if (typeof(MainWindow).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic) is null)
         throw new Exception("A paridade de geometria WPF não está implementada: " + name);
 
+// VCC-0831: the documents manager is a dedicated Launcher view.
+var documentPage = typeof(MainWindow).GetMethod("BuildDocumentsPage",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("Vista de gestão centralizada de documentos ausente.");
+var documentContainer = new StackPanel();
+documentPage.Invoke(window, [documentContainer]);
+if (documentContainer.Children.Count < 4)
+    throw new Exception("A gestão centralizada não apresenta pesquisa, filtros e catálogo.");
+foreach (var name in new[] { "ChangePinnedAsync", "RelinkRecentAsync", "CleanMissingDocumentsAsync" })
+    if (typeof(MainWindow).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic) is null)
+        throw new Exception("Operação de gestão documental ausente: " + name);
+
 var filterMethod = typeof(MainWindow).GetMethod("SetRecentModuleFilter",
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("Falta o filtro de recentes por módulo.");

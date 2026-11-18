@@ -13,6 +13,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
     ("VCC-0820.8 sessões Avalonia: migração WPF, duplicados, fecho e backup", ValidatesAvaloniaSessionMigration),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
+    ("VCC-0831 catálogo central: fixados, filtros, ordem e recuperação", TestsCentralDocumentManagement),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
@@ -949,6 +950,49 @@ static async Task TestsRecentDocuments()
             throw new Exception("O ficheiro não foi removido do catálogo.");
 
         await AssertThrows<FileNotFoundException>(() => reopened.RegisterAsync(xlsx));
+    }
+    finally { Directory.Delete(root, true); }
+}
+
+static async Task TestsCentralDocumentManagement()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var docs = new RecentDocumentsService(new CoreDatabase(StoragePaths.ForLocalApplication(root)));
+        var report = Path.Combine(root, "Relatorio.docx");
+        var budget = Path.Combine(root, "Orcamento.xlsx");
+        var moved = Path.Combine(root, "Relatorio-renomeado.docx");
+        File.WriteAllText(report, "relatorio");
+        File.WriteAllText(budget, "orcamento");
+        await docs.RegisterAsync(report);
+        await docs.RegisterAsync(budget);
+        await docs.SetPinnedAsync(report, true);
+        await docs.SetFavoriteAsync(report, true);
+        var persisted = new RecentDocumentsService(new CoreDatabase(StoragePaths.ForLocalApplication(root)));
+        var pinned = (await persisted.QueryAsync(pinnedOnly: true)).Single();
+        if (pinned.FullPath != report || !pinned.IsPinned || !pinned.IsFavorite)
+            throw new Exception("Fixação e favorito não persistiram no SQLite.");
+        if ((await persisted.QueryAsync(extension: ".xlsx")).Single().FullPath != budget ||
+            (await persisted.QueryAsync(search: "Relatorio")).Single().FullPath != report ||
+            (await persisted.QueryAsync(openedSince: DateTimeOffset.UtcNow.AddDays(1))).Count != 0)
+            throw new Exception("Pesquisa por extensão, nome ou data falhou.");
+        if ((await persisted.QueryAsync(sort: RecentDocumentSort.Name))[0].FullPath != report)
+            throw new Exception("O documento fixado não ficou no topo da ordenação.");
+        File.Move(report, moved);
+        if ((await persisted.QueryAsync(exists: false)).Single().FullPath != report)
+            throw new Exception("O documento movido não foi sinalizado como indisponível.");
+        await persisted.RelinkAsync(report, moved);
+        var restored = (await persisted.QueryAsync(pinnedOnly: true)).Single();
+        if (restored.FullPath != moved || !restored.Exists || !restored.IsFavorite || !restored.IsPinned)
+            throw new Exception("A recuperação não preservou os metadados do documento.");
+        await AssertThrows<InvalidOperationException>(() => persisted.RelinkAsync(moved, budget));
+        if (!File.Exists(moved) || !File.Exists(budget))
+            throw new Exception("A recuperação não pode modificar ficheiros do utilizador.");
+        File.Delete(budget);
+        if (await persisted.RemoveMissingAsync() != 1 ||
+            (await persisted.QueryAsync()).Count != 1)
+            throw new Exception("Limpeza de referências indisponíveis falhou.");
     }
     finally { Directory.Delete(root, true); }
 }
