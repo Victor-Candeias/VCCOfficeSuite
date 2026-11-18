@@ -393,8 +393,6 @@ var installedApplicationsProperty = typeof(MainWindow).GetProperty("InstalledApp
 var installed = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(window)!;
 if (installed.Count != 1 || installed[0].Id != "writer")
     throw new Exception("A vista deve mostrar apenas os plugins realmente instalados.");
-if (sideButtons.Keys.Any(id => id != "writer"))
-    throw new Exception("O menu lateral contém aplicações sem DLL de plugin.");
 var pluginWindowsField = typeof(MainWindow).GetField("_pluginWindows",
     BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new Exception("O Launcher não tem gestão genérica de janelas de plugins.");
@@ -407,6 +405,8 @@ var sideButtonsField = typeof(MainWindow).GetField("_sidebarModuleButtons",
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("O menu lateral de módulos não foi encontrado.");
 var sideButtons = (Dictionary<string, Button>)sideButtonsField.GetValue(window)!;
+if (sideButtons.Keys.Any(id => id != "writer"))
+    throw new Exception("O menu lateral contém aplicações sem DLL de plugin.");
 if (!sideButtons.TryGetValue("writer", out var writerSideButton) ||
     ToolTip.GetTip(writerSideButton)?.ToString() != writerPlugin.ToolTip ||
     writerSideButton.Content is not StackPanel writerSideContent ||
