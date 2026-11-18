@@ -13,14 +13,17 @@ public sealed class PluginManagerWindow : Window
     private readonly OfficePluginHost _host;
     private readonly OfficePluginPackageManager _packages;
     private readonly Action<string, bool> _onChanged;
+    private readonly Action<string, string, bool>? _onOperation;
     private readonly StackPanel _items = new() { Spacing = 12, Margin = new Thickness(18) };
     private readonly TextBlock _message = new() { TextWrapping = TextWrapping.Wrap };
 
-    public PluginManagerWindow(OfficePluginHost host, Action<string, bool> onChanged)
+    public PluginManagerWindow(OfficePluginHost host, Action<string, bool> onChanged,
+        Action<string, string, bool>? onOperation = null)
     {
         _host = host ?? throw new ArgumentNullException(nameof(host));
         _packages = new OfficePluginPackageManager(_host.RootDirectory);
         _onChanged = onChanged ?? throw new ArgumentNullException(nameof(onChanged));
+        _onOperation = onOperation;
         Title = "VCC Office — Gestão de plugins";
         Width = 740; Height = 650; MinWidth = 560; MinHeight = 400;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -40,11 +43,13 @@ public sealed class PluginManagerWindow : Window
                 var path = files[0].TryGetLocalPath() ?? throw new InvalidOperationException("Apenas ficheiros locais.");
                 var result = _packages.StageInstall(path);
                 _message.Text = result.Id + ": " + (result.Action == "install" ? "instalação" : "atualização") + " preparada para o próximo arranque.";
+                _onOperation?.Invoke("Instalação/atualização preparada", _message.Text ?? "", true);
                 Refresh();
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
             {
                 _message.Text = "Não foi possível preparar o plugin: " + ex.Message;
+                _onOperation?.Invoke("Falha na instalação de plugin", ex.Message, false);
             }
         };
         header.Children.Add(install);
@@ -87,6 +92,7 @@ public sealed class PluginManagerWindow : Window
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível alterar o plugin: " + ex.Message;
+                    _onOperation?.Invoke("Falha ao alterar plugin", ex.Message, false);
                 }
             };
             details.Children.Add(toggle);
@@ -99,11 +105,13 @@ public sealed class PluginManagerWindow : Window
                     _host.SetEnabled(entry.Id, false);
                     _onChanged(entry.Id, false);
                     _message.Text = entry.Name + ": remoção agendada para o próximo arranque.";
+                    _onOperation?.Invoke("Remoção de plugin agendada", _message.Text, true);
                     Refresh();
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível remover o plugin: " + ex.Message;
+                    _onOperation?.Invoke("Falha ao remover plugin", ex.Message, false);
                 }
             };
             details.Children.Add(remove);

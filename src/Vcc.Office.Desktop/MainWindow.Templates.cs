@@ -19,6 +19,7 @@ public sealed partial class MainWindow
     {
         _templatesPage = true;
         _documentsPage = false;
+        _notificationsPage = false;
         _selectedSidebarModuleId = null;
         _activeDashboard = DashboardIds.Classic;
         _launcherState = _launcherState with { DashboardId = _activeDashboard };
@@ -179,6 +180,9 @@ public sealed partial class MainWindow
             created.Show(this);
             SelectSidebarModule(entry.Plugin.Id);
             TrackModuleOpened(entry.Plugin.Id);
+            _ = RecordNotificationAsync(OfficeNotificationCategory.Operation,
+                OfficeNotificationSeverity.Success, "Documento criado a partir de modelo",
+                entry.Template.Title, entry.Plugin.Id);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or
             IOException or UnauthorizedAccessException or NotSupportedException or

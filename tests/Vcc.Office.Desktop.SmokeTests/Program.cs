@@ -442,6 +442,19 @@ if (textEditor?.Text is not { } templateText ||
     throw new Exception("O modelo Writer não produziu conteúdo editável.");
 templateWindow.Close();
 
+// VCC-0833: notification center and header counter are available on the generic shell.
+var notificationBuild = typeof(MainWindow).GetMethod("BuildNotificationsPage",
+    BindingFlags.Instance | BindingFlags.NonPublic)
+    ?? throw new Exception("Centro de notificações não encontrado.");
+var notificationPanel = new StackPanel();
+notificationBuild.Invoke(window, [notificationPanel]);
+if (notificationPanel.Children.Count < 4 ||
+    typeof(MainWindow).GetMethod("ShowNotificationsPage",
+        BindingFlags.Instance | BindingFlags.NonPublic) is null ||
+    typeof(MainWindow).GetField("_notificationButton",
+        BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(window) is not Button)
+    throw new Exception("Centro de notificações ou indicador não disponível no Launcher.");
+
 var pluginHost = OfficePluginHost.Discover();
 if (pluginHost.Errors.Count != 0 ||
     !pluginHost.TryGet("writer", out var writerPlugin) || writerPlugin is null ||

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Vcc.Office.PluginHost;
+using Vcc.Office.CoreShell;
 
 namespace Vcc.Office.Desktop;
 
@@ -14,6 +15,14 @@ public sealed partial class MainWindow
             if (!enabled && string.Equals(_selectedSidebarModuleId, id, StringComparison.OrdinalIgnoreCase))
                 _selectedSidebarModuleId = null;
             Render();
+            _ = RecordNotificationAsync(OfficeNotificationCategory.Plugin,
+                OfficeNotificationSeverity.Info, enabled ? "Plugin ativado" : "Plugin desativado",
+                id, id);
+        }, (title, message, success) =>
+        {
+            _ = RecordNotificationAsync(OfficeNotificationCategory.Plugin,
+                success ? OfficeNotificationSeverity.Success : OfficeNotificationSeverity.Error,
+                title, message, "Gestor de plugins");
         });
         dialog.Show(this);
     }

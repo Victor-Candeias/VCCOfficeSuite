@@ -49,6 +49,20 @@ public sealed class MigrationRunner
         (5, """
         ALTER TABLE recent_documents ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0;
         CREATE INDEX IF NOT EXISTS ix_recent_documents_pinned ON recent_documents(is_pinned, opened_at DESC);
+        """),
+        (6, """
+        CREATE TABLE IF NOT EXISTS office_notifications (
+            id TEXT NOT NULL PRIMARY KEY,
+            category TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            source TEXT,
+            created_at TEXT NOT NULL,
+            is_read INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS ix_office_notifications_latest ON office_notifications(created_at DESC);
+        CREATE INDEX IF NOT EXISTS ix_office_notifications_unread ON office_notifications(is_read, created_at DESC);
         """)
     ];
 
