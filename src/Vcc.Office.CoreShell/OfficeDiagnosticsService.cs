@@ -114,8 +114,6 @@ public sealed class OfficeDiagnosticsService
     {
         var backup = _shellPath + ".bak";
         if (!File.Exists(backup)) throw new FileNotFoundException("Não existe backup do estado.", backup);
-        var recovery = new ShellStateStore(backup);
-        var state = await recovery.LoadAsync(cancellationToken);
         // LoadAsync falls back to defaults; validate the exact backup to avoid silently restoring defaults.
         await using (var stream = File.OpenRead(backup))
         {
@@ -129,7 +127,6 @@ public sealed class OfficeDiagnosticsService
                 }, cancellationToken);
             if (loaded is null || !ShellStateValidator.Validate(loaded).IsValid)
                 throw new InvalidDataException("O backup do estado não passou na validação.");
-            state = loaded;
         }
         Directory.CreateDirectory(Path.GetDirectoryName(_shellPath)!);
         if (File.Exists(_shellPath))
