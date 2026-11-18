@@ -36,6 +36,10 @@ jobs:
         run: python -m unittest discover -s tests/security -p 'test_*.py' -v
       - name: Restore canonical Avalonia solution
         run: dotnet restore VCC.Office.Avalonia.sln
+      - name: Audit NuGet dependencies for known vulnerabilities
+        run: |
+          dotnet package list --project VCC.Office.Avalonia.sln --include-transitive --vulnerable --no-restore --format json > nuget-audit.json
+          python scripts/release_security.py audit nuget-audit.json
       - name: Build canonical Avalonia solution
         run: dotnet build VCC.Office.Avalonia.sln --configuration Release --no-restore --property:ContinuousIntegrationBuild=true
       - name: Test shared CoreShell
