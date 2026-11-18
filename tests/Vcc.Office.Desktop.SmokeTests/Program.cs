@@ -448,8 +448,8 @@ if (lifecycle.ApplyPending().Count != 0 || OfficePluginHost.Discover(lifecycleRo
 var maliciousZip = Path.Combine(packageRoot, "malicious.zip");
 using (var archive = ZipFile.Open(maliciousZip, ZipArchiveMode.Create))
 {
-    using var writer = new StreamWriter(archive.CreateEntry("../escape.txt").Open());
-    writer.Write("bad");
+    using var maliciousWriter = new StreamWriter(archive.CreateEntry("../escape.txt").Open());
+    maliciousWriter.Write("bad");
 }
 try
 {
