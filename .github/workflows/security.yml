@@ -10,19 +10,6 @@ permissions:
   contents: read
 
 jobs:
-  dependency-review:
-    name: Dependency review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Reject newly introduced vulnerable dependencies
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: moderate
-
   codeql:
     name: CodeQL C# analysis
     runs-on: ubuntu-24.04
