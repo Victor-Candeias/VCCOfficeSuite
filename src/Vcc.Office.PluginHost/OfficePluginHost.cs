@@ -6,19 +6,83 @@ using Vcc.Office.Plugin.Abstractions;
 
 namespace Vcc.Office.PluginHost;
 
+/// <summary>Describes a loaded plugin and its direct managed assembly references.</summary>
+public sealed record OfficePluginInventoryItem(string Id, string Name, string Version,
+    bool Enabled, IReadOnlyList<string> Dependencies);
+
 /// <summary>Loads trusted, separately compiled modules from Plugins/<id>/plugin.json.</summary>
 public sealed class OfficePluginHost
 {
     private readonly Dictionary<string, IOfficePlugin> _plugins = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<string> _errors = [];
 
-    public IReadOnlyCollection<IOfficePlugin> Plugins => _plugins.Values;
+    private readonly HashSet<string> _disabled = new(StringComparer.OrdinalIgnoreCase);
+    private readonly string _settingsPath;
+
+    private OfficePluginHost(string rootDirectory, string settingsPath)
+    {
+        RootDirectory = rootDirectory;
+        _settingsPath = settingsPath;
+        try
+        {
+            if (File.Exists(_settingsPath))
+                _disabled.UnionWith(JsonSerializer.Deserialize<string[]>(File.ReadAllText(_settingsPath)) ?? []);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            _errors.Add("Estado dos plugins: " + ex.Message);
+        }
+    }
+
+    public string RootDirectory { get; }
+    public IReadOnlyCollection<IOfficePlugin> Plugins => _plugins.Values.Where(p => !_disabled.Contains(p.Id)).ToArray();
+    public IReadOnlyCollection<IOfficePlugin> InstalledPlugins => _plugins.Values.ToArray();
     public IReadOnlyList<string> Errors => _errors;
 
-    public static OfficePluginHost Discover(string? root = null)
+    public IReadOnlyList<OfficePluginInventoryItem> GetInventory() =>
+        _plugins.Values.OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(p => new OfficePluginInventoryItem(p.Id, p.DisplayName,
+                p.GetType().Assembly.GetName().Version?.ToString() ?? "0.0",
+                !_disabled.Contains(p.Id),
+                p.GetType().Assembly.GetReferencedAssemblies()
+                    .Select(reference => reference.Name ?? "")
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray()))
+            .ToArray();
+
+    public bool IsEnabled(string id) => _plugins.ContainsKey(id) && !_disabled.Contains(id);
+
+    /// <summary>Persist controlled activation; assemblies unload when the process exits.</summary>
+    public void SetEnabled(string id, bool enabled)
     {
-        var host = new OfficePluginHost();
+        if (!_plugins.ContainsKey(id)) throw new ArgumentException("Plugin não instalado.", nameof(id));
+        var next = new HashSet<string>(_disabled, StringComparer.OrdinalIgnoreCase);
+        if (enabled) next.Remove(id);
+        else next.Add(id);
+        var folder = Path.GetDirectoryName(_settingsPath)!;
+        Directory.CreateDirectory(folder);
+        var temp = _settingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temp, JsonSerializer.Serialize(next.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)));
+            File.Move(temp, _settingsPath, overwrite: true);
+            _disabled.Clear();
+            _disabled.UnionWith(next);
+        }
+        finally
+        {
+            if (File.Exists(temp)) File.Delete(temp);
+        }
+    }
+
+    public static OfficePluginHost Discover(string? root = null, string? settingsPath = null)
+    {
         var directory = root ?? Path.Combine(AppContext.BaseDirectory, "Plugins");
+        var state = settingsPath ?? (root is null
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "VCC Office", "plugins-state.json")
+            : Path.Combine(directory, ".plugins-state.json"));
+        var host = new OfficePluginHost(directory, state);
         if (!Directory.Exists(directory))
             return host;
 
@@ -41,8 +105,11 @@ public sealed class OfficePluginHost
         return host;
     }
 
-    public bool TryGet(string id, out IOfficePlugin? plugin) =>
-        _plugins.TryGetValue(id, out plugin);
+    public bool TryGet(string id, out IOfficePlugin? plugin)
+    {
+        if (_disabled.Contains(id)) { plugin = null; return false; }
+        return _plugins.TryGetValue(id, out plugin);
+    }
 
     public bool TryCreateWindow(string id, WindowIcon? icon, out Window? window)
     {
