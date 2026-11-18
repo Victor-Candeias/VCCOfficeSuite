@@ -30,7 +30,7 @@ public sealed class OfficePluginHost
                 host.Register(manifestPath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-                                       JsonException or InvalidOperationException or
+                                       JsonException or InvalidDataException or InvalidOperationException or
                                        ArgumentException or FileLoadException or
                                        BadImageFormatException or TypeLoadException or
                                        TargetInvocationException)

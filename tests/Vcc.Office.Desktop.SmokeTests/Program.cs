@@ -394,6 +394,21 @@ var installedApplicationsProperty = typeof(MainWindow).GetProperty("InstalledApp
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("A vista de aplicações instaladas não foi encontrada.");
 var installed = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(window)!;
+// VCC-0825: verify the actual Launcher with zero and one installed plugins.
+var emptyLauncher = new MainWindow(emptyPluginsRoot);
+var emptyInstalled = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(emptyLauncher)!;
+if (emptyInstalled.Count != 0)
+    throw new Exception("O Launcher deve iniciar com zero plugins visíveis.");
+var singleRoot = Path.Combine(Path.GetTempPath(), "vcc-office-plugin-single-" + Guid.NewGuid().ToString("N"));
+var singleWriterFolder = Path.Combine(singleRoot, "Writer");
+Directory.CreateDirectory(singleWriterFolder);
+var sourceWriterFolder = Path.Combine(AppContext.BaseDirectory, "Plugins", "Writer");
+foreach (var file in new[] { "plugin.json", "Vcc.Office.Writer.dll" })
+    File.Copy(Path.Combine(sourceWriterFolder, file), Path.Combine(singleWriterFolder, file));
+var singleLauncher = new MainWindow(singleRoot);
+var singleInstalled = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(singleLauncher)!;
+if (singleInstalled.Count != 1 || singleInstalled[0].Id != "writer")
+    throw new Exception("O Launcher deve mostrar apenas o único plugin instalado.");
 if (installed.Count != 4 || !installed.Any(m => m.Id == "data") || !installed.Any(m => m.Id == "slides") || !installed.Any(m => m.Id == "sheets") || !installed.Any(m => m.Id == "writer" ))
     throw new Exception("A vista deve mostrar apenas os plugins realmente instalados.");
 var pluginWindowsField = typeof(MainWindow).GetField("_pluginWindows",
