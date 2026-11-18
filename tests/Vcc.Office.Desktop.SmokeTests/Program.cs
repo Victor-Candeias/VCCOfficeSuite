@@ -376,12 +376,21 @@ foreach (var unsupported in new[] { "legacy.doc", "legacy.xls", "legacy.ppt",
     if (documentedHost.DocumentHandlers(unsupported).Count != 0)
         throw new Exception("O Launcher anunciou importação não suportada: " + unsupported);
 var txt = Path.Combine(Path.GetTempPath(), "vcc-0830-" + Guid.NewGuid().ToString("N") + ".txt");
-await File.WriteAllTextAsync(txt, "Documento aberto pelo plugin Writer");
+File.WriteAllText(txt, "Documento aberto pelo plugin Writer");
 try
 {
     var plugin = documentedHost.DocumentHandlers(txt).Single();
     var documentWindow = plugin.CreateWindow(plugin.CreateWindowIcon());
-    await plugin.OpenDocumentAsync(documentWindow, txt);
+    var openTask = plugin.OpenDocumentAsync(documentWindow, txt);
+    var timeout = System.Diagnostics.Stopwatch.StartNew();
+    while (!openTask.IsCompleted && timeout.Elapsed < TimeSpan.FromSeconds(15))
+    {
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        Thread.Sleep(5);
+    }
+    if (!openTask.IsCompleted)
+        throw new Exception("Timeout ao importar TXT no smoke test headless.");
+    openTask.GetAwaiter().GetResult();
     var field = documentWindow.GetType().GetField("_editor", BindingFlags.Instance | BindingFlags.NonPublic);
     if (field?.GetValue(documentWindow) is not TextBox { Text: "Documento aberto pelo plugin Writer" })
         throw new Exception("O Writer não recebeu o documento enviado pelo Launcher.");
