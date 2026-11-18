@@ -6,7 +6,8 @@ O ZIP do GitHub Actions não é assinado, não tem reputação estabelecida e po
 
 ## Pipeline
 
-- A CI existente executa testes de integridade e empacotamento do VCC-0828 em Windows, Linux e macOS.
+- A CI existente executa testes de integridade e empacotamento do VCC-0828 em Windows, Linux e macOS e rejeita dependências NuGet com advisories conhecidos.
+- O workflow separado `Security Review` acrescenta análise estática C# CodeQL e revisão de dependências introduzidas em cada PR (se as funcionalidades de segurança estiverem disponíveis no repositório).
 - A release oficial é gerada exclusivamente por **tags existentes** `vN.N.N` associadas ao `main`, usando `.github/workflows/release.yml`. Nunca é criada apenas por fazer push para o `main`.
 - O workflow recria e testa os pacotes nas três plataformas, consulta vulnerabilidades NuGet transitivas, valida DLLs de plugins e gera ZIPs por plataforma com manifestos SHA-256 internos.
 - O job final publica três arquivos ZIP e `SHA256SUMS.txt` no **GitHub Releases**. Verificação local: `sha256sum -c SHA256SUMS.txt` no diretório dos três ZIPs. Cada ZIP também contém hashes de todos os ficheiros.
