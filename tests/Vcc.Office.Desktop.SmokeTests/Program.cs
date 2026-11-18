@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Vcc.Office.Data;
 using Vcc.Office.Slides;
 using Vcc.Office.Sheets;
@@ -421,6 +422,42 @@ if (persistedDisabled.Plugins.Count != 0 || persistedDisabled.InstalledPlugins.C
 persistedDisabled.SetEnabled("writer", true);
 if (!OfficePluginHost.Discover(singleRoot).IsEnabled("writer"))
     throw new Exception("A reativação do plugin não foi persistida.");
+// VCC-0827: ZIP package lifecycle, updates, removal and path traversal rejection.
+var packageRoot = Path.Combine(Path.GetTempPath(), "vcc-office-package-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(packageRoot);
+var zipPath = Path.Combine(packageRoot, "writer.zip");
+using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+{
+    archive.CreateEntryFromFile(Path.Combine(sourceWriterFolder, "plugin.json"), "plugin.json");
+    archive.CreateEntryFromFile(Path.Combine(sourceWriterFolder, "Vcc.Office.Writer.dll"), "Vcc.Office.Writer.dll");
+}
+var targetRoot = Path.Combine(packageRoot, "install");
+var installer = new OfficePluginPackageManager(targetRoot);
+if (installer.StageInstall(zipPath).Action != "install" || installer.Pending.Count != 1 ||
+    installer.ApplyPending().Count != 0 ||
+    OfficePluginHost.Discover(targetRoot).InstalledPlugins.Count != 1)
+    throw new Exception("A instalação independente de um ZIP falhou.");
+var lifecycleRoot = Path.Combine(packageRoot, "lifecycle");
+var lifecycle = new OfficePluginPackageManager(lifecycleRoot);
+if (lifecycle.StageInstall(zipPath).Action != "install" || lifecycle.ApplyPending().Count != 0 ||
+    lifecycle.StageInstall(zipPath).Action != "update" || lifecycle.ApplyPending().Count != 0)
+    throw new Exception("A atualização independente do plugin falhou.");
+lifecycle.StageRemove("writer");
+if (lifecycle.ApplyPending().Count != 0 || OfficePluginHost.Discover(lifecycleRoot).InstalledPlugins.Count != 0)
+    throw new Exception("A remoção independente do plugin falhou.");
+var maliciousZip = Path.Combine(packageRoot, "malicious.zip");
+using (var archive = ZipFile.Open(maliciousZip, ZipArchiveMode.Create))
+{
+    using var writer = new StreamWriter(archive.CreateEntry("../escape.txt").Open());
+    writer.Write("bad");
+}
+try
+{
+    new OfficePluginPackageManager(Path.Combine(packageRoot, "unsafe")).StageInstall(maliciousZip);
+    throw new Exception("Um ZIP com path traversal foi aceite.");
+}
+catch (InvalidDataException) { }
+
 var managerWindow = new PluginManagerWindow(managedHost, (_, _) => { });
 if (managerWindow.Title?.Contains("Gestão de plugins", StringComparison.Ordinal) != true)
     throw new Exception("A interface de gestão de plugins não abre.");

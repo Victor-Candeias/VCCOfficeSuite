@@ -83,10 +83,25 @@ public sealed class OfficePluginHost
                 "VCC Office", "plugins-state.json")
             : Path.Combine(directory, ".plugins-state.json"));
         var host = new OfficePluginHost(directory, state);
+        if (Directory.Exists(directory))
+        {
+            try
+            {
+                foreach (var error in new OfficePluginPackageManager(directory).ApplyPending())
+                    host._errors.Add("Atualização pendente: " + error);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
+                                       ArgumentException or JsonException)
+            {
+                host._errors.Add("Instalação de plugins: " + ex.Message);
+            }
+        }
         if (!Directory.Exists(directory))
             return host;
 
         foreach (var manifestPath in Directory.EnumerateFiles(directory, "plugin.json", SearchOption.AllDirectories)
+                     .Where(path => !Path.GetRelativePath(directory, path).Split(Path.DirectorySeparatorChar)
+                         .Contains(".vcc-updates", StringComparer.OrdinalIgnoreCase))
                      .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
         {
             try
