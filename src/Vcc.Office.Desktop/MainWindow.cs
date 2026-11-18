@@ -13,14 +13,14 @@ namespace Vcc.Office.Desktop;
 /// <summary>Launcher multiplataforma com três disposições distintas e catálogo partilhado.</summary>
 public sealed partial class MainWindow : Window
 {
-    private readonly OfficeApplicationRegistry _registry = new();
+    private readonly OfficeApplicationRegistry _registry = new(includeLegacyAvailability: false);
     private readonly DashboardRegistry _dashboards = new();
     private readonly Grid _layout = new();
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
     private StackPanel? _configuredSidebar = null;
     private readonly Dictionary<string, Window> _pluginWindows = new(StringComparer.OrdinalIgnoreCase);
-    private readonly OfficePluginHost _plugins = OfficePluginHost.Discover();
+    private readonly OfficePluginHost _plugins;
     private string _activeDashboard = DashboardIds.Modern;
     private bool _compactLayout;
     private string? _selectedSidebarModuleId;
@@ -39,8 +39,11 @@ public sealed partial class MainWindow : Window
     private IBrush Muted => Brush.Parse(HighContrast ? "#FFFF00" : Dark ? "#A7B7D1" : "#62718B");
     private IBrush LineBrush => Brush.Parse(HighContrast ? "#FFFFFF" : Dark ? "#33445F" : "#DDE4EF");
 
-    public MainWindow()
+    public MainWindow() : this(null) { }
+
+    public MainWindow(string? pluginsRoot)
     {
+        _plugins = OfficePluginHost.Discover(pluginsRoot);
         Title = "VCC Office Suite";
         Icon = AppBranding.LoadWindowIcon();
         Width = 1280;
@@ -555,25 +558,13 @@ public sealed partial class MainWindow : Window
 
     private void OpenModule(OfficeModule? module)
     {
-        if (module is not null && !_plugins.TryGet(module.Id, out _)) return;
-        if (module is not null) SelectSidebarModule(module.Id);
-        if (module is not null && _plugins.TryGet(module.Id, out _))
+        if (module is null || !_plugins.TryGet(module.Id, out var plugin) || plugin is null)
         {
-            OpenPlugin(module);
+            NotifyFeature(module?.Name ?? "Aplicação não instalada");
             return;
         }
-        NotifyUnavailable(module);
-    }
-
-    private void NotifyUnavailable(OfficeModule? module)
-    {
-        if (module is not null)
-        {
-            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
-            _ = SaveLauncherAsync();
-        }
-        NotifyFeature(module is null ? "Módulo desconhecido" :
-            module.Name + " ainda não tem uma interface Avalonia disponível");
+        SelectSidebarModule(module.Id);
+        OpenPlugin(module);
     }
 
     private void NotifyFeature(string title)
@@ -586,7 +577,7 @@ public sealed partial class MainWindow : Window
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Content = new TextBlock
             {
-                Text = title + ". A versão Windows WPF continua disponível durante a migração.",
+                Text = title + ". Verifique se o plugin está instalado e ativo.",
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(24),
                 VerticalAlignment = VerticalAlignment.Center

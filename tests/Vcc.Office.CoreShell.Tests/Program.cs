@@ -825,6 +825,9 @@ static string CreateTestDirectory()
 
 static Task ValidatesOfficeApplicationRegistry()
 {
+    var pluginOnlyRegistry = new OfficeApplicationRegistry(includeLegacyAvailability: false);
+    if (pluginOnlyRegistry.GetAll().Any(m => m.IsAvailable))
+        throw new Exception("O catálogo do Launcher não deve disponibilizar módulos legados.");
     var registry = new OfficeApplicationRegistry();
     var all = registry.GetAll();
     if (all.Count != 25 || all.Select(m => m.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 25)

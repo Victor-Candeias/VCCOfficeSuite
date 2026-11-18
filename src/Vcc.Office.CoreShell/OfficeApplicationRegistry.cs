@@ -16,15 +16,16 @@ public sealed class OfficeApplicationRegistry
     private readonly Dictionary<string, OfficeModule> _modules;
     private readonly List<string> _externalIds = [];
 
-    public OfficeApplicationRegistry(IEnumerable<OfficeModule>? registered = null)
+    public OfficeApplicationRegistry(IEnumerable<OfficeModule>? registered = null, bool includeLegacyAvailability = true)
     {
         _modules = ModuleIds.ToDictionary(
             id => id,
             id => new OfficeModule(id, "VCC " + id, false),
             StringComparer.OrdinalIgnoreCase);
 
-        // O módulo Data é atualmente o único com interface WPF de operações reais.
-        Register(new OfficeModule("data", "VCC Data", true));
+        // Compatibility only: the Launcher uses includeLegacyAvailability: false.
+        if (includeLegacyAvailability)
+            Register(new OfficeModule("data", "VCC Data", true));
         if (registered is not null)
             foreach (var module in registered) Register(module);
     }
