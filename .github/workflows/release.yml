@@ -74,7 +74,7 @@ jobs:
       - name: Verify plugin payload
         run: python scripts/check-writer-plugin-package.py artifacts/release
       - name: Sign and verify Windows binaries (required for published tags)
-        if: matrix.name == 'win-x64'
+        if: matrix.name == 'win-x64' && startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         env:
           WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
