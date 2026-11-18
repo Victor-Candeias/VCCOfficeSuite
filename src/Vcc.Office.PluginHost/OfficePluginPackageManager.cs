@@ -43,7 +43,7 @@ public sealed class OfficePluginPackageManager
             foreach (var entry in archive.Entries)
             {
                 var name = entry.FullName.Replace('\\', '/');
-                if (name.StartsWith('/', StringComparison.Ordinal) || name.Contains(':') ||
+                if (name.StartsWith("/", StringComparison.Ordinal) || name.Contains(':') ||
                     name.Split('/').Any(segment => segment is "." or ".."))
                     throw new InvalidDataException("Caminho inseguro no pacote: " + name);
                 var unixType = (entry.ExternalAttributes >> 16) & 0xF000;
