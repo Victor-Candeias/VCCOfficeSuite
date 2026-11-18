@@ -90,6 +90,9 @@ jobs:
         run: dotnet run --project tests/Vcc.Office.Desktop.SmokeTests/Vcc.Office.Desktop.SmokeTests.csproj --configuration Release
       - name: Publish standalone Windows x64 (includes .NET runtime)
         run: dotnet publish src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true --property:PublishTrimmed=false --property:PublishSingleFile=false --output artifacts/windows-standalone
+      - name: Verify self-signed Authenticode integrity (ephemeral CI certificate)
+        shell: pwsh
+        run: ./tests/security/Test-CodeSignature.ps1 -ExecutablePath 'artifacts/windows-standalone/VCC Office Suite.exe'
       - name: Stage discovered plugin DLLs (Windows)
         run: python scripts/stage-office-plugins.py artifacts/windows-standalone Release
       - name: Verify Writer plugin in Windows standalone release
