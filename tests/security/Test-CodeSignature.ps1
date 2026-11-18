@@ -6,6 +6,7 @@ $work = Join-Path $env:RUNNER_TEMP ('vcc-signing-regression-' + [Guid]::NewGuid(
 New-Item -ItemType Directory -Path $work | Out-Null
 $cert = $null
 try {
+  Write-Host 'TEST: generating temporary Code Signing certificate'
   $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject 'CN=VCC Office Temporary CI Test Only' -CertStoreLocation 'Cert:\CurrentUser\My' -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -NotAfter (Get-Date).AddDays(7)
   $pfx = Join-Path $work 'fixture.pfx'
   $pass = [Guid]::NewGuid().ToString('N')
@@ -14,11 +15,14 @@ try {
   $env:WINDOWS_SIGNING_PFX_PASSWORD = $pass
   $binary = Join-Path $work 'test-unsigned-copy.exe'
   Copy-Item -LiteralPath $ExecutablePath -Destination $binary
+  Write-Host 'TEST: locating Windows signtool.exe'
   $sdk = Join-Path ([Environment]::GetFolderPath('ProgramFilesX86')) 'Windows Kits\10\bin'
   $tool = Get-ChildItem -LiteralPath $sdk -Recurse -File -Filter signtool.exe | Where-Object { $_.FullName -match '[\\/]x64[\\/]signtool\.exe$' } | Sort-Object FullName -Descending | Select-Object -First 1
   if ($null -eq $tool) { throw 'signtool.exe not found on Windows runner' }
+  Write-Host 'TEST: signing isolated executable copy'
   & $tool.FullName sign /fd SHA256 /f $pfx /p $pass $binary
   if ($LASTEXITCODE -ne 0) { throw 'Fixture signing failed' }
+  Write-Host 'TEST: validating pinned self-signed signer and PE hash'
   & (Join-Path $PSScriptRoot '..\..\scripts\verify-code-signature.ps1') -FilePath $binary -PfxPath $pfx -Mode SelfSignedTest
 
   $trustedRejected = $false
