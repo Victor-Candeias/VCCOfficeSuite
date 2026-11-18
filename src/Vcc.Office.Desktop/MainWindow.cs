@@ -132,6 +132,7 @@ public sealed partial class MainWindow : Window
         _favoritesOnly = false;
         _documentsPage = false;
         _templatesPage = false;
+        _notificationsPage = false;
         _launcherState = _launcherState with { DashboardId = id };
         _ = SaveLauncherAsync();
         _search.Text = "";
@@ -187,6 +188,10 @@ public sealed partial class MainWindow : Window
             Render();
         };
         tools.Children.Add(theme);
+        _notificationButton = new Button { MinWidth = 98, CornerRadius = new CornerRadius(ControlCornerRadius) };
+        UpdateNotificationsCounter();
+        _notificationButton.Click += (_, _) => ShowNotificationsPage();
+        tools.Children.Add(_notificationButton);
         var settings = new Button { Content = "⚙ Definições", MinWidth = 105, CornerRadius = new CornerRadius(ControlCornerRadius) };
         settings.Click += (_, _) => ShowLauncherSettings();
         tools.Children.Add(settings);
@@ -235,6 +240,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("◷   Ficheiros recentes", () => ShowRecentPage(false)));
         navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
         navigation.Children.Add(Nav("▦   Modelos", ShowTemplatesCatalog));
+        navigation.Children.Add(Nav("♧   Notificações", ShowNotificationsPage));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(Nav("◫   Plugins", ShowPluginManager));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
@@ -286,6 +292,11 @@ public sealed partial class MainWindow : Window
     {
         if (_body is null) return;
         _body.Children.Clear();
+        if (_notificationsPage)
+        {
+            BuildNotificationsPage(_body);
+            return;
+        }
         if (_templatesPage)
         {
             BuildTemplatesCatalog(_body);

@@ -49,6 +49,10 @@ public sealed partial class MainWindow
                 };
             }
             await RefreshRecentAsync();
+            await RefreshNotificationsAsync();
+            foreach (var error in _plugins.Errors)
+                _ = RecordNotificationAsync(OfficeNotificationCategory.Plugin,
+                    OfficeNotificationSeverity.Error, "Falha ao carregar plugin", error, "PluginHost");
             await _workspaceShell.InitialiseAsync();
             RestoreWorkspaceWindow();
             Render();
@@ -150,6 +154,8 @@ public sealed partial class MainWindow
                 LastSelectedModuleId = selected.Id };
             await SaveLauncherAsync();
             await RefreshRecentAsync();
+            _ = RecordNotificationAsync(OfficeNotificationCategory.Document,
+                OfficeNotificationSeverity.Success, "Documento aberto", Path.GetFileName(path), selected.Id);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
             ArgumentException or InvalidOperationException or InvalidDataException or
@@ -504,6 +510,7 @@ public sealed partial class MainWindow
         _favoritesOnly = favoritesOnly;
         _documentsPage = true;
         _templatesPage = false;
+        _notificationsPage = false;
         _recentModuleFilter = null;
         _activeDashboard = DashboardIds.Classic;
         _launcherState = _launcherState with { DashboardId = _activeDashboard };
@@ -513,6 +520,12 @@ public sealed partial class MainWindow
 
     private void ShowNotice(string title, string description)
     {
+        _ = RecordNotificationAsync(OfficeNotificationCategory.System,
+            title.Contains("erro", StringComparison.OrdinalIgnoreCase) ||
+            title.Contains("não foi possível", StringComparison.OrdinalIgnoreCase) ||
+            title.Contains("falha", StringComparison.OrdinalIgnoreCase)
+                ? OfficeNotificationSeverity.Error : OfficeNotificationSeverity.Warning,
+            title, description, "Launcher");
         var dialog = new Window
         {
             Title = title,

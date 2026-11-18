@@ -14,6 +14,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0820.8 sessões Avalonia: migração WPF, duplicados, fecho e backup", ValidatesAvaloniaSessionMigration),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
     ("VCC-0831 catálogo central: fixados, filtros, ordem e recuperação", TestsCentralDocumentManagement),
+    ("VCC-0833 notificações: persistência, filtros e estados", TestsNotificationCenter),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
@@ -905,6 +906,48 @@ static Task ValidatesOfficeSessionRecovery()
     }
     finally { Directory.Delete(directory, true); }
     return Task.CompletedTask;
+}
+
+static async Task TestsNotificationCenter()
+{
+    var directory = CreateTestDirectory();
+    try
+    {
+        var paths = StoragePaths.ForLocalApplication(directory);
+        var inbox = new OfficeNotificationService(new CoreDatabase(paths));
+        if ((await inbox.QueryAsync()).Count != 0 || await inbox.UnreadCountAsync() != 0)
+            throw new Exception("A caixa de notificações deve iniciar vazia.");
+        var doc = await inbox.PublishAsync(OfficeNotificationCategory.Document,
+            OfficeNotificationSeverity.Success, "Ficheiro aberto", "Relatório.docx", "writer");
+        var error = await inbox.PublishAsync(OfficeNotificationCategory.Plugin,
+            OfficeNotificationSeverity.Error, "Plugin indisponível", "Falha no carregamento", "sheets");
+        if (await inbox.UnreadCountAsync() != 2 ||
+            (await inbox.QueryAsync(category: OfficeNotificationCategory.Document)).Single().Id != doc.Id ||
+            (await inbox.QueryAsync(severity: OfficeNotificationSeverity.Error)).Single().Id != error.Id ||
+            (await inbox.QueryAsync(search: "Relatório")).Single().Id != doc.Id)
+            throw new Exception("A contagem ou filtragem falhou.");
+        var newInstance = new OfficeNotificationService(new CoreDatabase(paths));
+        if ((await newInstance.QueryAsync()).Count != 2)
+            throw new Exception("As notificações não persistiram após reinício.");
+        await newInstance.MarkReadAsync(doc.Id);
+        if (await inbox.UnreadCountAsync() != 1 ||
+            (await newInstance.QueryAsync(unreadOnly: true)).Single().Id != error.Id)
+            throw new Exception("Marcar como lida falhou.");
+        await inbox.MarkReadAsync(doc.Id, false);
+        if (await newInstance.UnreadCountAsync() != 2)
+            throw new Exception("Marcar como não lida falhou.");
+        await inbox.MarkAllReadAsync();
+        if (await inbox.UnreadCountAsync() != 0) throw new Exception("Marcar todas falhou.");
+        await inbox.RemoveAsync(error.Id);
+        if ((await inbox.QueryAsync()).Count != 1) throw new Exception("Remoção individual falhou.");
+        await inbox.ClearReadAsync();
+        if ((await inbox.QueryAsync()).Count != 0) throw new Exception("Limpeza de lidas falhou.");
+        await AssertThrows<ArgumentException>(() => inbox.PublishAsync(
+            OfficeNotificationCategory.System, OfficeNotificationSeverity.Info, "", "Mensagem"));
+        if ((await newInstance.QueryAsync()).Count != 0)
+            throw new Exception("Uma notificação inválida foi persistida.");
+    }
+    finally { Directory.Delete(directory, true); }
 }
 
 static async Task TestsRecentDocuments()
