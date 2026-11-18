@@ -32,6 +32,8 @@ jobs:
         run: python scripts/check-wpf-retirement.py
       - name: Verify plugin boundaries
         run: python scripts/check-host-plugin-boundaries.py
+      - name: Verify release checksum and packaging security tests
+        run: python -m unittest discover -s tests/security -p 'test_*.py' -v
       - name: Restore canonical Avalonia solution
         run: dotnet restore VCC.Office.Avalonia.sln
       - name: Build canonical Avalonia solution
@@ -72,6 +74,8 @@ jobs:
         run: python scripts/check-wpf-retirement.py
       - name: Verify plugin boundaries
         run: python scripts/check-host-plugin-boundaries.py
+      - name: Verify release checksum and packaging security tests
+        run: python -m unittest discover -s tests/security -p 'test_*.py' -v
       - name: Restore canonical Avalonia solution
         run: dotnet restore VCC.Office.Avalonia.sln
       - name: Build canonical Avalonia solution (Release)
