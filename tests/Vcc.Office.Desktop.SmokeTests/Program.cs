@@ -410,6 +410,38 @@ try
 }
 finally { File.Delete(txt); }
 
+// VCC-0832: template entries come from enabled plugin DLLs only.
+var templates = documentedHost.Templates;
+if (templates.Count != 9 ||
+    templates.GroupBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
+        .Any(group => group.Count() != 1) ||
+    templates.Count(item => item.Plugin.Id == "writer") != 3 ||
+    templates.Count(item => item.Plugin.Id == "sheets") != 3 ||
+    templates.Count(item => item.Plugin.Id == "slides") != 3 ||
+    templates.Any(item => string.IsNullOrWhiteSpace(item.Template.Preview)))
+    throw new Exception("Catálogo inválido de modelos dos plugins.");
+if (OfficePluginHost.Discover(emptyPluginsRoot).Templates.Count != 0)
+    throw new Exception("Modelos sem plugins instalados.");
+if (typeof(MainWindow).GetMethod("BuildTemplatesCatalog", BindingFlags.NonPublic | BindingFlags.Instance) is null)
+    throw new Exception("A galeria de modelos do Launcher está ausente.");
+var template = templates.Single(item => item.Plugin.Id == "writer" && item.Template.Id == "report");
+var templateWindow = template.Plugin.CreateWindow();
+var templateTask = template.Plugin.ApplyTemplateAsync(templateWindow, template.Template.Id);
+var timeoutTemplate = System.Diagnostics.Stopwatch.StartNew();
+while (!templateTask.IsCompleted && timeoutTemplate.Elapsed < TimeSpan.FromSeconds(15))
+{
+    Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+    Thread.Sleep(5);
+}
+if (!templateTask.IsCompleted) throw new Exception("Timeout a aplicar o modelo Writer.");
+templateTask.GetAwaiter().GetResult();
+var textEditor = templateWindow.GetType().GetField("_editor",
+    BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(templateWindow) as TextBox;
+if (textEditor?.Text is not { } templateText ||
+    !templateText.Contains("RELATÓRIO", StringComparison.Ordinal))
+    throw new Exception("O modelo Writer não produziu conteúdo editável.");
+templateWindow.Close();
+
 var pluginHost = OfficePluginHost.Discover();
 if (pluginHost.Errors.Count != 0 ||
     !pluginHost.TryGet("writer", out var writerPlugin) || writerPlugin is null ||

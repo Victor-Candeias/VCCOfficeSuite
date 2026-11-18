@@ -86,6 +86,43 @@ public sealed class SheetsWindow : Window
         _status.Text = "XLSX importado (primeira folha; verifique fórmulas e formatos).";
     }
 
+    /// <summary>Creates and persists a new worksheet, leaving existing worksheets untouched.</summary>
+    public async Task ApplyTemplateAsync(string templateId)
+    {
+        var (title, cells) = templateId switch
+        {
+            "budget" => ("Orçamento mensal", new (string, string)[]
+            {
+                ("A1", "Categoria"), ("B1", "Previsto"), ("C1", "Real"),
+                ("A2", "Receitas"), ("A3", "Despesas"), ("A4", "Saldo")
+            }),
+            "tasks" => ("Lista de tarefas", new (string, string)[]
+            {
+                ("A1", "Tarefa"), ("B1", "Responsável"), ("C1", "Estado"),
+                ("A2", "Preparar atividade"), ("C2", "Pendente")
+            }),
+            "expenses" => ("Mapa de despesas", new (string, string)[]
+            {
+                ("A1", "Data"), ("B1", "Descrição"), ("C1", "Valor"),
+                ("B5", "TOTAL")
+            }),
+            _ => throw new ArgumentException("Modelo desconhecido.", nameof(templateId))
+        };
+        await EnsureInitializedAsync();
+        var sheet = await _sheets.CreateAsync(Guid.NewGuid().ToString("N"), title);
+        foreach (var (cell, value) in cells) await _sheets.SetValueAsync(sheet.Id, cell, value);
+        if (templateId == "budget")
+        {
+            await _sheets.SetFormulaAsync(sheet.Id, "B4", "=B2-B3");
+            await _sheets.SetFormulaAsync(sheet.Id, "C4", "=C2-C3");
+        }
+        if (templateId == "expenses")
+            await _sheets.SetFormulaAsync(sheet.Id, "C5", "=SUM(C2:C4)");
+        _currentId = sheet.Id;
+        Reload();
+        _status.Text = "Folha criada a partir de modelo; edite as células e exporte quando necessário.";
+    }
+
     private static Button Action(string caption, Action click)
     {
         var b = new Button { Content = caption, Margin = new Thickness(0, 0, 8, 8),

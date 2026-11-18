@@ -344,6 +344,26 @@ public sealed class WriterWindow : Window
         await _writer.SetRichTextAsync(_documentId, _editor.Text ?? "");
     }
 
+    /// <summary>Creates an editable document from a plugin-defined template; never overwrites a source.</summary>
+    public Task ApplyTemplateAsync(string templateId)
+    {
+        var (title, content) = templateId switch
+        {
+            "letter" => ("Carta formal", "Destinatário: [Nome]\\nMorada: [Morada]\\n\\nAssunto: [Assunto]\\n\\nExmo.(a) Senhor(a),\\n\\n[Texto da carta]\\n\\nCom os melhores cumprimentos,\\n[Assinatura]"),
+            "meeting" => ("Ata de reunião", "ATA DE REUNIÃO\\n\\nData: [Data]\\nLocal: [Local]\\nParticipantes: [Nomes]\\n\\n1. Ordem de trabalhos\\n2. Decisões\\n3. Ações e responsáveis\\n4. Próxima reunião"),
+            "report" => ("Relatório simples", "RELATÓRIO\\n\\nTítulo: [Tema]\\nData: [Data]\\n\\n1. Resumo executivo\\n2. Contexto e objetivos\\n3. Desenvolvimento\\n4. Resultados\\n5. Conclusões e recomendações"),
+            _ => throw new ArgumentException("Modelo desconhecido.", nameof(templateId))
+        };
+        _documentId = Guid.NewGuid().ToString("N");
+        _documentTitle = title;
+        _currentPath = null;
+        _editor.Text = content.Replace("\\n", Environment.NewLine, StringComparison.Ordinal);
+        _dirty = true;
+        UpdateTitle();
+        Status("Modelo aplicado — guarde o documento com um novo nome.");
+        return Task.CompletedTask;
+    }
+
     private async Task NewAsync() => await ExecuteAsync(async () =>
     {
         if (!await ConfirmDiscardAsync()) return;

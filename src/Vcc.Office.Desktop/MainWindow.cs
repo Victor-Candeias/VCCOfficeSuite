@@ -131,6 +131,7 @@ public sealed partial class MainWindow : Window
         _activeDashboard = id;
         _favoritesOnly = false;
         _documentsPage = false;
+        _templatesPage = false;
         _launcherState = _launcherState with { DashboardId = id };
         _ = SaveLauncherAsync();
         _search.Text = "";
@@ -233,6 +234,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(classicButton);
         navigation.Children.Add(Nav("◷   Ficheiros recentes", () => ShowRecentPage(false)));
         navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
+        navigation.Children.Add(Nav("▦   Modelos", ShowTemplatesCatalog));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(Nav("◫   Plugins", ShowPluginManager));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
@@ -284,6 +286,11 @@ public sealed partial class MainWindow : Window
     {
         if (_body is null) return;
         _body.Children.Clear();
+        if (_templatesPage)
+        {
+            BuildTemplatesCatalog(_body);
+            return;
+        }
         if (_documentsPage)
         {
             BuildDocumentsPage(_body);
@@ -331,7 +338,7 @@ public sealed partial class MainWindow : Window
         var shortcuts = new WrapPanel { Orientation = Orientation.Horizontal };
         shortcuts.Children.Add(Nav("＋  Novo documento", () => OpenDefaultDocumentEditor()));
         shortcuts.Children.Add(Nav("▱  Abrir ficheiro", () => _ = ChooseLocalFileAsync()));
-        shortcuts.Children.Add(Nav("▦  Modelos", () => NotifyUnavailable("templates")));
+        shortcuts.Children.Add(Nav("▦  Modelos", ShowTemplatesCatalog));
         root.Children.Add(shortcuts);
 
         var panels = new WrapPanel { Orientation = Orientation.Horizontal };
@@ -385,6 +392,7 @@ public sealed partial class MainWindow : Window
         AddApplicationCards(root, 15);
         AddConfiguredCards(root);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
+        root.Children.Add(Nav("▦  Modelos", ShowTemplatesCatalog));
         root.Children.Add(DocumentPanel(_favoritesOnly ? "★  Favoritos" : "◷  Ficheiros recentes", _favoritesOnly, 30));
     }
 
@@ -395,6 +403,7 @@ public sealed partial class MainWindow : Window
         AddApplicationCards(root, int.MaxValue);
         AddConfiguredCards(root);
         root.Children.Add(Nav("▱  Abrir ficheiro local", () => _ = ChooseLocalFileAsync()));
+        root.Children.Add(Nav("▦  Modelos", ShowTemplatesCatalog));
         root.Children.Add(DocumentPanel("◷  Ficheiros recentes", false, 8));
     }
 

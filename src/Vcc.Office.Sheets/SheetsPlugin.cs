@@ -7,12 +7,23 @@ using Vcc.Office.Plugin.Abstractions;
 namespace Vcc.Office.Sheets;
 
 /// <summary>Fully independent Sheets application and plugin metadata.</summary>
-public sealed class SheetsPlugin : IOfficeDocumentPlugin
+public sealed class SheetsPlugin : IOfficeDocumentPlugin, IOfficeTemplatePlugin
 {
     public string Id => "sheets";
     public string DisplayName => "VCC Sheets";
     public string ToolTip => "Criar, editar e exportar folhas de cálculo, fórmulas e tabelas.";
     public bool SupportsNewDocument => true;
+    public IReadOnlyCollection<OfficeDocumentTemplate> Templates { get; } =
+    [
+        new("budget", "Orçamento mensal", "Finanças", "Tabela de receitas, despesas e saldo.", "Categoria | Previsto | Real\nReceitas\nDespesas"),
+        new("tasks", "Lista de tarefas", "Produtividade", "Registo de tarefas, responsáveis e estados.", "Tarefa | Responsável | Estado\nPreparar ..."),
+        new("expenses", "Mapa de despesas", "Finanças", "Registo de despesas com cálculo total.", "Data | Descrição | Valor\nTOTAL")
+    ];
+
+    public Task ApplyTemplateAsync(Window window, string templateId) =>
+        window is SheetsWindow editor ? editor.ApplyTemplateAsync(templateId)
+            : throw new ArgumentException("A janela não pertence ao plugin SheetsPlugin.", nameof(window));
+
     public IReadOnlyCollection<string> SupportedExtensions { get; } = [".xlsx"];
 
     public Task OpenDocumentAsync(Window window, string filePath) =>

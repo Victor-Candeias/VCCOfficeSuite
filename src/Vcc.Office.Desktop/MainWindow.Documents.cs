@@ -503,6 +503,7 @@ public sealed partial class MainWindow
     {
         _favoritesOnly = favoritesOnly;
         _documentsPage = true;
+        _templatesPage = false;
         _recentModuleFilter = null;
         _activeDashboard = DashboardIds.Classic;
         _launcherState = _launcherState with { DashboardId = _activeDashboard };

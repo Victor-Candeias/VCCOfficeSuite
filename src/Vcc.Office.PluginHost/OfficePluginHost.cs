@@ -120,6 +120,9 @@ public sealed class OfficePluginHost
         return host;
     }
 
+    /// <summary>Templates only from currently installed and enabled DLL plugins.</summary>
+    public IReadOnlyList<OfficeTemplateEntry> Templates => OfficeTemplateCatalog.Discover(Plugins);
+
     /// <summary>Only enabled plugins with an actual document import capability.</summary>
     public IReadOnlyList<IOfficeDocumentPlugin> DocumentHandlers(string filePath) =>
         DocumentPluginRouter.GetCandidates(Plugins, filePath);
