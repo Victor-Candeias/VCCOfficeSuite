@@ -19,7 +19,6 @@ public sealed partial class MainWindow : Window
     private TextBox _search = new() { PlaceholderText = "Pesquisar aplicações...", MinWidth = 180 };
     private StackPanel? _body;
     private StackPanel? _configuredSidebar = null;
-    private DataWindow? _dataWindow;
     private readonly Dictionary<string, Window> _pluginWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly OfficePluginHost _plugins = OfficePluginHost.Discover();
     private string _activeDashboard = DashboardIds.Modern;
@@ -561,30 +560,6 @@ public sealed partial class MainWindow : Window
         if (module is not null && _plugins.TryGet(module.Id, out _))
         {
             OpenPlugin(module);
-            return;
-        }
-        if (module?.Id == "data")
-        {
-            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
-            _ = SaveLauncherAsync();
-            if (_dataWindow is not null)
-            {
-                if (_dataWindow.WindowState == WindowState.Minimized)
-                    _dataWindow.WindowState = WindowState.Normal;
-                _dataWindow.Activate();
-                return;
-            }
-
-            var data = new DataWindow(new VccDataService(_documentsDatabase));
-            data.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            data.Closed += (_, _) =>
-            {
-                _dataWindow = null;
-                TrackModuleClosed("data");
-            };
-            _dataWindow = data;
-            data.Show(this);
-            TrackModuleOpened("data");
             return;
         }
         NotifyUnavailable(module);

@@ -1,3 +1,4 @@
+using Vcc.Office.Data;
 using Vcc.Office.Slides;
 using Vcc.Office.Sheets;
 using System.Reflection;
@@ -69,7 +70,7 @@ var sidebarDashboardsField = typeof(MainWindow).GetField("_sidebarDashboardButto
 var moduleButtons = (Dictionary<string, Button>)sidebarModulesField.GetValue(window)!;
 var dashboardButtons = (Dictionary<string, Button>)sidebarDashboardsField.GetValue(window)!;
 var selectedDashboardBackground = dashboardButtons["modern"].Background?.ToString();
-if (moduleButtons.Keys.Any(id => id != "writer" && id != "sheets" && id != "slides"))
+if (moduleButtons.Keys.Any(id => id != "writer" && id != "sheets" && id != "slides" && id != "data"))
     throw new Exception("O menu lateral deve conter apenas plugins instalados.");
 selectSidebarModule.Invoke(window, ["writer"]);
 var writerBackground = moduleButtons["writer"].Background?.ToString();
@@ -157,7 +158,7 @@ var quickPanel = classicRoot.Children.OfType<Border>()
     .FirstOrDefault(border => border.Child is WrapPanel wrap &&
         wrap.Children.OfType<Button>().Any(button => button.Width == 160));
 if (quickPanel?.Child is not WrapPanel quickApps || quickPanel.Padding.Top > 12 ||
-    quickPanel.Padding.Bottom > 12 || quickApps.Children.OfType<Button>().Count() != 3 ||
+    quickPanel.Padding.Bottom > 12 || quickApps.Children.OfType<Button>().Count() != 4 ||
     quickApps.Children.OfType<Button>().Any(button => button.Height > 100))
     throw new Exception("Os atalhos dos plugins do dashboard clássico devem ter altura compacta.");
 var classicCards = classicRoot.Children.OfType<WrapPanel>()
@@ -250,7 +251,7 @@ var sessionRegistryProperty = typeof(MainWindow).GetProperty("SessionRegistry",
 var sessionRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)sessionRegistryProperty.GetValue(window)!;
 var availableIds = sessionRegistry.GetAll().Where(item => item.IsAvailable).Select(item => item.Id)
     .OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToArray();
-if (!availableIds.SequenceEqual(new[] { "sheets", "slides", "writer" }))
+if (!availableIds.SequenceEqual(new[] { "data", "sheets", "slides", "writer" }))
     throw new Exception("A sessão Avalonia deve reconhecer apenas os editores disponíveis, incluindo plugins.");
 foreach (var name in new[] { "RestoreModuleSession", "TrackModuleOpened", "TrackModuleClosed" })
     if (typeof(MainWindow).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance) is null)
@@ -393,7 +394,7 @@ var installedApplicationsProperty = typeof(MainWindow).GetProperty("InstalledApp
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("A vista de aplicações instaladas não foi encontrada.");
 var installed = (IReadOnlyList<Vcc.Office.CoreShell.OfficeModule>)installedApplicationsProperty.GetValue(window)!;
-if (installed.Count != 3 || !installed.Any(m => m.Id == "slides") || !installed.Any(m => m.Id == "sheets") || !installed.Any(m => m.Id == "writer" ))
+if (installed.Count != 4 || !installed.Any(m => m.Id == "data") || !installed.Any(m => m.Id == "slides") || !installed.Any(m => m.Id == "sheets") || !installed.Any(m => m.Id == "writer" ))
     throw new Exception("A vista deve mostrar apenas os plugins realmente instalados.");
 var pluginWindowsField = typeof(MainWindow).GetField("_pluginWindows",
     BindingFlags.NonPublic | BindingFlags.Instance)
@@ -407,7 +408,7 @@ var sideButtonsField = typeof(MainWindow).GetField("_sidebarModuleButtons",
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("O menu lateral de módulos não foi encontrado.");
 var sideButtons = (Dictionary<string, Button>)sideButtonsField.GetValue(window)!;
-if (sideButtons.Keys.Any(id => id != "writer" && id != "sheets" && id != "slides"))
+if (sideButtons.Keys.Any(id => id != "writer" && id != "sheets" && id != "slides" && id != "data"))
     throw new Exception("O menu lateral contém aplicações sem DLL de plugin.");
 if (!sideButtons.TryGetValue("writer", out var writerSideButton) ||
     ToolTip.GetTip(writerSideButton)?.ToString() != writerPlugin.ToolTip ||
@@ -432,6 +433,14 @@ if (!pluginHost.TryGet("slides", out var slidesPlugin) || slidesPlugin is null |
     slidesPluginWindow?.GetType().FullName != typeof(SlidesWindow).FullName)
     throw new Exception("A DLL autónoma do Slides não fornece interface e identidade.");
 slidesPluginWindow!.Close();
+
+if (!pluginHost.TryGet("data", out var dataPlugin) || dataPlugin is null ||
+    dataPlugin.CreateWindowIcon() is null ||
+    dataPlugin.CreateMenuIcon(24) is not Border { Name: "DataPluginIcon" } ||
+    !pluginHost.TryCreateWindow("data", null, out var dataPluginWindow) ||
+    dataPluginWindow?.GetType().FullName != typeof(DataWindow).FullName)
+    throw new Exception("A DLL autónoma do Data não fornece interface e identidade.");
+dataPluginWindow!.Close();
 
 // Writer visual regression: keep Ribbon, A4 page, rulers and editable text intact.
 var writerVisualWindow = new WriterWindow();
