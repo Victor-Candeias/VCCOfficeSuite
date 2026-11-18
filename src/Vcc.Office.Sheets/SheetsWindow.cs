@@ -26,13 +26,13 @@ public sealed class SheetsWindow : Window
         var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VCC Office");
         _sheets = new VccSheetsService(Path.Combine(directory, "sheets-avalonia.json"));
         Title = "VCC Sheets — Avalonia";
-        Icon = AppBranding.LoadWindowIcon();
+        Icon = new SheetsPlugin().CreateWindowIcon();
         Width = 1050; Height = 750; MinWidth = 650; MinHeight = 450;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         var root = new DockPanel();
         var top = new StackPanel { Margin = new Thickness(18), Spacing = 8 };
         top.Children.Add(new TextBlock { Text = "VCC Sheets", FontSize = 27, FontWeight = FontWeight.SemiBold });
-        top.Children.Add(new TextBlock { Text = "Editor de células e fórmulas · motor CoreShell partilhado" });
+        top.Children.Add(new TextBlock { Text = "Editor de células e fórmulas · motor Sheets autónomo" });
         var tools = new WrapPanel { Orientation = Orientation.Horizontal };
         tools.Children.Add(_documents);
         tools.Children.Add(Action("Nova folha", () => _ = RunAsync(CreateAsync)));
