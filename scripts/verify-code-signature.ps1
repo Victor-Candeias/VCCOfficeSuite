@@ -21,28 +21,61 @@ try {
   $codeSigning = [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension]$eku
   $oids = @($codeSigning.EnhancedKeyUsages | ForEach-Object { $_.Value })
   if ('1.3.6.1.5.5.7.3.3' -notin $oids) { throw 'Certificate cannot be used for Code Signing' }
-  $sig = Get-AuthenticodeSignature -LiteralPath $FilePath
-  if ($null -eq $sig.SignerCertificate) { throw 'No Authenticode signer' }
-  if ($sig.SignerCertificate.Thumbprint -ne $expected.Thumbprint) { throw 'Unexpected signer thumbprint' }
   if ($Mode -eq 'TrustedRelease') {
+    # Never classify a self-issued PFX as a publicly trusted release signer,
+    # even if someone installed that certificate in the local Windows root store.
+    if ($expected.Subject -eq $expected.Issuer) {
+      throw 'Public release rejects self-issued/self-signed code signing certificates'
+    }
+    $sig = Get-AuthenticodeSignature -LiteralPath $FilePath
+    if ($null -eq $sig.SignerCertificate -or $sig.SignerCertificate.Thumbprint -ne $expected.Thumbprint) {
+      throw 'Signer thumbprint does not match the expected PFX'
+    }
     if ($sig.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
-      throw "Public trusted signature required; status: $($sig.Status)"
+      throw "TrustedRelease requires a publicly trusted signature; status: $($sig.Status)"
     }
   } else {
-    if ($expected.Subject -ne $expected.Issuer) { throw 'SelfSignedTest requires a self-issued certificate' }
+    if ($expected.Subject -ne $expected.Issuer) { throw 'SelfSignedTest requires a self-issued signer' }
     $chain = [System.Security.Cryptography.X509Certificates.X509Chain]::new()
     try {
       $chain.ChainPolicy.TrustMode = [System.Security.Cryptography.X509Certificates.X509ChainTrustMode]::CustomRootTrust
       $chain.ChainPolicy.CustomTrustStore.Add($expected)
       $chain.ChainPolicy.RevocationMode = [System.Security.Cryptography.X509Certificates.X509RevocationMode]::NoCheck
       $chain.ChainPolicy.ApplicationPolicy.Add([System.Security.Cryptography.Oid]::new('1.3.6.1.5.5.7.3.3'))
-      if (-not $chain.Build($sig.SignerCertificate) -or $chain.ChainElements.Count -ne 1) {
-        throw 'Self-signed chain could not be verified with isolated custom trust'
+      if (-not $chain.Build($expected) -or $chain.ChainElements.Count -ne 1) {
+        throw 'Isolated self-signed chain verification failed'
       }
     } finally { $chain.Dispose() }
-    # Authenticode rejects modified PE hashes as HashMismatch, which must not be allowed.
-    if ($sig.Status -notin @([System.Management.Automation.SignatureStatus]::Valid,[System.Management.Automation.SignatureStatus]::NotTrusted)) {
-      throw "Authenticode signature/hash failed: $($sig.Status)"
+
+    # Windows Authenticode/WinVerifyTrust may return UnknownError for an untrusted
+    # root, which cannot safely be interpreted as proof of a valid PE hash.
+    # On a short-lived, dedicated Actions runner, temporarily trust ONLY this
+    # pinned public certificate, verify using Windows, and remove it immediately.
+    $root = [System.Security.Cryptography.X509Certificates.X509Store]::new(
+      [System.Security.Cryptography.X509Certificates.StoreName]::Root,
+      [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
+    $added = $false
+    $root.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+    try {
+      $already = $root.Certificates.Find(
+        [System.Security.Cryptography.X509Certificates.X509FindType]::FindByThumbprint,
+        $expected.Thumbprint, $false)
+      if ($already.Count -ne 0) {
+        throw 'Self-signed test refuses to modify a root certificate already trusted by this runner'
+      }
+      $root.Add($expected)
+      $added = $true
+      $sig = Get-AuthenticodeSignature -LiteralPath $FilePath
+      if ($null -eq $sig.SignerCertificate -or $sig.SignerCertificate.Thumbprint -ne $expected.Thumbprint) {
+        throw 'Signer thumbprint does not match the expected PFX'
+      }
+      if ($sig.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
+        throw "Authenticode PE signature/hash failed in isolated test: $($sig.Status)"
+      }
+    } finally {
+      if ($added) { $root.Remove($expected) }
+      $root.Close()
+      $root.Dispose()
     }
   }
   Write-Host "PASS $Mode signature verification for $([IO.Path]::GetFileName($FilePath))"
