@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Vcc.Office.PluginHost;
+using Vcc.Office.CoreShell;
 
 namespace Vcc.Office.Desktop;
 
