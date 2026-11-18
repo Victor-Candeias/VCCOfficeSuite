@@ -130,6 +130,7 @@ public sealed partial class MainWindow : Window
         _selectedSidebarModuleId = null;
         _activeDashboard = id;
         _favoritesOnly = false;
+        _documentsPage = false;
         _launcherState = _launcherState with { DashboardId = id };
         _ = SaveLauncherAsync();
         _search.Text = "";
@@ -283,6 +284,11 @@ public sealed partial class MainWindow : Window
     {
         if (_body is null) return;
         _body.Children.Clear();
+        if (_documentsPage)
+        {
+            BuildDocumentsPage(_body);
+            return;
+        }
         switch (_activeDashboard)
         {
             case DashboardIds.Classic:
