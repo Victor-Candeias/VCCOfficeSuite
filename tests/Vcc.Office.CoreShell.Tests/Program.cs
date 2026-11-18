@@ -15,6 +15,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
     ("VCC-0831 catálogo central: fixados, filtros, ordem e recuperação", TestsCentralDocumentManagement),
     ("VCC-0833 notificações: persistência, filtros e estados", TestsNotificationCenter),
+    ("VCC-0834 diagnóstico read-only e recuperação explícita", TestsDiagnosticsAndRecovery),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
@@ -1437,4 +1438,59 @@ static async Task TestsAccessibilityNavigationRoundTrip()
             throw new Exception("A desativação de opções de acessibilidade/navegação não persistiu.");
     }
     finally { Directory.Delete(directory, recursive: true); }
+}
+
+static async Task TestsDiagnosticsAndRecovery()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var paths = new StoragePaths(root);
+        var shellPath = Path.Combine(root, "shell-state.json");
+        var sessionPath = Path.Combine(root, "session.json");
+        var store = new ShellStateStore(shellPath);
+        var diagnostics = new OfficeDiagnosticsService(paths, shellPath, sessionPath);
+
+        var first = await diagnostics.ScanAsync();
+        if (first.Checks.Count != 5 || first.HasErrors)
+            throw new Exception("O diagnóstico inicial não deve alterar nem criar ficheiros.");
+        if (Directory.Exists(paths.DataDirectory))
+            throw new Exception("O diagnóstico criou pastas sem autorização.");
+
+        await new CoreDatabase(paths).InitialiseAsync();
+        await store.SaveAsync(ShellState.Default);
+        await store.SaveAsync(ShellState.Default);
+        File.WriteAllText(sessionPath, "{}");
+        var healthy = await diagnostics.ScanAsync();
+        if (healthy.Checks.First(c => c.Id == "database").Status != DiagnosticStatus.Healthy ||
+            healthy.Checks.First(c => c.Id == "shell").Status != DiagnosticStatus.Healthy)
+            throw new Exception("Não foram reconhecidos os dados locais íntegros.");
+
+        File.WriteAllText(shellPath, "{corrupt");
+        var broken = await diagnostics.ScanAsync();
+        if (!broken.HasErrors || broken.Checks.First(c => c.Id == "shell").Status != DiagnosticStatus.Error)
+            throw new Exception("O estado JSON corrompido não foi detetado.");
+        if (File.ReadAllText(shellPath) != "{corrupt")
+            throw new Exception("O diagnóstico modificou o estado.");
+
+        await diagnostics.RestoreShellBackupAsync();
+        var recovered = await diagnostics.ScanAsync();
+        if (recovered.Checks.First(c => c.Id == "shell").Status != DiagnosticStatus.Healthy ||
+            !Directory.GetFiles(root, "shell-state.json.before-recovery-*").Any())
+            throw new Exception("A recuperação não preservou o estado anterior.");
+        if (File.ReadAllText(shellPath + ".bak").Contains("corrupt", StringComparison.Ordinal))
+            throw new Exception("O backup válido foi substituído.");
+
+        File.WriteAllText(shellPath + ".bak", "{bad");
+        File.WriteAllText(shellPath, "{also-bad");
+        try
+        {
+            await diagnostics.RestoreShellBackupAsync();
+            throw new Exception("Um backup inválido foi aceite.");
+        }
+        catch (System.Text.Json.JsonException) { }
+        if (File.ReadAllText(shellPath) != "{also-bad")
+            throw new Exception("A recuperação inválida substituiu o estado.");
+    }
+    finally { Directory.Delete(root, recursive: true); }
 }

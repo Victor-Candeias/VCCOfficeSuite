@@ -17,6 +17,8 @@ public sealed partial class MainWindow
 
     private void ShowTemplatesCatalog()
     {
+        _diagnosticsPage = false;
+
         _templatesPage = true;
         _documentsPage = false;
         _notificationsPage = false;

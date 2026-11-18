@@ -133,6 +133,7 @@ public sealed partial class MainWindow : Window
         _documentsPage = false;
         _templatesPage = false;
         _notificationsPage = false;
+        _diagnosticsPage = false;
         _launcherState = _launcherState with { DashboardId = id };
         _ = SaveLauncherAsync();
         _search.Text = "";
@@ -241,6 +242,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("★   Favoritos", () => ShowRecentPage(true)));
         navigation.Children.Add(Nav("▦   Modelos", ShowTemplatesCatalog));
         navigation.Children.Add(Nav("♧   Notificações", ShowNotificationsPage));
+        navigation.Children.Add(Nav("⚕   Diagnóstico", ShowDiagnosticsPage));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(Nav("◫   Plugins", ShowPluginManager));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
@@ -292,6 +294,11 @@ public sealed partial class MainWindow : Window
     {
         if (_body is null) return;
         _body.Children.Clear();
+        if (_diagnosticsPage)
+        {
+            BuildDiagnosticsPage(_body);
+            return;
+        }
         if (_notificationsPage)
         {
             BuildNotificationsPage(_body);

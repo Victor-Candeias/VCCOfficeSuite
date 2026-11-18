@@ -508,6 +508,8 @@ public sealed partial class MainWindow
     private void ShowRecentPage(bool favoritesOnly)
     {
         _favoritesOnly = favoritesOnly;
+        _diagnosticsPage = false;
+
         _documentsPage = true;
         _templatesPage = false;
         _notificationsPage = false;
