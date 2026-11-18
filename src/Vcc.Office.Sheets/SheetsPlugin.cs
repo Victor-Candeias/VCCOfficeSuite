@@ -1,0 +1,40 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Vcc.Office.Plugin.Abstractions;
+
+namespace Vcc.Office.Sheets;
+
+/// <summary>Fully independent Sheets application and plugin metadata.</summary>
+public sealed class SheetsPlugin : IOfficePlugin
+{
+    public string Id => "sheets";
+    public string DisplayName => "VCC Sheets";
+    public string ToolTip => "Criar, editar e exportar folhas de cálculo, fórmulas e tabelas.";
+    public bool SupportsNewDocument => true;
+    public Control CreateMenuIcon(double size)
+    {
+        if (size <= 0 || double.IsNaN(size) || double.IsInfinity(size))
+            throw new ArgumentOutOfRangeException(nameof(size));
+        return new Border
+        {
+            Name = "SheetsPluginIcon", Width = size, Height = size,
+            Background = Brush.Parse("#188451"), CornerRadius = new CornerRadius(size * 0.2),
+            Child = new TextBlock
+            {
+                Text = "▦", Foreground = Brushes.White,
+                FontSize = size * 0.65, FontWeight = FontWeight.Bold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            }
+        };
+    }
+    public WindowIcon CreateWindowIcon()
+    {
+        const string icon = "AAABAAEAICAAAAAAIADsAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAALNJREFUeJxjFKrw+s8wgIAFXeBe0yqaWqhUF4bbAfeaVmEooDZAt4OJnpYzMEBCADmUmehpOTZHMBFQS3MwdBzwtn0rw9v2rWTLU+wAWoFRB4w6YMAdgFEZwQCuLEUoq+GTF670xhAbvCGA7lqYz7D5ghh5XGDAQ2DUAQPugNFsOJoNB9wBOKMAHRAKWlKDHgYGPASYGBgwOwu0Bsj9EHgI0MsR6J0gRvTeMb07pxgOoDcAAIGrUGnXDbFZAAAAAElFTkSuQmCC";
+        using var stream = new MemoryStream(Convert.FromBase64String(icon));
+        return new WindowIcon(stream);
+    }
+    public Window CreateWindow(WindowIcon? icon = null) => new SheetsWindow { Icon = icon ?? CreateWindowIcon() };
+}

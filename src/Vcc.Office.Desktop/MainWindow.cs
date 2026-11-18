@@ -20,7 +20,6 @@ public sealed partial class MainWindow : Window
     private StackPanel? _body;
     private StackPanel? _configuredSidebar = null;
     private DataWindow? _dataWindow;
-    private SheetsWindow? _sheetsWindow;
     private SlidesWindow? _slidesWindow;
     private readonly Dictionary<string, Window> _pluginWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly OfficePluginHost _plugins = OfficePluginHost.Discover();
@@ -563,28 +562,6 @@ public sealed partial class MainWindow : Window
         if (module is not null && _plugins.TryGet(module.Id, out _))
         {
             OpenPlugin(module);
-            return;
-        }
-        if (module?.Id == "sheets")
-        {
-            _launcherState = _launcherState with { LastSelectedModuleId = module.Id };
-            _ = SaveLauncherAsync();
-            if (_sheetsWindow is not null)
-            {
-                if (_sheetsWindow.WindowState == WindowState.Minimized)
-                    _sheetsWindow.WindowState = WindowState.Normal;
-                _sheetsWindow.Activate();
-                return;
-            }
-            var sheets = new SheetsWindow();
-            sheets.Closed += (_, _) =>
-            {
-                _sheetsWindow = null;
-                TrackModuleClosed("sheets");
-            };
-            _sheetsWindow = sheets;
-            sheets.Show(this);
-            TrackModuleOpened("sheets");
             return;
         }
         if (module?.Id == "slides")

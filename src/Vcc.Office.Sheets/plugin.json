@@ -1,0 +1,6 @@
+{
+  "id": "sheets",
+  "assembly": "Vcc.Office.Sheets.dll",
+  "entryType": "Vcc.Office.Sheets.SheetsPlugin",
+  "apiVersion": 1
+}

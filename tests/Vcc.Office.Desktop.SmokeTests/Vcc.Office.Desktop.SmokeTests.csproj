@@ -10,6 +10,7 @@
     <PackageReference Include="Avalonia.Headless" Version="12.1.6" />
     <ProjectReference Include="../../src/Vcc.Office.Desktop/Vcc.Office.Desktop.csproj" />
     <ProjectReference Include="../../src/Vcc.Office.Writer/Vcc.Office.Writer.csproj" />
+    <ProjectReference Include="../../src/Vcc.Office.Sheets/Vcc.Office.Sheets.csproj" />
     <ProjectReference Include="../../src/Vcc.Office.PluginHost/Vcc.Office.PluginHost.csproj" />
   </ItemGroup>
   <!-- The smoke runner has its own BaseDirectory; stage the same plugin as the actual launcher. -->
@@ -17,5 +18,8 @@
     <MakeDir Directories="$(TargetDir)Plugins/Writer" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Writer/bin/$(Configuration)/net10.0/Vcc.Office.Writer.dll" DestinationFolder="$(TargetDir)Plugins/Writer" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Writer/plugin.json" DestinationFolder="$(TargetDir)Plugins/Writer" />
+    <MakeDir Directories="$(TargetDir)Plugins/Sheets" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Sheets/bin/$(Configuration)/net10.0/Vcc.Office.Sheets.dll" DestinationFolder="$(TargetDir)Plugins/Sheets" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../../src/Vcc.Office.Sheets/plugin.json" DestinationFolder="$(TargetDir)Plugins/Sheets" />
   </Target>
 </Project>

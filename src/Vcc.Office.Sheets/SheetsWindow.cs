@@ -5,7 +5,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Vcc.Office.CoreShell;
 
-namespace Vcc.Office.Desktop;
+namespace Vcc.Office.Sheets;
 
 /// <summary>
 /// Spreadsheet interface for the shared Sheets engine. Uses a selectable cell
