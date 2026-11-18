@@ -101,6 +101,27 @@ public sealed class SlidesWindow : Window
         _status.Text = "PPTX importado. Confirme a fidelidade de estilos, animações e objetos.";
     }
 
+    /// <summary>Creates a separate presentation containing an editable outline.</summary>
+    public async Task ApplyTemplateAsync(string templateId)
+    {
+        var (title, headings) = templateId switch
+        {
+            "pitch" => ("Apresentação de projeto", new[] { "Projeto", "Objetivos", "Solução", "Próximos passos" }),
+            "meeting" => ("Reunião de equipa", new[] { "Reunião", "Agenda", "Decisões", "Ações e responsáveis" }),
+            "training" => ("Sessão de formação", new[] { "Formação", "Objetivos", "Conteúdo", "Resumo" }),
+            _ => throw new ArgumentException("Modelo desconhecido.", nameof(templateId))
+        };
+        await EnsureInitializedAsync();
+        var deck = await _slides.CreateAsync(Guid.NewGuid().ToString("N"), title);
+        await _slides.SetSlideTitleAsync(deck.Id, 0, headings[0]);
+        for (var i = 1; i < headings.Length; i++)
+            await _slides.AddSlideAsync(deck.Id, headings[i]);
+        _currentId = deck.Id;
+        _slideIndex = 0;
+        Reload();
+        _status.Text = "Apresentação criada a partir de modelo; personalize cada diapositivo.";
+    }
+
     private static Button Action(string caption, Action action)
     {
         var button = new Button { Content = caption, Padding = new Thickness(12, 8),

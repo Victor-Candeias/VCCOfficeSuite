@@ -7,12 +7,23 @@ using Vcc.Office.Plugin.Abstractions;
 namespace Vcc.Office.Slides;
 
 /// <summary>Independent presentation editor, engine and plugin metadata.</summary>
-public sealed class SlidesPlugin : IOfficeDocumentPlugin
+public sealed class SlidesPlugin : IOfficeDocumentPlugin, IOfficeTemplatePlugin
 {
     public string Id => "slides";
     public string DisplayName => "VCC Slides";
     public string ToolTip => "Criar, editar e exportar apresentações, objetos, notas e transições.";
     public bool SupportsNewDocument => true;
+    public IReadOnlyCollection<OfficeDocumentTemplate> Templates { get; } =
+    [
+        new("pitch", "Apresentação de projeto", "Projetos", "Estrutura com objetivos, solução e próximos passos.", "Projeto\nObjetivos → Solução → Próximos passos"),
+        new("meeting", "Reunião de equipa", "Reuniões", "Agenda, decisões e próximos passos.", "Reunião\nAgenda → Decisões → Ações"),
+        new("training", "Sessão de formação", "Educação", "Objetivos de aprendizagem, conteúdo e resumo.", "Formação\nObjetivos → Conteúdo → Resumo")
+    ];
+
+    public Task ApplyTemplateAsync(Window window, string templateId) =>
+        window is SlidesWindow editor ? editor.ApplyTemplateAsync(templateId)
+            : throw new ArgumentException("A janela não pertence ao plugin SlidesPlugin.", nameof(window));
+
     public IReadOnlyCollection<string> SupportedExtensions { get; } = [".pptx"];
 
     public Task OpenDocumentAsync(Window window, string filePath) =>
