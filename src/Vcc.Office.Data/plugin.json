@@ -1,0 +1,6 @@
+{
+  "id": "data",
+  "assembly": "Vcc.Office.Data.dll",
+  "entryType": "Vcc.Office.Data.DataPlugin",
+  "apiVersion": 1
+}

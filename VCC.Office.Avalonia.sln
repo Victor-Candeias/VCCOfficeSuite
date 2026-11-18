@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.Sheets", "src\\V
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.Slides", "src\\Vcc.Office.Slides\\Vcc.Office.Slides.csproj", "{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD15}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vcc.Office.Data", "src\\Vcc.Office.Data\\Vcc.Office.Data.csproj", "{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,5 +64,9 @@ Global
 		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5FBA04D-E0C0-4D1D-BC1B-59899DE2DD16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

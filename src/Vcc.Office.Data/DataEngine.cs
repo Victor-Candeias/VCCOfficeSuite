@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Text;
 using Microsoft.Data.Sqlite;
 
-namespace Vcc.Office.CoreShell;
+using Vcc.Office.CoreShell;
+
+namespace Vcc.Office.Data;
 
 public sealed record DataColumnDefinition(string Name, string Type, bool Nullable = true, int Position = 0);
 public sealed record DataTableDefinition(string Name, string DisplayName, IReadOnlyList<DataColumnDefinition> Columns);

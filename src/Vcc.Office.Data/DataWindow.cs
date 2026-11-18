@@ -6,7 +6,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Vcc.Office.CoreShell;
 
-namespace Vcc.Office.Desktop;
+namespace Vcc.Office.Data;
 
 /// <summary>
 /// Interface Avalonia do VCC Data: utiliza VccDataService existente sobre a base
@@ -34,7 +34,7 @@ public sealed class DataWindow : Window
     {
         _data = data ?? throw new ArgumentNullException(nameof(data));
         Title = "VCC Data — Avalonia";
-        Icon = AppBranding.LoadWindowIcon();
+        Icon = new DataPlugin().CreateWindowIcon();
         Width = 1040;
         Height = 750;
         MinWidth = 690;
@@ -206,7 +206,7 @@ public sealed class DataWindow : Window
         _content.Children.Add(TitleText("Consultas SQL de leitura"));
         _content.Children.Add(new TextBlock
         {
-            Text = "A execução utiliza o validador de consultas do CoreShell. Não permite comandos de escrita.",
+            Text = "A execução utiliza o validador de consultas do Data. Não permite comandos de escrita.",
             TextWrapping = TextWrapping.Wrap
         });
         _content.Children.Add(_query);
