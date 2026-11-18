@@ -6,7 +6,7 @@ using System.Text;
 var tests = new (string Name, Func<Task> Run)[]
 {
     ("estado predefinido é válido", () => AssertValid(ShellState.Default)),
-    ("VCC-0815 registo de 26 módulos e disponibilidade", ValidatesOfficeApplicationRegistry),
+    ("VCC-0815 catálogo base e plugins dinâmicos", ValidatesOfficeApplicationRegistry),
     ("VCC-0816 sessão de aplicações: persistência, recuperação e filtros", ValidatesOfficeSessionRecovery),
     ("VCC-0820.8 sessões Avalonia: migração WPF, duplicados, fecho e backup", ValidatesAvaloniaSessionMigration),
     ("VCC-0817 documentos recentes, favoritos, filtros e remoção", TestsRecentDocuments),
@@ -824,16 +824,21 @@ static Task ValidatesOfficeApplicationRegistry()
 {
     var registry = new OfficeApplicationRegistry();
     var all = registry.GetAll();
-    if (all.Count != 26 || all.Select(m => m.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 26)
-        throw new Exception("O catálogo deve conter 26 módulos únicos.");
+    if (all.Count != 25 || all.Select(m => m.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 25)
+        throw new Exception("O catálogo base deve conter 25 módulos únicos; o Writer é instalado por plugin.");
     var manager = new OfficeApplicationManager(registry);
     if (!manager.TryResolve("DATA", out var data) || data?.Id != "data")
         throw new Exception("VCC Data deve abrir no Launcher.");
     if (manager.TryResolve("writer", out _) || manager.TryResolve("desconhecido", out _))
         throw new Exception("Módulos sem interface não podem ser anunciados como disponíveis.");
-    registry.Register(new OfficeModule("writer", "VCC Writer", true));
+    registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
     if (!manager.TryResolve("writer", out _))
         throw new Exception("O registo dinâmico deve permitir disponibilizar futuros módulos.");
+    if (registry.GetAll().Count != 26 || registry.Find("writer")?.Name != "VCC Writer")
+        throw new Exception("O plugin deve ser descoberto sem alterar o catálogo base.");
+    registry.RegisterPlugin(new OfficeModule("writer", "Writer externo", true));
+    if (registry.GetAll().Count != 26 || registry.Find("writer")?.Name != "Writer externo")
+        throw new Exception("Atualização de plugin não deve duplicar entradas.");
     try
     {
         registry.Register(new OfficeModule("unknown", "Inexistente", true));
@@ -869,7 +874,7 @@ static Task ValidatesOfficeSessionRecovery()
             store.Load(registry).LastModuleId != "data")
             throw new Exception("Uma janela fechada não deve reabrir, mas a última aplicação deve ser recordada.");
 
-        registry.Register(new OfficeModule("writer", "VCC Writer", true));
+        registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         var multi = OfficeSessionPolicy.Open(closed, "writer", registry);
         multi = OfficeSessionPolicy.Open(multi, "data", registry);
         store.Save(multi, registry);
@@ -950,6 +955,8 @@ static async Task TestsDesktopLauncherState()
         var database = new CoreDatabase(StoragePaths.ForLocalApplication(root));
         var dashboards = new DashboardRegistry();
         var modules = new OfficeApplicationRegistry();
+        // Test only: simulate the dynamically discovered Writer plugin.
+        modules.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         var store = new DesktopLauncherStateStore(database, dashboards, modules);
         var initial = await store.LoadAsync();
         if (initial != DesktopLauncherState.Default)
@@ -1215,6 +1222,8 @@ static async Task TestsConfiguredLauncherPolicy()
             Path.Combine(directory, "shell-state.json")));
         await restored.InitialiseAsync();
         var registry = new OfficeApplicationRegistry();
+        // Only the installed Writer plugin is considered an application entry.
+        registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         var custom = ConfiguredLauncherPolicy.CustomItems(restored.State.Launcher, registry);
         if (custom.Count != 2 || custom[0].Id != "vcc-tasks" ||
             custom[1].Id != "vcc-inventory")
@@ -1225,6 +1234,7 @@ static async Task TestsConfiguredLauncherPolicy()
         if (filtered.Count != 1 || filtered[0].Id != "vcc-tasks")
             throw new InvalidOperationException("Pesquisa por descrição falhou.");
 
+        registry.RegisterPlugin(new OfficeModule("writer", "VCC Writer", true));
         if (!ConfiguredLauncherPolicy.IsBuiltIn("WRITER", registry) ||
             !ConfiguredLauncherPolicy.IsBuiltIn("settings", registry) ||
             ConfiguredLauncherPolicy.IsBuiltIn("vcc-tasks", registry))
@@ -1246,7 +1256,12 @@ static Task ValidatesAvaloniaSessionMigration()
         var avaloniaPath = Path.Combine(directory, "avalonia-application-session.json");
         var legacy = new OfficeSessionStore(legacyPath);
         var avalonia = new OfficeSessionStore(avaloniaPath);
-        var registry = AvaloniaModuleSession.AvailableModules();
+        var registry = AvaloniaModuleSession.AvailableModules([
+            new OfficeModule("writer", "VCC Writer", true),
+            new OfficeModule("sheets", "VCC Sheets", true),
+            new OfficeModule("slides", "VCC Slides", true),
+            new OfficeModule("data", "VCC Data", true)
+        ]);
 
         // The CoreShell default registry intentionally keeps the unfinished
         // applications unavailable, but Avalonia can open its four editors.

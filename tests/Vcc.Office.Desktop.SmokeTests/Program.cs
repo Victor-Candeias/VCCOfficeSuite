@@ -245,13 +245,14 @@ if (customButton.Content?.ToString()?.Contains("Módulo Teste", StringComparison
 
 // The Avalonia launcher must reuse the existing session contract for exactly
 // the editors that it can actually instantiate (not all catalog placeholders).
-var sessionRegistryField = typeof(MainWindow).GetField("_sessionRegistry",
+var sessionRegistryProperty = typeof(MainWindow).GetProperty("SessionRegistry",
     BindingFlags.NonPublic | BindingFlags.Instance)
     ?? throw new Exception("Registo da recuperação de sessões Avalonia em falta.");
-var sessionRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)sessionRegistryField.GetValue(window)!;
-var availableIds = sessionRegistry.GetAll().Where(item => item.IsAvailable).Select(item => item.Id).ToArray();
-if (!availableIds.SequenceEqual(new[] { "writer", "sheets", "slides", "data" }))
-    throw new Exception("A sessão Avalonia deve abrir apenas os quatro editores funcionais.");
+var sessionRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)sessionRegistryProperty.GetValue(window)!;
+var availableIds = sessionRegistry.GetAll().Where(item => item.IsAvailable).Select(item => item.Id)
+    .OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToArray();
+if (!availableIds.SequenceEqual(new[] { "data", "sheets", "slides", "writer" }))
+    throw new Exception("A sessão Avalonia deve reconhecer apenas os editores disponíveis, incluindo plugins.");
 foreach (var name in new[] { "RestoreModuleSession", "TrackModuleOpened", "TrackModuleClosed" })
     if (typeof(MainWindow).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance) is null)
         throw new Exception("Fluxo de sessão não integrado: " + name);
@@ -384,6 +385,18 @@ var launcherRegistryField = typeof(MainWindow).GetField("_registry",
 var launcherRegistry = (Vcc.Office.CoreShell.OfficeApplicationRegistry)launcherRegistryField.GetValue(window)!;
 if (launcherRegistry.Find("writer") is not { IsAvailable: true, Name: "VCC Writer" })
     throw new Exception("O Launcher não utiliza o nome e disponibilidade fornecidos pela DLL Writer.");
+if (!writerPlugin.SupportsNewDocument)
+    throw new Exception("O plugin Writer deve anunciar a capacidade Novo documento.");
+if (launcherRegistry.GetAll().Count != 26)
+    throw new Exception("Os 25 módulos base devem ser complementados pelo plugin Writer, sem duplicações.");
+var pluginWindowsField = typeof(MainWindow).GetField("_pluginWindows",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("O Launcher não tem gestão genérica de janelas de plugins.");
+var pluginWindows = (Dictionary<string, Window>)pluginWindowsField.GetValue(window)!;
+if (pluginWindows.Count != 0 || typeof(MainWindow).GetField("_writerWindow",
+    BindingFlags.NonPublic | BindingFlags.Instance) is not null)
+    throw new Exception("O Host mantém estado específico do Writer.");
+
 var sideButtonsField = typeof(MainWindow).GetField("_sidebarModuleButtons",
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("O menu lateral de módulos não foi encontrado.");

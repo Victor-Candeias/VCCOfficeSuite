@@ -8,6 +8,7 @@ public interface IOfficePlugin
     string Id { get; }
     string DisplayName { get; }
     string ToolTip { get; }
+    bool SupportsNewDocument { get; }
 
     /// <summary>The plugin supplies its own icon for launcher menus and dashboards.</summary>
     Control CreateMenuIcon(double size);

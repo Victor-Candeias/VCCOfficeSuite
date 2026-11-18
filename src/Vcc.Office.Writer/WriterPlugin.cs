@@ -9,6 +9,7 @@ public sealed class WriterPlugin : IOfficePlugin
     public string Id => "writer";
     public string DisplayName => "VCC Writer";
     public string ToolTip => "Criar, editar, abrir e guardar documentos de texto e DOCX.";
+    public bool SupportsNewDocument => true;
 
     public Control CreateMenuIcon(double size) => WriterBranding.CreateMenuIcon(size);
     public WindowIcon CreateWindowIcon() => WriterBranding.CreateWindowIcon();

@@ -8,7 +8,7 @@ namespace Vcc.Office.Desktop;
 /// </summary>
 public sealed partial class MainWindow
 {
-    private readonly OfficeApplicationRegistry _sessionRegistry = AvaloniaModuleSession.AvailableModules();
+    private OfficeApplicationRegistry SessionRegistry => AvaloniaModuleSession.AvailableModules(_registry.GetAll());
     private readonly OfficeSessionStore _sessionStore = new(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "VCC Office", "avalonia-application-session.json"));
@@ -38,7 +38,7 @@ public sealed partial class MainWindow
         try
         {
             _moduleSession = AvaloniaModuleSession.Load(
-                _sessionStore, _legacySessionStore, _sessionRegistry);
+                _sessionStore, _legacySessionStore, SessionRegistry);
             var toOpen = _moduleSession.OpenModuleIds.ToArray();
 
             _restoringModules = true;
@@ -72,7 +72,7 @@ public sealed partial class MainWindow
         if (_closingSuite) return;
         try
         {
-            _moduleSession = OfficeSessionPolicy.Open(_moduleSession, moduleId, _sessionRegistry);
+            _moduleSession = OfficeSessionPolicy.Open(_moduleSession, moduleId, SessionRegistry);
             if (!_restoringModules) SaveModuleSession();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
@@ -87,7 +87,7 @@ public sealed partial class MainWindow
         if (_closingSuite || _restoringModules) return;
         try
         {
-            _moduleSession = OfficeSessionPolicy.Close(_moduleSession, moduleId, _sessionRegistry);
+            _moduleSession = OfficeSessionPolicy.Close(_moduleSession, moduleId, SessionRegistry);
             SaveModuleSession();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
@@ -100,6 +100,6 @@ public sealed partial class MainWindow
     private void SaveModuleSession()
     {
         if (_restoringModules) return;
-        _sessionStore.Save(_moduleSession, _sessionRegistry);
+        _sessionStore.Save(_moduleSession, SessionRegistry);
     }
 }

@@ -19,17 +19,5 @@
   <ItemGroup>
     <ProjectReference Include="../Vcc.Office.CoreShell/Vcc.Office.CoreShell.csproj" />
     <ProjectReference Include="../Vcc.Office.PluginHost/Vcc.Office.PluginHost.csproj" />
-    <!-- Compile the Writer, but do not reference its assembly from the executable. -->
-    <ProjectReference Include="../Vcc.Office.Writer/Vcc.Office.Writer.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
-  <Target Name="StageWriterPluginForBuild" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
-    <MakeDir Directories="$(TargetDir)Plugins/Writer" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../Vcc.Office.Writer/bin/$(Configuration)/net10.0/Vcc.Office.Writer.dll" DestinationFolder="$(TargetDir)Plugins/Writer" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../Vcc.Office.Writer/plugin.json" DestinationFolder="$(TargetDir)Plugins/Writer" />
-  </Target>
-  <Target Name="StageWriterPluginForPublish" AfterTargets="Publish">
-    <MakeDir Directories="$(PublishDir)Plugins/Writer" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../Vcc.Office.Writer/bin/$(Configuration)/net10.0/Vcc.Office.Writer.dll" DestinationFolder="$(PublishDir)Plugins/Writer" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../Vcc.Office.Writer/plugin.json" DestinationFolder="$(PublishDir)Plugins/Writer" />
-  </Target>
 </Project>

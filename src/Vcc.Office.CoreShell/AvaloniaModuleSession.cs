@@ -6,12 +6,18 @@ namespace Vcc.Office.CoreShell;
 /// </summary>
 public static class AvaloniaModuleSession
 {
-    public static OfficeApplicationRegistry AvailableModules() => new([
-        new OfficeModule("writer", "VCC Writer", true),
-        new OfficeModule("sheets", "VCC Sheets", true),
-        new OfficeModule("slides", "VCC Slides", true),
-        new OfficeModule("data", "VCC Data", true)
-    ]);
+    /// <summary>
+    /// Session availability comes from the discovered plugin registry and the
+    /// currently available built-in applications, never hardcoded module names.
+    /// </summary>
+    public static OfficeApplicationRegistry AvailableModules(IEnumerable<OfficeModule> available)
+    {
+        ArgumentNullException.ThrowIfNull(available);
+        var registry = new OfficeApplicationRegistry();
+        foreach (var module in available.Where(module => module.IsAvailable))
+            registry.RegisterPlugin(module);
+        return registry;
+    }
 
     /// <summary>
     /// A sessão Avalonia tem precedência. Se ainda não existir, importa a
