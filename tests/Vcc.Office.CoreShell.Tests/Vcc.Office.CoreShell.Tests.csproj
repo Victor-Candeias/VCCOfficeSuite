@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
       <ProjectReference Include="../../src/Vcc.Office.Sheets/Vcc.Office.Sheets.csproj" />
+      <ProjectReference Include="../../src/Vcc.Office.Slides/Vcc.Office.Slides.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vcc.Office.CoreShell\Vcc.Office.CoreShell.csproj" />

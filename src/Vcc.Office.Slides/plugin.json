@@ -1,0 +1,6 @@
+{
+  "id": "slides",
+  "assembly": "Vcc.Office.Slides.dll",
+  "entryType": "Vcc.Office.Slides.SlidesPlugin",
+  "apiVersion": 1
+}
