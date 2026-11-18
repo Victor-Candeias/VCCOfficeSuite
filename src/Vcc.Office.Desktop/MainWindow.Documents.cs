@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -8,6 +6,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Vcc.Office.CoreShell;
+using Vcc.Office.Plugin.Abstractions;
 
 namespace Vcc.Office.Desktop;
 
@@ -115,31 +114,78 @@ public sealed partial class MainWindow
                 "O documento foi movido ou eliminado. Pode removê-lo da lista de recentes.");
             return;
         }
-        if (RecentDocumentsService.ResolveModule(path) is null)
+        var candidates = _plugins.DocumentHandlers(path);
+        if (candidates.Count == 0)
         {
-            ShowNotice("Formato ainda não suportado",
-                "Este tipo de ficheiro não está associado a um módulo do VCC Office.");
+            ShowNotice("Formato sem editor instalado",
+                "Não existe um plugin ativo capaz de abrir " + Path.GetExtension(path) +
+                ". Verifique os plugins instalados; o Launcher não executa aplicações externas.");
             return;
         }
+        var selected = candidates.Count == 1 ? candidates[0] :
+            await ChooseDocumentPluginAsync(candidates, Path.GetFileName(path));
+        if (selected is null) return;
 
+        Window? editor = null;
         try
         {
-            // O registo é feito antes da abertura externa, tal como na versão WPF.
-            // Não afirmar que existe edição Avalonia para DOCX/XLSX/PPTX.
+            // Each file gets its own window; an existing unsaved document is never replaced.
+            editor = selected.CreateWindow(selected.CreateWindowIcon());
+            await selected.OpenDocumentAsync(editor, path);
+            var openedEditor = editor;
+            _documentWindows.Add(openedEditor);
+            openedEditor.Closed += (_, _) => _documentWindows.Remove(openedEditor);
+            openedEditor.Show(this);
+            SelectSidebarModule(selected.Id);
+            TrackModuleOpened(selected.Id);
             await _recentDocuments.RegisterAsync(path);
-            _launcherState = _launcherState with { LastOpenedDocumentPath = path };
+            _launcherState = _launcherState with { LastOpenedDocumentPath = path,
+                LastSelectedModuleId = selected.Id };
             await SaveLauncherAsync();
             await RefreshRecentAsync();
-            using var process = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-            if (process is null)
-                ShowNotice("Abertura não confirmada",
-                    "O sistema operativo não indicou uma aplicação associada a este formato.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-            Win32Exception or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
+            ArgumentException or InvalidOperationException or InvalidDataException or
+            NotSupportedException or FormatException or Microsoft.Data.Sqlite.SqliteException)
         {
+            editor?.Close();
             ShowNotice("Não foi possível abrir o documento", ex.Message);
         }
+    }
+
+    private readonly HashSet<Window> _documentWindows = [];
+
+    private async Task<IOfficeDocumentPlugin?> ChooseDocumentPluginAsync(
+        IReadOnlyList<IOfficeDocumentPlugin> candidates, string fileName)
+    {
+        var dialog = new Window
+        {
+            Title = "Escolher aplicação para abrir", Width = 430, Height = 210,
+            MinWidth = 370, WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        var stack = new StackPanel { Margin = new Thickness(20), Spacing = 12 };
+        stack.Children.Add(new TextBlock
+        {
+            Text = "Abrir " + fileName + " com:", TextWrapping = TextWrapping.Wrap
+        });
+        var choices = new ComboBox
+        {
+            ItemsSource = candidates.Select(item => item.DisplayName).ToArray(),
+            SelectedIndex = 0
+        };
+        stack.Children.Add(choices);
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+        var cancel = new Button { Content = "Cancelar" };
+        cancel.Click += (_, _) => dialog.Close(false);
+        var confirm = new Button { Content = "Abrir" };
+        confirm.Click += (_, _) => dialog.Close(true);
+        actions.Children.Add(cancel);
+        actions.Children.Add(confirm);
+        stack.Children.Add(actions);
+        dialog.Content = stack;
+        return await dialog.ShowDialog<bool>(this) && choices.SelectedIndex >= 0
+            ? candidates[choices.SelectedIndex] : null;
     }
 
     private async Task ChangeFavoriteAsync(RecentDocument document)
