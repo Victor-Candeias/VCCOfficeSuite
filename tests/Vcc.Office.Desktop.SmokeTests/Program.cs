@@ -407,7 +407,7 @@ var sideButtonsField = typeof(MainWindow).GetField("_sidebarModuleButtons",
     BindingFlags.Instance | BindingFlags.NonPublic)
     ?? throw new Exception("O menu lateral de módulos não foi encontrado.");
 var sideButtons = (Dictionary<string, Button>)sideButtonsField.GetValue(window)!;
-if (sideButtons.Keys.Any(id => id != "writer" && id != "sheets"))
+if (sideButtons.Keys.Any(id => id != "writer" && id != "sheets" && id != "slides"))
     throw new Exception("O menu lateral contém aplicações sem DLL de plugin.");
 if (!sideButtons.TryGetValue("writer", out var writerSideButton) ||
     ToolTip.GetTip(writerSideButton)?.ToString() != writerPlugin.ToolTip ||
