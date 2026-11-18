@@ -5,9 +5,9 @@
 Um certificado Code Signing autoassinado não é confiável para o público por defeito. O modo SelfSignedTest serve exclusivamente para testes isolados.
 
 - TrustedRelease exige Get-AuthenticodeSignature com estado Valid. Uma cadeia autoassinada não confiável bloqueia a publicação.
-- SelfSignedTest exige identidade do signatário idêntica ao certificado PFX (thumbprint), certificado ainda válido, EKU Code Signing, cadeia de um único elemento validada por CustomRootTrust em memória e estado Authenticode Valid ou NotTrusted.
+- SelfSignedTest exige identidade do signatário idêntica ao certificado PFX (thumbprint), certificado ainda válido, EKU Code Signing, cadeia de um único elemento validada por CustomRootTrust em memória e Authenticode com estado Valid após confiar temporariamente, apenas no runner de testes, no certificado público esperado.
 - Binários adulterados (HashMismatch), não assinados, assinados por terceiros ou com cadeia inválida falham.
-- Não instala o certificado no armazenamento de autoridades de confiança do Windows.
+- Durante a validação de teste, adiciona temporariamente o certificado público esperado à raiz CurrentUser do runner Windows; remove-o imediatamente em finally, mesmo se ocorrer um erro. Não altera a confiança de computadores dos utilizadores. Este modo só deve correr em runners GitHub hospedados, temporários, nunca em máquinas partilhadas ou self-hosted.
 - Os GitHub Actions secrets apenas chegam ao job Windows numa tag ou num workflow_dispatch explícito; nunca aos PRs.
 - A CI Windows cria certificado temporário de curta duração, assina uma cópia do executável e testa rejeição de adulteração e de uso em TrustedRelease.
 
@@ -19,7 +19,7 @@ Um certificado Code Signing autoassinado não é confiável para o público por 
 4. Verificar a etapa Sign and verify Windows binaries do job Package win-x64.
 5. Os ZIPs são produzidos para teste, sem criar GitHub Release pública.
 
-Os testes automáticos do PR usam certificados temporários; não comprovam o conteúdo dos secrets reais. O teste real protegido requer execução manual.
+Os testes automáticos do PR usam certificados temporários; não comprovam o conteúdo dos secrets reais. O verificador recusa um certificado que já esteja previamente instalado na raiz CurrentUser, para não modificar a confiança preexistente. O teste real protegido requer execução manual.
 
 ## Releases públicas
 
