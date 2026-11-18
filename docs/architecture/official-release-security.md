@@ -11,7 +11,7 @@ O ZIP do GitHub Actions não é assinado, não tem reputação estabelecida e po
 - A release oficial é gerada exclusivamente por **tags existentes** `vN.N.N` associadas ao `main`, usando `.github/workflows/release.yml`. Nunca é criada apenas por fazer push para o `main`.
 - O workflow recria e testa os pacotes nas três plataformas, consulta vulnerabilidades NuGet transitivas, valida DLLs de plugins e gera ZIPs por plataforma com manifestos SHA-256 internos.
 - O job final publica três arquivos ZIP e `SHA256SUMS.txt` no **GitHub Releases**. Verificação local: `sha256sum -c SHA256SUMS.txt` no diretório dos três ZIPs. Cada ZIP também contém hashes de todos os ficheiros.
-- `workflow_dispatch` permite testar a criação de pacotes **sem publicar uma release**.
+- Os pull requests e `workflow_dispatch` testam a criação de pacotes **sem publicar uma release**; a assinatura Windows é obrigatória apenas nas execuções de publicação por tag.
 
 ## Assinatura digital Windows — requisito para releases públicas
 
