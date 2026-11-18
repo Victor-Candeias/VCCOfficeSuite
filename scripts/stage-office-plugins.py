@@ -6,6 +6,7 @@ Use after building the solution: python scripts/stage-office-plugins.py <publish
 """
 import json
 import shutil
+import zipfile
 import sys
 from pathlib import Path
 
@@ -52,3 +53,14 @@ for manifest_path in manifests:
             continue
         shutil.copy2(dependency, output / dependency.name)
     print(f"Staged {plugin_id}: {output / assembly}")
+
+# VCC-0827: create independently installable ZIPs without new workflow artifacts.
+packages = destination.parent / "PluginPackages"
+packages.mkdir(parents=True, exist_ok=True)
+for plugin_directory in sorted(destination.iterdir()):
+    if not plugin_directory.is_dir() or not (plugin_directory / "plugin.json").is_file():
+        continue
+    with zipfile.ZipFile(packages / (plugin_directory.name + ".zip"), "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for item in sorted(plugin_directory.rglob("*")):
+            if item.is_file():
+                archive.write(item, item.relative_to(plugin_directory).as_posix())
