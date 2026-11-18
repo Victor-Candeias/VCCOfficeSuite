@@ -422,7 +422,7 @@ public sealed partial class MainWindow
             13, false, Muted));
 
         var searchBar = new WrapPanel { Orientation = Orientation.Horizontal };
-        var search = new TextBox { Text = _documentSearch, Watermark = "Nome ou caminho do documento",
+        var search = new TextBox { Text = _documentSearch, PlaceholderText = "Nome ou caminho do documento",
             MinWidth = 290, Margin = new Thickness(0, 0, 8, 7) };
         searchBar.Children.Add(search);
         var apply = new Button { Content = "Pesquisar", Margin = new Thickness(0, 0, 8, 7) };
