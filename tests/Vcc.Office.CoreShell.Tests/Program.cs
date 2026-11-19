@@ -16,6 +16,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0831 catálogo central: fixados, filtros, ordem e recuperação", TestsCentralDocumentManagement),
     ("VCC-0833 notificações: persistência, filtros e estados", TestsNotificationCenter),
     ("VCC-0834 diagnóstico read-only e recuperação explícita", TestsDiagnosticsAndRecovery),
+    ("VCC-0835 release estável, checksum e staging seguro", TestsSuiteUpdates),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
@@ -1493,4 +1494,79 @@ static async Task TestsDiagnosticsAndRecovery()
             throw new Exception("A recuperação inválida substituiu o estado.");
     }
     finally { Directory.Delete(root, recursive: true); }
+}
+
+static async Task TestsSuiteUpdates()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        if (!SuiteUpdateService.IsNewer("v2.0.0", "1.9.0") ||
+            SuiteUpdateService.IsNewer("v1.0.0", "1.0.0") ||
+            SuiteUpdateService.IsNewer("v3.0.0-beta.1", "2.0.0") ||
+            SuiteUpdateService.IsNewer("invalid", "1.0.0"))
+            throw new Exception("Comparação de versões estáveis incorreta.");
+        if (SuiteUpdateService.FindSha256(new string('a', 64) + "  suite.zip\n", "suite.zip") != new string('a', 64) ||
+            SuiteUpdateService.FindSha256(new string('a', 64) + "  suite.zip\n", "other.zip") is not null)
+            throw new Exception("Leitura de SHA256SUMS incorreta.");
+
+        var platform = SuiteUpdateService.PlatformId();
+        if (string.IsNullOrEmpty(platform)) return; // Sem pacote suportado neste runner.
+        var name = "VCCOfficeSuite-v8.3.5-" + platform + ".zip";
+        var bytes = Encoding.UTF8.GetBytes("isolated-test-archive");
+        var digest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant();
+        var asset = "https://github.com/Victor-Candeias/VCCOfficeSuite/releases/download/v8.3.5/" + name;
+        var manifest = "https://github.com/Victor-Candeias/VCCOfficeSuite/releases/download/v8.3.5/SHA256SUMS.txt";
+        var release = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            tag_name = "v8.3.5", draft = false, prerelease = false,
+            html_url = "https://github.com/Victor-Candeias/VCCOfficeSuite/releases/tag/v8.3.5",
+            assets = new[] { new { name, browser_download_url = asset },
+                new { name = "SHA256SUMS.txt", browser_download_url = manifest } }
+        });
+        using var client = new HttpClient(new SuiteUpdateTestHandler(release, digest + "  " + name + "\n", bytes));
+        var service = new SuiteUpdateService(client, Path.Combine(root, "staging"));
+        var checkedRelease = await service.CheckAsync("1.0.0");
+        if (checkedRelease.Available is null || checkedRelease.Available.Version != "v8.3.5")
+            throw new Exception("Release oficial não foi encontrada.");
+        var file = await service.StageAsync(checkedRelease.Available);
+        if (!File.Exists(file) || !File.ReadAllBytes(file).SequenceEqual(bytes))
+            throw new Exception("Pacote validado não foi preparado.");
+
+        var wrong = checkedRelease.Available with { ExpectedSha256 = new string('f', 64) };
+        try
+        {
+            await service.StageAsync(wrong);
+            throw new Exception("Um pacote com checksum incorreto foi aceite.");
+        }
+        catch (InvalidDataException) { }
+        if (Directory.GetFiles(Path.Combine(root, "staging"), "*.download").Length != 0)
+            throw new Exception("Downloads temporários não foram eliminados após erro.");
+
+        using var missingClient = new HttpClient(new SuiteUpdateTestHandler(null, "", []));
+        var missing = await new SuiteUpdateService(missingClient, root).CheckAsync("1.0.0");
+        if (missing.Available is not null)
+            throw new Exception("Uma release inexistente não deve oferecer download.");
+    }
+    finally { Directory.Delete(root, recursive: true); }
+}
+
+sealed class SuiteUpdateTestHandler(string? release, string checksums, byte[] payload)
+    : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var path = request.RequestUri?.AbsolutePath ?? "";
+        if (path.EndsWith("/releases/latest", StringComparison.Ordinal))
+        {
+            if (release is null) return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            { Content = new StringContent(release) });
+        }
+        if (path.EndsWith("/SHA256SUMS.txt", StringComparison.Ordinal))
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            { Content = new StringContent(checksums) });
+        return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        { Content = new ByteArrayContent(payload) });
+    }
 }
