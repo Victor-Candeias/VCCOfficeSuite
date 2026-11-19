@@ -50,6 +50,7 @@ public sealed partial class MainWindow
             }
             await RefreshRecentAsync();
             await RefreshNotificationsAsync();
+            await ReportPreviousInstallationAsync();
             foreach (var error in _plugins.Errors)
                 _ = RecordNotificationAsync(OfficeNotificationCategory.Plugin,
                     OfficeNotificationSeverity.Error, "Falha ao carregar plugin", error, "PluginHost");

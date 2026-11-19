@@ -12,6 +12,27 @@ public sealed partial class MainWindow
     private readonly HttpClient _updatesHttp = new() { Timeout = TimeSpan.FromMinutes(10) };
     private SuiteUpdateService? _updatesService;
 
+    private async Task ReportPreviousInstallationAsync()
+    {
+        var statusFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "VCCOffice", "updates", "last-install-result.txt");
+        if (!File.Exists(statusFile)) return;
+        try
+        {
+            var message = await File.ReadAllTextAsync(statusFile);
+            File.Delete(statusFile);
+            if (string.IsNullOrWhiteSpace(message)) return;
+            var succeeded = message.StartsWith("Atualização instalada", StringComparison.Ordinal);
+            await RecordNotificationAsync(OfficeNotificationCategory.System,
+                succeeded ? OfficeNotificationSeverity.Success : OfficeNotificationSeverity.Warning,
+                succeeded ? "Atualização instalada" : "Resultado da atualização",
+                message, "Atualizações");
+        }
+        catch (IOException) { /* An inaccessible status file must not prevent startup. */ }
+        catch (UnauthorizedAccessException) { /* Keep running with a read-only profile. */ }
+    }
+
     private void ShowSuiteUpdates()
     {
         var service = _updatesService ??= new SuiteUpdateService(_updatesHttp,
@@ -38,12 +59,16 @@ public sealed partial class MainWindow
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
         var check = new Button { Content = "Procurar atualizações" };
         var download = new Button { Content = "Descarregar e verificar", IsEnabled = false };
+        var install = new Button { Content = "Instalar ao fechar (com rollback)", IsEnabled = false };
         var close = new Button { Content = "Fechar" };
+        string? verifiedArchive = null;
         SuiteUpdate? available = null;
         check.Click += async (_, _) =>
         {
             check.IsEnabled = false;
             download.IsEnabled = false;
+            install.IsEnabled = false;
+            verifiedArchive = null;
             status.Text = "A verificar releases oficiais...";
             try
             {
@@ -68,9 +93,10 @@ public sealed partial class MainWindow
             try
             {
                 var path = await service.StageAsync(available);
-                status.Text = "Download validado e guardado em: " + path +
-                    "\nFeche a aplicação antes de efetuar a atualização manual. " +
-                    "O ZIP não é executado automaticamente.";
+                verifiedArchive = path;
+                install.IsEnabled = true;
+                status.Text = "Download validado: " + path +
+                    "\nPode instalar após fechar a suite. Guarde primeiro os documentos em edição.";
                 await RecordNotificationAsync(OfficeNotificationCategory.System,
                     OfficeNotificationSeverity.Success, "Atualização descarregada",
                     "Pacote " + available.Version + " verificado com SHA-256 e preparado para instalação manual.",
@@ -83,6 +109,68 @@ public sealed partial class MainWindow
             }
             finally { check.IsEnabled = true; }
         };
+        install.Click += async (_, _) =>
+        {
+            if (available is null || verifiedArchive is null) return;
+            var selectedUpdate = available;
+            var archive = verifiedArchive;
+            var confirmation = new Window
+            {
+                Title = "Confirmar instalação",
+                Icon = AppBranding.LoadWindowIcon(),
+                Width = 490, Height = 230,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            var confirmPanel = new StackPanel { Margin = new Thickness(20), Spacing = 12 };
+            confirmPanel.Children.Add(new TextBlock
+            {
+                Text = "A instalação fecha a VCC Office Suite. Guarde todos os documentos antes de continuar. " +
+                    "A versão anterior fica em backup e será restaurada se a nova instalação falhar na verificação de arranque.",
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
+            var confirmActions = new StackPanel
+            {
+                Orientation = Orientation.Horizontal, Spacing = 10,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+            var cancelAction = new Button { Content = "Cancelar" };
+            cancelAction.Click += (_, _) => confirmation.Close(false);
+            var accept = new Button { Content = "Instalar e fechar" };
+            accept.Click += (_, _) => confirmation.Close(true);
+            confirmActions.Children.Add(cancelAction);
+            confirmActions.Children.Add(accept);
+            confirmPanel.Children.Add(confirmActions);
+            confirmation.Content = confirmPanel;
+            if (!await confirmation.ShowDialog<bool>(dialog)) return;
+
+            install.IsEnabled = false;
+            download.IsEnabled = false;
+            check.IsEnabled = false;
+            status.Text = "A preparar instalação verificada e cópia auxiliar...";
+            try
+            {
+                var plan = await SuiteUpdateInstaller.PrepareAsync(
+                    archive, selectedUpdate.ExpectedSha256, selectedUpdate.Version,
+                    AppContext.BaseDirectory, Environment.ProcessId);
+                var worker = SuiteUpdateHandoff.PrepareWorker(plan);
+                var planPath = Path.Combine(worker, SuiteUpdateInstaller.PlanName);
+                await SuiteUpdateInstaller.SavePlanAsync(plan, planPath);
+                SuiteUpdateHandoff.LaunchWorker(worker, planPath, plan.ExpectedExecutable);
+                // Worker is outside the installation and waits for this process to exit.
+                dialog.Close();
+                Close();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
+                InvalidDataException or InvalidOperationException or ArgumentException or
+                System.ComponentModel.Win32Exception)
+            {
+                status.Text = "Instalação não iniciada: " + ex.Message;
+                install.IsEnabled = true;
+                check.IsEnabled = true;
+                download.IsEnabled = true;
+            }
+        };
+        actions.Children.Add(install);
         close.Click += (_, _) => dialog.Close();
         actions.Children.Add(check);
         actions.Children.Add(download);
@@ -90,7 +178,7 @@ public sealed partial class MainWindow
         panel.Children.Add(actions);
         panel.Children.Add(new TextBlock
         {
-            Text = "Canal estável · sem instalação silenciosa · sem alterações a documentos, plugins ou definições.",
+            Text = "Canal estável · instalação apenas com confirmação · backup e rollback · sem alteração de documentos ou definições.",
             TextWrapping = Avalonia.Media.TextWrapping.Wrap
         });
         dialog.Content = new ScrollViewer { Content = panel };

@@ -17,6 +17,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0833 notificações: persistência, filtros e estados", TestsNotificationCenter),
     ("VCC-0834 diagnóstico read-only e recuperação explícita", TestsDiagnosticsAndRecovery),
     ("VCC-0835 release estável, checksum e staging seguro", TestsSuiteUpdates),
+    ("VCC-0841 instalador offline, integridade e rollback", TestsOfflineSuiteInstaller),
     ("VCC-0836 plugin queue cancellation", TestsAdvancedPluginQueue),
     ("VCC-0837 launcher personalized preferences", TestsLauncherPersonalization),
     ("VCC-0838 cloud synced-folder safe copies", TestsCloudSyncedFolders),
@@ -1605,6 +1606,76 @@ static async Task TestsCloudSyncedFolders()
             throw new Exception("A cópia do próprio diretório deveria ser recusada.");
         }
         catch (InvalidOperationException) { }
+    }
+    finally { Directory.Delete(root, recursive: true); }
+}
+
+
+static async Task TestsOfflineSuiteInstaller()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var installed = Path.Combine(root, "installed");
+        Directory.CreateDirectory(installed);
+        var binary = OperatingSystem.IsWindows() ? "VCC Office Suite.exe" : "VCC Office Suite.dll";
+        File.WriteAllText(Path.Combine(installed, binary), "version-old");
+        var archive = Path.Combine(root, "release.zip");
+        var payload = Encoding.UTF8.GetBytes("version-new");
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(payload)).ToLowerInvariant();
+        using (var file = new FileStream(archive, FileMode.Create))
+        using (var zip = new System.IO.Compression.ZipArchive(file, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            using (var writer = zip.CreateEntry(binary).Open()) writer.Write(payload);
+            using var manifest = new StreamWriter(zip.CreateEntry("SHA256SUMS.txt").Open());
+            manifest.Write(hash + "  " + binary + "\n");
+        }
+        string fullHash;
+        await using (var read = File.OpenRead(archive))
+            fullHash = Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(read));
+
+        var plan = await SuiteUpdateInstaller.PrepareAsync(
+            archive, fullHash, "1.2.3", installed, Environment.ProcessId);
+        if (File.ReadAllText(Path.Combine(installed, binary)) != "version-old")
+            throw new Exception("A preparação substituiu a instalação.");
+        var planPath = Path.Combine(root, "plan.json");
+        await SuiteUpdateInstaller.SavePlanAsync(plan, planPath);
+        var loaded = await SuiteUpdateInstaller.ReadPlanAsync(planPath);
+        var applied = SuiteUpdateInstaller.CommitOffline(loaded, path =>
+            File.Exists(path) && File.ReadAllText(path) == "version-new");
+        if (!applied.Succeeded || !Directory.Exists(plan.BackupDirectory) ||
+            File.ReadAllText(Path.Combine(plan.BackupDirectory, binary)) != "version-old")
+            throw new Exception("Instalação offline não preservou o backup.");
+        if (File.ReadAllText(Path.Combine(installed, binary)) != "version-new")
+            throw new Exception("Instalação offline não aplicou a versão nova.");
+
+        var rollback = await SuiteUpdateInstaller.PrepareAsync(
+            archive, fullHash, "1.2.4", installed, Environment.ProcessId);
+        var failed = SuiteUpdateInstaller.CommitOffline(rollback, _ => false);
+        if (failed.Succeeded || !failed.RolledBack ||
+            File.ReadAllText(Path.Combine(installed, binary)) != "version-new")
+            throw new Exception("Falha de arranque não restaurou a instalação anterior.");
+
+        try
+        {
+            await SuiteUpdateInstaller.PrepareAsync(
+                archive, new string('0', 64), "1.2.5", installed, Environment.ProcessId);
+            throw new Exception("O instalador aceitou um hash inválido.");
+        }
+        catch (InvalidDataException) { }
+
+        var unsafeArchive = Path.Combine(root, "unsafe.zip");
+        using (var file = new FileStream(unsafeArchive, FileMode.Create))
+        using (var zip = new System.IO.Compression.ZipArchive(file, System.IO.Compression.ZipArchiveMode.Create))
+        using (var writer = new StreamWriter(zip.CreateEntry("../escape.txt").Open()))
+            writer.Write("unsafe");
+        try
+        {
+            await SuiteUpdateInstaller.ExtractVerifiedAsync(
+                unsafeArchive, Path.Combine(root, "extracted"));
+            throw new Exception("O instalador aceitou path traversal.");
+        }
+        catch (InvalidDataException) { }
     }
     finally { Directory.Delete(root, recursive: true); }
 }

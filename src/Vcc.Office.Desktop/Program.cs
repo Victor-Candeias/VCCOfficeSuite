@@ -10,6 +10,16 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--vcc-apply-offline-update")
+        {
+            Environment.ExitCode = SuiteUpdateHandoff.RunWorker(args[1]);
+            return;
+        }
+        if (args.Length == 1 && args[0] == "--vcc-update-health-check")
+        {
+            Environment.ExitCode = SuiteUpdateHandoff.HealthCheck() ? 0 : 1;
+            return;
+        }
         var lifetime = new ClassicDesktopStyleApplicationLifetime
         {
             Args = args
