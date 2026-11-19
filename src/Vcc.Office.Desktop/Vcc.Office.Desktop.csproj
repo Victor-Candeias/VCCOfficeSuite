@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>VCC Office Suite</AssemblyName>
+    <Version Condition="'$(VCC_RELEASE_VERSION)' != ''">$(VCC_RELEASE_VERSION)</Version>
     <ApplicationIcon>Assets/VccOfficeSuite.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
