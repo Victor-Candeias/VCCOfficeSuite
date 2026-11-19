@@ -31,6 +31,12 @@ public sealed class PluginManagerWindow : Window
         header.Children.Add(new TextBlock { Text = "Plugins instalados", FontSize = 25, FontWeight = FontWeight.Bold });
         header.Children.Add(new TextBlock { Text = "A desativação impede a abertura e retira a aplicação dos menus. Os assemblies carregados só são libertados quando a suite é reiniciada.", TextWrapping = TextWrapping.Wrap });
         header.Children.Add(new TextBlock { Text = "Instale apenas plugins de origem confiável. Os pacotes ZIP são aplicados no próximo arranque, antes de carregar as DLLs.", TextWrapping = TextWrapping.Wrap });
+        var allowUnsigned = new CheckBox
+        {
+            Content = "Permitir instalar ZIP sem assinatura confiável (não recomendado)",
+            IsChecked = false
+        };
+        header.Children.Add(allowUnsigned);
         var install = new Button { Content = "Instalar / atualizar plugin (.zip)", HorizontalAlignment = HorizontalAlignment.Left };
         install.Click += async (_, _) =>
         {
@@ -41,12 +47,12 @@ public sealed class PluginManagerWindow : Window
                   FileTypeFilter = [new FilePickerFileType("Pacotes de plugins ZIP") { Patterns = ["*.zip"] }] });
                 if (files.Count == 0) return;
                 var path = files[0].TryGetLocalPath() ?? throw new InvalidOperationException("Apenas ficheiros locais.");
-                var result = _packages.StageInstall(path);
+                var result = _packages.StageInstall(path, requireSignature: allowUnsigned.IsChecked != true);
                 _message.Text = result.Id + ": " + (result.Action == "install" ? "instalação" : "atualização") + " preparada para o próximo arranque.";
                 _onOperation?.Invoke("Instalação/atualização preparada", _message.Text ?? "", true);
                 Refresh();
             }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
+            catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or System.Security.Cryptography.CryptographicException)
             {
                 _message.Text = "Não foi possível preparar o plugin: " + ex.Message;
                 _onOperation?.Invoke("Falha na instalação de plugin", ex.Message, false);
@@ -75,11 +81,21 @@ public sealed class PluginManagerWindow : Window
                 FontWeight = FontWeight.SemiBold, FontSize = 16 });
             details.Children.Add(new TextBlock { Text = "ID: " + entry.Id + " · API v1 (compatível) · " +
                 (entry.Enabled ? "Ativo" : "Desativado") });
-            details.Children.Add(new TextBlock { Text = "Dependências: " +
+            details.Children.Add(new TextBlock { Text = "Plugins necessários: " +
+                (entry.RequiredPlugins.Count == 0 ? "Nenhum" : string.Join(", ", entry.RequiredPlugins)),
+                TextWrapping = TextWrapping.Wrap, FontSize = 12 });
+            details.Children.Add(new TextBlock { Text = "Dependências .NET: " +
                 (entry.Dependencies.Count == 0 ? "Nenhuma" : string.Join(", ", entry.Dependencies)),
                 TextWrapping = TextWrapping.Wrap, FontSize = 12 });
+            if (entry.LoadFailure is not null)
+                details.Children.Add(new TextBlock
+                {
+                    Text = "Falha de carregamento: " + entry.LoadFailure,
+                    TextWrapping = TextWrapping.Wrap,
+                    Foreground = Brush.Parse("#B64040")
+                });
             var toggle = new Button { Content = entry.Enabled ? "Desativar" : "Ativar", MinWidth = 110,
-                HorizontalAlignment = HorizontalAlignment.Right };
+                HorizontalAlignment = HorizontalAlignment.Right, IsEnabled = entry.LoadFailure is null };
             toggle.Click += (_, _) =>
             {
                 try
@@ -89,7 +105,7 @@ public sealed class PluginManagerWindow : Window
                     _message.Text = "Estado atualizado: " + entry.Name;
                     Refresh();
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
                 {
                     _message.Text = "Não foi possível alterar o plugin: " + ex.Message;
                     _onOperation?.Invoke("Falha ao alterar plugin", ex.Message, false);
@@ -102,13 +118,16 @@ public sealed class PluginManagerWindow : Window
                 try
                 {
                     _packages.StageRemove(entry.Id);
-                    _host.SetEnabled(entry.Id, false);
-                    _onChanged(entry.Id, false);
+                    if (entry.LoadFailure is null)
+                    {
+                        _host.SetEnabled(entry.Id, false);
+                        _onChanged(entry.Id, false);
+                    }
                     _message.Text = entry.Name + ": remoção agendada para o próximo arranque.";
                     _onOperation?.Invoke("Remoção de plugin agendada", _message.Text, true);
                     Refresh();
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível remover o plugin: " + ex.Message;
                     _onOperation?.Invoke("Falha ao remover plugin", ex.Message, false);
@@ -118,6 +137,30 @@ public sealed class PluginManagerWindow : Window
             _items.Children.Add(new Border { BorderBrush = Brush.Parse("#8D9DB2"),
                 BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(9),
                 Padding = new Thickness(12), Child = details });
+        }
+        foreach (var point in _packages.RollbackPoints)
+        {
+            var rollback = new Button
+            {
+                Content = "Recuperar versão anterior de " + point.Id + " (próximo arranque)",
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            rollback.Click += (_, _) =>
+            {
+                try
+                {
+                    _packages.StageRollback(point.Id);
+                    _message.Text = "Recuperação de plugin agendada: " + point.Id;
+                    _onOperation?.Invoke("Rollback de plugin preparado", _message.Text, true);
+                    Refresh();
+                }
+                catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
+                {
+                    _message.Text = "Não foi possível recuperar: " + ex.Message;
+                    _onOperation?.Invoke("Falha no rollback de plugin", ex.Message, false);
+                }
+            };
+            _items.Children.Add(rollback);
         }
         foreach (var pending in _packages.PendingChanges())
         {
@@ -137,7 +180,7 @@ public sealed class PluginManagerWindow : Window
                         Refresh();
                     }
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível cancelar: " + ex.Message;
                 }

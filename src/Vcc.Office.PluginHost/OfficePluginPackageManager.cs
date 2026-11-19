@@ -1,4 +1,6 @@
 using System.IO.Compression;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -7,6 +9,7 @@ namespace Vcc.Office.PluginHost;
 /// <summary>One verified plugin package operation, applied at the next process startup.</summary>
 public sealed record PendingPluginChange(string Id, string Action, string? StagedName);
 public sealed record PluginPackageReceipt(string Id, string Action);
+public sealed record PluginRollbackPoint(string Id, string BackupName);
 
 /// <summary>
 /// Stages trusted ZIP packages for an atomic startup replacement. Never overwrites a loaded DLL.
@@ -19,6 +22,8 @@ public sealed class OfficePluginPackageManager
     private string UpdatesRoot => Path.Combine(_root, ".vcc-updates");
     private string StagingRoot => Path.Combine(UpdatesRoot, "staged");
     private string QueueFile => Path.Combine(UpdatesRoot, "queue.json");
+    private string HistoryFile => Path.Combine(UpdatesRoot, "rollback.json");
+    private string TrustedKeysDirectory => Path.Combine(UpdatesRoot, "trusted-signers");
 
     public OfficePluginPackageManager(string pluginsRoot)
     {
@@ -29,8 +34,17 @@ public sealed class OfficePluginPackageManager
 
     public IReadOnlyList<PendingPluginChange> Pending => ReadQueue();
 
-    public PluginPackageReceipt StageInstall(string archivePath)
+    public PluginPackageReceipt StageInstall(string archivePath, bool requireSignature = false)
     {
+        byte[]? signedArchiveHash = null;
+        var signaturePath = archivePath + ".sig";
+        if (requireSignature || File.Exists(signaturePath))
+        {
+            if (!File.Exists(signaturePath))
+                throw new InvalidDataException("É obrigatória a assinatura RSA-PSS do pacote.");
+            signedArchiveHash = PluginPackageSignature.Verify(
+                archivePath, signaturePath, TrustedKeysDirectory);
+        }
         if (string.IsNullOrWhiteSpace(archivePath) || !File.Exists(archivePath))
             throw new FileNotFoundException("Pacote ZIP não encontrado.", archivePath);
         string id;
@@ -40,11 +54,13 @@ public sealed class OfficePluginPackageManager
             if (archive.Entries.Count is 0 or > 256)
                 throw new InvalidDataException("Quantidade de ficheiros do pacote inválida.");
             long total = 0;
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var entry in archive.Entries)
             {
                 var name = entry.FullName.Replace('\\', '/');
                 if (name.StartsWith("/", StringComparison.Ordinal) || name.Contains(':') ||
-                    name.Split('/').Any(segment => segment is "." or ".."))
+                    name.Split('/').Any(segment => segment is "." or "..") ||
+                    !seen.Add(name.TrimEnd('/')))
                     throw new InvalidDataException("Caminho inseguro no pacote: " + name);
                 var unixType = (entry.ExternalAttributes >> 16) & 0xF000;
                 if (unixType == 0xA000)
@@ -56,9 +72,7 @@ public sealed class OfficePluginPackageManager
             var manifestEntry = archive.GetEntry("plugin.json")
                 ?? throw new InvalidDataException("O ZIP não contém plugin.json na raiz.");
             using var reader = new StreamReader(manifestEntry.Open());
-            var manifest = JsonSerializer.Deserialize<PackageManifest>(reader.ReadToEnd(),
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                ?? throw new InvalidDataException("Manifesto do plugin vazio.");
+            var manifest = PluginCompatibilityPolicy.Read(reader.ReadToEnd());
             id = manifest.Id;
             assembly = manifest.Assembly;
             ValidateId(id);
@@ -76,6 +90,13 @@ public sealed class OfficePluginPackageManager
             ZipFile.ExtractToDirectory(archivePath, stagedPath);
             if (!File.Exists(Path.Combine(stagedPath, assembly)))
                 throw new InvalidDataException("A DLL indicada não existe no pacote.");
+            if (signedArchiveHash is not null)
+            {
+                using var after = File.OpenRead(archivePath);
+                if (!System.Security.Cryptography.SHA256.HashData(after).SequenceEqual(signedArchiveHash))
+                    throw new InvalidDataException("O pacote assinado foi modificado durante a instalação.");
+            }
+            SealStage(stagedPath, token);
             var pending = ReadQueue().ToList();
             var previous = pending.FirstOrDefault(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
             pending.RemoveAll(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
@@ -88,6 +109,7 @@ public sealed class OfficePluginPackageManager
         catch
         {
             if (Directory.Exists(stagedPath)) Directory.Delete(stagedPath, recursive: true);
+            RemoveStageSeal(token);
             throw;
         }
     }
@@ -100,7 +122,27 @@ public sealed class OfficePluginPackageManager
         if (!Directory.Exists(PluginFolder(id)) && previous is null)
             throw new ArgumentException("Plugin não instalado.", nameof(id));
         pending.RemoveAll(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        EnsureNoDependants(id);
         pending.Add(new PendingPluginChange(id, "remove", null));
+        SaveQueue(pending);
+        CleanPreviousStage(previous);
+    }
+
+    public IReadOnlyList<PluginRollbackPoint> RollbackPoints => ReadHistory();
+
+    /// <summary>Queues recovery of the last replaced or removed plugin version.</summary>
+    public void StageRollback(string id)
+    {
+        ValidateId(id);
+        var point = ReadHistory().FirstOrDefault(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        if (point is null || !point.BackupName.StartsWith("backup-", StringComparison.Ordinal) ||
+            !Guid.TryParseExact(point.BackupName["backup-".Length..], "N", out _) ||
+            !Directory.Exists(Path.Combine(UpdatesRoot, point.BackupName)))
+            throw new InvalidOperationException("Não existe uma versão anterior recuperável.");
+        var pending = ReadQueue();
+        var previous = pending.FirstOrDefault(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        pending.RemoveAll(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        pending.Add(new PendingPluginChange(id, "rollback", null));
         SaveQueue(pending);
         CleanPreviousStage(previous);
     }
@@ -120,7 +162,7 @@ public sealed class OfficePluginPackageManager
 
     /// <summary>Inventory entries are bounded to the managed staging area and contain no executable paths.</summary>
     public IReadOnlyList<PendingPluginChange> PendingChanges() =>
-        ReadQueue().Where(change => change.Action is "install" or "update" or "remove")
+        ReadQueue().Where(change => change.Action is "install" or "update" or "remove" or "rollback")
             .OrderBy(change => change.Id, StringComparer.OrdinalIgnoreCase).ToArray();
 
     /// <summary>Called before OfficePluginHost loads any assembly; failures stay queued for retry.</summary>
@@ -137,7 +179,8 @@ public sealed class OfficePluginPackageManager
                 SaveQueue(pending);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-                                       ArgumentException or InvalidDataException)
+                                       ArgumentException or InvalidDataException or InvalidOperationException or
+                                       BadImageFormatException)
             {
                 errors.Add(change.Id + ": " + ex.Message);
             }
@@ -150,13 +193,42 @@ public sealed class OfficePluginPackageManager
         ValidateId(change.Id);
         var destination = PluginFolder(change.Id);
         var backup = Path.Combine(UpdatesRoot, "backup-" + Guid.NewGuid().ToString("N"));
+        if (change.Action == "rollback")
+        {
+            var point = ReadHistory().FirstOrDefault(x => x.Id.Equals(change.Id, StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidDataException("Versão anterior indisponível.");
+            var source = Path.Combine(UpdatesRoot, point.BackupName);
+            if (!Directory.Exists(source)) throw new DirectoryNotFoundException("Backup do plugin em falta.");
+            if (Directory.Exists(destination)) Directory.Move(destination, backup);
+            try
+            {
+                Directory.Move(source, destination);
+                var history = ReadHistory();
+                history.RemoveAll(x => x.Id.Equals(change.Id, StringComparison.OrdinalIgnoreCase));
+                if (Directory.Exists(backup))
+                    history.Add(new PluginRollbackPoint(change.Id, Path.GetFileName(backup)));
+                SaveHistory(history);
+            }
+            catch
+            {
+                if (Directory.Exists(destination)) Directory.Move(destination, source);
+                if (Directory.Exists(backup)) Directory.Move(backup, destination);
+                throw;
+            }
+            return;
+        }
         if (change.Action == "remove")
         {
+            EnsureNoDependants(change.Id);
             if (Directory.Exists(destination))
             {
                 Directory.Move(destination, backup);
-                try { Directory.Delete(backup, recursive: true); }
-                catch { Directory.Move(backup, destination); throw; }
+                try { RetainBackup(change.Id, backup); }
+                catch
+                {
+                    if (Directory.Exists(backup)) Directory.Move(backup, destination);
+                    throw;
+                }
             }
             return;
         }
@@ -165,18 +237,135 @@ public sealed class OfficePluginPackageManager
             throw new InvalidDataException("Operação pendente inválida.");
         var stagedPath = Path.Combine(StagingRoot, change.StagedName!);
         if (!Directory.Exists(stagedPath)) throw new DirectoryNotFoundException("Pacote preparado inexistente.");
+        VerifyStage(stagedPath, change.StagedName!);
+        var manifestPath = Path.Combine(stagedPath, "plugin.json");
+        if (!File.Exists(manifestPath)) throw new InvalidDataException("Manifesto do plugin preparado em falta.");
+        var metadata = PluginCompatibilityPolicy.Read(File.ReadAllText(manifestPath));
+        if (!metadata.Id.Equals(change.Id, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("O pacote preparado mudou de identificador.");
+        var dependencies = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
+        foreach (var folder in Directory.EnumerateDirectories(_root))
+        {
+            var otherManifest = Path.Combine(folder, "plugin.json");
+            if (!File.Exists(otherManifest)) continue;
+            var other = PluginCompatibilityPolicy.Read(File.ReadAllText(otherManifest));
+            var path = Path.Combine(folder, other.Assembly);
+            if (File.Exists(path))
+                dependencies[other.Id] = AssemblyName.GetAssemblyName(path).Version ?? new Version(0, 0);
+        }
+        PluginCompatibilityPolicy.EnsureCompatible(metadata,
+            typeof(OfficePluginPackageManager).Assembly.GetName().Version ?? new Version(1, 0),
+            dependencies);
         if (Directory.Exists(destination)) Directory.Move(destination, backup);
         try
         {
             Directory.Move(stagedPath, destination);
-            if (Directory.Exists(backup)) Directory.Delete(backup, recursive: true);
+            if (Directory.Exists(backup)) RetainBackup(change.Id, backup);
+            RemoveStageSeal(change.StagedName!);
         }
         catch
         {
-            if (Directory.Exists(destination)) Directory.Delete(destination, recursive: true);
+            if (Directory.Exists(destination) && !Directory.Exists(stagedPath))
+                Directory.Move(destination, stagedPath);
             if (Directory.Exists(backup)) Directory.Move(backup, destination);
             throw;
         }
+    }
+
+    private string SealPath(string token) => Path.Combine(StagingRoot, token + ".seal.json");
+
+    private static Dictionary<string, string> StageHashes(string stage)
+    {
+        var hashes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories))
+        {
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
+                throw new InvalidDataException("O staging não permite links simbólicos.");
+            var relative = Path.GetRelativePath(stage, file).Replace(Path.DirectorySeparatorChar, '/');
+            using var stream = File.OpenRead(file);
+            hashes.Add(relative, Convert.ToHexString(SHA256.HashData(stream)));
+        }
+        return hashes;
+    }
+
+    private void SealStage(string stage, string token)
+    {
+        var seal = SealPath(token);
+        File.WriteAllText(seal, JsonSerializer.Serialize(StageHashes(stage)));
+    }
+
+    private void VerifyStage(string stage, string token)
+    {
+        var seal = SealPath(token);
+        if (!File.Exists(seal)) throw new InvalidDataException("Selo de integridade do staging em falta.");
+        var expected = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(seal))
+            ?? throw new InvalidDataException("Selo de integridade vazio.");
+        var actual = StageHashes(stage);
+        if (expected.Count != actual.Count || expected.Any(item =>
+                !actual.TryGetValue(item.Key, out var hash) ||
+                !hash.Equals(item.Value, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidDataException("O plugin preparado foi alterado após a validação.");
+    }
+
+    private void RemoveStageSeal(string token)
+    {
+        if (Guid.TryParseExact(token, "N", out _))
+        {
+            var seal = SealPath(token);
+            if (File.Exists(seal)) File.Delete(seal);
+        }
+    }
+
+    private void EnsureNoDependants(string id)
+    {
+        if (!Directory.Exists(_root)) return;
+        foreach (var folder in Directory.EnumerateDirectories(_root))
+        {
+            var path = Path.Combine(folder, "plugin.json");
+            if (!File.Exists(path) || Path.GetFileName(folder).Equals(id, StringComparison.OrdinalIgnoreCase))
+                continue;
+            var other = PluginCompatibilityPolicy.Read(File.ReadAllText(path));
+            if ((other.Requires ?? []).Any(item => item.Id.Equals(id, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException("O plugin " + other.Id + " depende de " + id + ".");
+        }
+    }
+
+    private void RetainBackup(string id, string backup)
+    {
+        var history = ReadHistory();
+        var previous = history.FirstOrDefault(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        history.RemoveAll(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        history.Add(new PluginRollbackPoint(id, Path.GetFileName(backup)));
+        SaveHistory(history);
+        if (previous is not null && previous.BackupName != Path.GetFileName(backup))
+        {
+            var old = Path.Combine(UpdatesRoot, previous.BackupName);
+            if (old.StartsWith(UpdatesRoot + Path.DirectorySeparatorChar,
+                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
+                Directory.Exists(old))
+            {
+                try { Directory.Delete(old, recursive: true); }
+                catch (IOException) { /* Orphaned old backup can be cleaned later. */ }
+                catch (UnauthorizedAccessException) { /* Do not fail a successful update. */ }
+            }
+        }
+    }
+
+    private List<PluginRollbackPoint> ReadHistory() =>
+        File.Exists(HistoryFile)
+            ? JsonSerializer.Deserialize<List<PluginRollbackPoint>>(File.ReadAllText(HistoryFile)) ?? []
+            : [];
+
+    private void SaveHistory(List<PluginRollbackPoint> history)
+    {
+        Directory.CreateDirectory(UpdatesRoot);
+        var temp = HistoryFile + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temp, JsonSerializer.Serialize(history));
+            File.Move(temp, HistoryFile, overwrite: true);
+        }
+        finally { if (File.Exists(temp)) File.Delete(temp); }
     }
 
     private List<PendingPluginChange> ReadQueue() => File.Exists(QueueFile)
@@ -200,6 +389,7 @@ public sealed class OfficePluginPackageManager
         if (previous?.StagedName is null || !Guid.TryParseExact(previous.StagedName, "N", out _)) return;
         var old = Path.Combine(StagingRoot, previous.StagedName);
         if (Directory.Exists(old)) Directory.Delete(old, recursive: true);
+        RemoveStageSeal(previous.StagedName);
     }
 
     private string PluginFolder(string id) => Path.Combine(_root,
@@ -212,5 +402,4 @@ public sealed class OfficePluginPackageManager
             throw new InvalidDataException("ID de plugin inseguro ou inválido.");
     }
 
-    private sealed record PackageManifest(string Id, string Assembly, string EntryType, int ApiVersion);
 }
