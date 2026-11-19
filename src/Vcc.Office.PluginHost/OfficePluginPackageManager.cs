@@ -34,12 +34,15 @@ public sealed class OfficePluginPackageManager
 
     public PluginPackageReceipt StageInstall(string archivePath, bool requireSignature = false)
     {
+        byte[]? signedArchiveHash = null;
         var signaturePath = archivePath + ".sig";
         if (requireSignature || File.Exists(signaturePath))
         {
             if (!File.Exists(signaturePath))
                 throw new InvalidDataException("É obrigatória a assinatura RSA-PSS do pacote.");
             PluginPackageSignature.Verify(archivePath, signaturePath, TrustedKeysDirectory);
+            using var signedStream = File.OpenRead(archivePath);
+            signedArchiveHash = System.Security.Cryptography.SHA256.HashData(signedStream);
         }
         if (string.IsNullOrWhiteSpace(archivePath) || !File.Exists(archivePath))
             throw new FileNotFoundException("Pacote ZIP não encontrado.", archivePath);
@@ -84,6 +87,12 @@ public sealed class OfficePluginPackageManager
             ZipFile.ExtractToDirectory(archivePath, stagedPath);
             if (!File.Exists(Path.Combine(stagedPath, assembly)))
                 throw new InvalidDataException("A DLL indicada não existe no pacote.");
+            if (signedArchiveHash is not null)
+            {
+                using var after = File.OpenRead(archivePath);
+                if (!System.Security.Cryptography.SHA256.HashData(after).SequenceEqual(signedArchiveHash))
+                    throw new InvalidDataException("O pacote assinado foi modificado durante a instalação.");
+            }
             var pending = ReadQueue().ToList();
             var previous = pending.FirstOrDefault(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
             pending.RemoveAll(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
@@ -108,6 +117,7 @@ public sealed class OfficePluginPackageManager
         if (!Directory.Exists(PluginFolder(id)) && previous is null)
             throw new ArgumentException("Plugin não instalado.", nameof(id));
         pending.RemoveAll(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        EnsureNoDependants(id);
         pending.Add(new PendingPluginChange(id, "remove", null));
         SaveQueue(pending);
         CleanPreviousStage(previous);
@@ -203,6 +213,7 @@ public sealed class OfficePluginPackageManager
         }
         if (change.Action == "remove")
         {
+            EnsureNoDependants(change.Id);
             if (Directory.Exists(destination))
             {
                 Directory.Move(destination, backup);
@@ -231,6 +242,20 @@ public sealed class OfficePluginPackageManager
             if (Directory.Exists(destination)) Directory.Delete(destination, recursive: true);
             if (Directory.Exists(backup)) Directory.Move(backup, destination);
             throw;
+        }
+    }
+
+    private void EnsureNoDependants(string id)
+    {
+        if (!Directory.Exists(_root)) return;
+        foreach (var folder in Directory.EnumerateDirectories(_root))
+        {
+            var path = Path.Combine(folder, "plugin.json");
+            if (!File.Exists(path) || Path.GetFileName(folder).Equals(id, StringComparison.OrdinalIgnoreCase))
+                continue;
+            var other = PluginCompatibilityPolicy.Read(File.ReadAllText(path));
+            if ((other.Requires ?? []).Any(item => item.Id.Equals(id, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException("O plugin " + other.Id + " depende de " + id + ".");
         }
     }
 
