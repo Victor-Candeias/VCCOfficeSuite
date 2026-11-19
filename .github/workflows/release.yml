@@ -50,6 +50,14 @@ jobs:
           version = os.environ["GITHUB_REF_NAME"]
           if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", version):
               raise SystemExit("Invalid release tag: " + version)
+      - name: Stamp official release version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: python
+        run: |
+          import os
+          version = os.environ["GITHUB_REF_NAME"][1:]
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write("VCC_RELEASE_VERSION=" + version + chr(10))
       - name: Verify host/plugin boundaries
         run: python scripts/check-host-plugin-boundaries.py
       - name: Verify retired WPF
