@@ -42,7 +42,7 @@ public sealed class SuiteUpdateService
         if (!Version.TryParse(candidate.TrimStart('v', 'V').Split('-')[0], out var next) ||
             !Version.TryParse(current.TrimStart('v', 'V').Split('-')[0], out var installed)) return false;
         // Pre-releases are not offered by this stable channel.
-        if (candidate.Contains('-', StringComparison.Ordinal)) return false;
+        if (candidate.Contains('-')) return false;
         return next > installed;
     }
 
