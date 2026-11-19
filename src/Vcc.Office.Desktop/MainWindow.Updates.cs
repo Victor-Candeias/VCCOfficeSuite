@@ -29,10 +29,8 @@ public sealed partial class MainWindow
                 succeeded ? "Atualização instalada" : "Resultado da atualização",
                 message, "Atualizações");
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // An inaccessible status file must not prevent launcher startup.
-        }
+        catch (IOException) { /* An inaccessible status file must not prevent startup. */ }
+        catch (UnauthorizedAccessException) { /* Keep running with a read-only profile. */ }
     }
 
     private void ShowSuiteUpdates()
