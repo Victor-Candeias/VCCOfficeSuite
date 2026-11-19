@@ -60,7 +60,8 @@ public sealed partial class MainWindow
         var export = new Button { Content = "Copiar documento para a pasta" };
         export.Click += async (_, _) =>
         {
-            if (service is null)
+            var selectedService = service;
+            if (selectedService is null)
             {
                 current.Text = "Selecione primeiro uma pasta.";
                 return;
@@ -74,7 +75,7 @@ public sealed partial class MainWindow
             {
                 var path = files[0].TryGetLocalPath()
                     ?? throw new InvalidOperationException("Apenas ficheiros locais.");
-                var result = await service.ExportCopyAsync(path);
+                var result = await selectedService.ExportCopyAsync(path);
                 current.Text = "Cópia local concluída: " + result +
                     "\nO envio remoto depende do estado do cliente de sincronização.";
                 await RecordNotificationAsync(OfficeNotificationCategory.Document,
