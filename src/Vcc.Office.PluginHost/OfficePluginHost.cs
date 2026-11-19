@@ -135,7 +135,8 @@ public sealed class OfficePluginHost
                 try
                 {
                     var manifest = PluginCompatibilityPolicy.Read(File.ReadAllText(manifestPath));
-                    if ((manifest.Requires ?? []).Any(dep => !host._plugins.ContainsKey(dep.Id)))
+                    if ((manifest.Requires ?? []).Any(dep =>
+                            !host._plugins.ContainsKey(dep.Id) || host._disabled.Contains(dep.Id)))
                         continue;
                     host.Register(manifestPath);
                 }
