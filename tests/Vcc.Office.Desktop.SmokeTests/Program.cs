@@ -625,6 +625,34 @@ try
 }
 catch (InvalidDataException) { }
 
+// VCC-0842: a dependant prevents removal of its required plugin.
+var dependentFolder = Path.Combine(lifecycleRoot, "Dependent");
+Directory.CreateDirectory(dependentFolder);
+File.WriteAllText(Path.Combine(dependentFolder, "plugin.json"),
+    "{\"id\":\"dependent\",\"assembly\":\"dependent.dll\",\"entryType\":\"Dependent.Plugin\",\"apiVersion\":1,\"requires\":[{\"id\":\"writer\"}]}");
+try
+{
+    lifecycle.StageRemove("writer");
+    throw new Exception("A remoção de um plugin necessário foi aceite.");
+}
+catch (InvalidOperationException) { }
+var unavailable = OfficePluginHost.Discover(lifecycleRoot);
+if (!unavailable.GetInventory().Any(item => item.Id == "dependent" && item.LoadFailure is not null))
+    throw new Exception("Falhas de plugins não aparecem no inventário de recuperação.");
+Directory.Delete(dependentFolder, recursive: true);
+
+// VCC-0842: staged files cannot change between verification and next startup.
+var unsignedZip = Path.Combine(packageRoot, "unsigned-writer.zip");
+File.Copy(zipPath, unsignedZip);
+var tamperRoot = Path.Combine(packageRoot, "tamper");
+var tamperManager = new OfficePluginPackageManager(tamperRoot);
+tamperManager.StageInstall(unsignedZip);
+var stagedFolder = Directory.GetDirectories(Path.Combine(tamperRoot, ".vcc-updates", "staged")).Single();
+File.AppendAllText(Path.Combine(stagedFolder, "plugin.json"), " ");
+if (tamperManager.ApplyPending().Count != 1 || tamperManager.Pending.Count != 1 ||
+    Directory.Exists(Path.Combine(tamperRoot, "Writer")))
+    throw new Exception("Staging adulterado foi instalado.");
+
 var managerWindow = new PluginManagerWindow(managedHost, (_, _) => { });
 if (managerWindow.Title?.Contains("Gestão de plugins", StringComparison.Ordinal) != true)
     throw new Exception("A interface de gestão de plugins não abre.");
