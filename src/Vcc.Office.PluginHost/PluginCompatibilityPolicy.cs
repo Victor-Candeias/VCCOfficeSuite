@@ -64,7 +64,7 @@ public static class PluginCompatibilityPolicy
 /// <summary>Detached RSA-PSS/SHA-256 package signatures with explicit administrator-trusted PEM keys.</summary>
 public static class PluginPackageSignature
 {
-    public static void Verify(string archivePath, string signatureFile, string trustedKeysDirectory)
+    public static byte[] Verify(string archivePath, string signatureFile, string trustedKeysDirectory)
     {
         if (!Directory.Exists(trustedKeysDirectory))
             throw new InvalidDataException("Não existem chaves públicas de confiança configuradas.");
@@ -84,7 +84,7 @@ public static class PluginPackageSignature
                 using var rsa = RSA.Create();
                 rsa.ImportFromPem(File.ReadAllText(key));
                 if (rsa.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pss))
-                    return;
+                    return hash;
             }
             catch (CryptographicException) { /* Other configured keys may match. */ }
             catch (ArgumentException) { /* Invalid key: do not accept this signer. */ }
