@@ -11,6 +11,7 @@ public sealed record OfficePluginInventoryItem(string Id, string Name, string Ve
     bool Enabled, IReadOnlyList<string> Dependencies)
 {
     public IReadOnlyList<string> RequiredPlugins { get; init; } = [];
+    public string? LoadFailure { get; init; }
 }
 
 /// <summary>Loads trusted, separately compiled modules from Plugins/<id>/plugin.json.</summary>
@@ -19,6 +20,7 @@ public sealed class OfficePluginHost
     private readonly Dictionary<string, IOfficePlugin> _plugins = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PluginPackageMetadata> _manifests = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<string> _errors = [];
+    private readonly Dictionary<string, string> _failedPlugins = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly HashSet<string> _disabled = new(StringComparer.OrdinalIgnoreCase);
     private readonly string _settingsPath;
@@ -44,8 +46,7 @@ public sealed class OfficePluginHost
     public IReadOnlyList<string> Errors => _errors;
 
     public IReadOnlyList<OfficePluginInventoryItem> GetInventory() =>
-        _plugins.Values.OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .Select(p => new OfficePluginInventoryItem(p.Id, p.DisplayName,
+        _plugins.Values.Select(p => new OfficePluginInventoryItem(p.Id, p.DisplayName,
                 p.GetType().Assembly.GetName().Version?.ToString() ?? "0.0",
                 !_disabled.Contains(p.Id),
                 p.GetType().Assembly.GetReferencedAssemblies()
@@ -57,6 +58,10 @@ public sealed class OfficePluginHost
                     ? (manifest.Requires ?? []).Select(dep => dep.Id).ToArray()
                     : []
             })
+            .Concat(_failedPlugins.Where(pair => !_plugins.ContainsKey(pair.Key))
+                .Select(pair => new OfficePluginInventoryItem(pair.Key, pair.Key, "indisponível",
+                    false, []) { LoadFailure = pair.Value }))
+            .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
     public bool IsEnabled(string id) => _plugins.ContainsKey(id) && !_disabled.Contains(id);
@@ -139,15 +144,22 @@ public sealed class OfficePluginHost
                                            ArgumentException or FileLoadException or BadImageFormatException or
                                            TypeLoadException or TargetInvocationException)
                 {
-                    host._errors.Add(Path.GetFileName(Path.GetDirectoryName(manifestPath)) + ": " + ex.Message);
+                    var name = Path.GetFileName(Path.GetDirectoryName(manifestPath));
+                    host._errors.Add(name + ": " + ex.Message);
+                    if (!string.IsNullOrWhiteSpace(name))
+                        host._failedPlugins[name.ToLowerInvariant()] = ex.Message;
                 }
                 pending.Remove(manifestPath);
                 progressed = true;
             }
             if (progressed) continue;
             foreach (var remaining in pending)
-                host._errors.Add(Path.GetFileName(Path.GetDirectoryName(remaining)) +
-                    ": dependências de plugin ausentes, desativadas ou circulares.");
+            {
+                var name = Path.GetFileName(Path.GetDirectoryName(remaining));
+                var error = "Dependências de plugin ausentes ou circulares.";
+                host._errors.Add(name + ": " + error);
+                if (!string.IsNullOrWhiteSpace(name)) host._failedPlugins[name.ToLowerInvariant()] = error;
+            }
             break;
         }
         return host;
