@@ -113,6 +113,7 @@ public sealed class SuiteUpdateInstaller
         if (hashes.Count != content.Length || content.Any(e => !hashes.ContainsKey(e.FullName)))
             throw new InvalidDataException("O manifesto não corresponde ao conteúdo.");
         Directory.CreateDirectory(candidate);
+        await File.WriteAllTextAsync(Path.Combine(candidate, "SHA256SUMS.txt"), manifest, ct);
         foreach (var entry in content)
         {
             ct.ThrowIfCancellationRequested();
@@ -156,6 +157,41 @@ public sealed class SuiteUpdateInstaller
         return plan;
     }
 
+    private static void VerifyPreparedFolder(PreparedSuiteUpdate plan)
+    {
+        var root = Path.GetFullPath(plan.CandidateDirectory);
+        var manifestPath = Path.Combine(root, "SHA256SUMS.txt");
+        if (!File.Exists(manifestPath)) throw new InvalidDataException("Manifesto do pacote preparado em falta.");
+        var expected = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var line in File.ReadAllLines(manifestPath))
+        {
+            if (line.Length < 67 || line[64..66] != "  " || !line[..64].All(Uri.IsHexDigit))
+                throw new InvalidDataException("Manifesto preparado inválido.");
+            var relative = line[66..];
+            if (relative.StartsWith('/') || relative.Contains('\\') ||
+                relative.Split('/').Any(segment => segment is "." or ".." or ""))
+                throw new InvalidDataException("Caminho de manifesto inseguro.");
+            if (!expected.TryAdd(relative, line[..64]))
+                throw new InvalidDataException("Entrada duplicada.");
+        }
+        var actualFiles = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+            .Where(file => !string.Equals(file, manifestPath, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (actualFiles.Length != expected.Count)
+            throw new InvalidDataException("O conteúdo preparado difere do manifesto.");
+        foreach (var file in actualFiles)
+        {
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
+                throw new InvalidDataException("Links simbólicos não são permitidos.");
+            var relative = Path.GetRelativePath(root, file).Replace(Path.DirectorySeparatorChar, '/');
+            if (!expected.TryGetValue(relative, out var checksum))
+                throw new InvalidDataException("Ficheiro não listado no manifesto.");
+            using var stream = File.OpenRead(file);
+            var digest = Convert.ToHexString(SHA256.HashData(stream));
+            if (!digest.Equals(checksum, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Conteúdo preparado alterado: " + relative);
+        }
+    }
+
     /// <summary>Atomic folder swap, with rollback on any failed readiness probe.</summary>
     public static SuiteInstallOutcome CommitOffline(PreparedSuiteUpdate plan, Func<string, bool> readiness)
     {
@@ -165,6 +201,7 @@ public sealed class SuiteUpdateInstaller
             !File.Exists(Path.Combine(plan.CandidateDirectory, plan.ExpectedExecutable)) ||
             !Directory.Exists(plan.InstallDirectory) || Directory.Exists(plan.BackupDirectory))
             throw new InvalidOperationException("Os diretórios de instalação não estão prontos.");
+        VerifyPreparedFolder(plan);
         Directory.Move(plan.InstallDirectory, plan.BackupDirectory);
         try
         {
