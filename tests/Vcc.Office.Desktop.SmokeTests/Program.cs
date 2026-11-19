@@ -607,7 +607,7 @@ using (var rsa = System.Security.Cryptography.RSA.Create(2048))
     File.WriteAllText(zipPath + ".sig", Convert.ToBase64String(new byte[signature.Length]));
     try
     {
-        new OfficePluginPackageManager(Path.Combine(packageRoot, "signed-invalid")).StageInstall(
+        new OfficePluginPackageManager(signingRoot).StageInstall(
             zipPath, requireSignature: true);
         throw new Exception("Assinatura inválida foi aceite.");
     }
