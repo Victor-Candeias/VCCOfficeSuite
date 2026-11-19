@@ -1554,26 +1554,6 @@ static async Task TestsSuiteUpdates()
     finally { Directory.Delete(root, recursive: true); }
 }
 
-sealed class SuiteUpdateTestHandler(string? release, string checksums, byte[] payload)
-    : HttpMessageHandler
-{
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var path = request.RequestUri?.AbsolutePath ?? "";
-        if (path.EndsWith("/releases/latest", StringComparison.Ordinal))
-        {
-            if (release is null) return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
-            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            { Content = new StringContent(release) });
-        }
-        if (path.EndsWith("/SHA256SUMS.txt", StringComparison.Ordinal))
-            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            { Content = new StringContent(checksums) });
-        return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-        { Content = new ByteArrayContent(payload) });
-    }
-}
-
 static Task TestsAdvancedPluginQueue()
 {
     var root = CreateTestDirectory();
@@ -1627,4 +1607,24 @@ static async Task TestsCloudSyncedFolders()
         catch (InvalidOperationException) { }
     }
     finally { Directory.Delete(root, recursive: true); }
+}
+
+sealed class SuiteUpdateTestHandler(string? release, string checksums, byte[] payload)
+    : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var path = request.RequestUri?.AbsolutePath ?? "";
+        if (path.EndsWith("/releases/latest", StringComparison.Ordinal))
+        {
+            if (release is null) return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound));
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            { Content = new StringContent(release) });
+        }
+        if (path.EndsWith("/SHA256SUMS.txt", StringComparison.Ordinal))
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            { Content = new StringContent(checksums) });
+        return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        { Content = new ByteArrayContent(payload) });
+    }
 }
