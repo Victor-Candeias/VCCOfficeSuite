@@ -81,7 +81,10 @@ public sealed class PluginManagerWindow : Window
                 FontWeight = FontWeight.SemiBold, FontSize = 16 });
             details.Children.Add(new TextBlock { Text = "ID: " + entry.Id + " · API v1 (compatível) · " +
                 (entry.Enabled ? "Ativo" : "Desativado") });
-            details.Children.Add(new TextBlock { Text = "Dependências: " +
+            details.Children.Add(new TextBlock { Text = "Plugins necessários: " +
+                (entry.RequiredPlugins.Count == 0 ? "Nenhum" : string.Join(", ", entry.RequiredPlugins)),
+                TextWrapping = TextWrapping.Wrap, FontSize = 12 });
+            details.Children.Add(new TextBlock { Text = "Dependências .NET: " +
                 (entry.Dependencies.Count == 0 ? "Nenhuma" : string.Join(", ", entry.Dependencies)),
                 TextWrapping = TextWrapping.Wrap, FontSize = 12 });
             var toggle = new Button { Content = entry.Enabled ? "Desativar" : "Ativar", MinWidth = 110,
@@ -95,7 +98,7 @@ public sealed class PluginManagerWindow : Window
                     _message.Text = "Estado atualizado: " + entry.Name;
                     Refresh();
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
                 {
                     _message.Text = "Não foi possível alterar o plugin: " + ex.Message;
                     _onOperation?.Invoke("Falha ao alterar plugin", ex.Message, false);
