@@ -145,8 +145,8 @@ public sealed class SuiteUpdateInstaller
         var plan = JsonSerializer.Deserialize<PreparedSuiteUpdate>(
             await File.ReadAllTextAsync(path, ct), JsonOptions)
             ?? throw new InvalidDataException("Plano de instalação vazio.");
-        if (Path.GetFileName(plan.CandidateDirectory).StartsWith(".vcc-candidate-", StringComparison.Ordinal) == false ||
-            Path.GetFileName(plan.BackupDirectory).StartsWith(".vcc-backup-", StringComparison.Ordinal) == false ||
+        if (Path.GetFileName(plan.CandidateDirectory)?.StartsWith(".vcc-candidate-", StringComparison.Ordinal) != true ||
+            Path.GetFileName(plan.BackupDirectory)?.StartsWith(".vcc-backup-", StringComparison.Ordinal) != true ||
             Path.GetDirectoryName(Path.GetFullPath(plan.CandidateDirectory)) !=
             Path.GetDirectoryName(Path.GetFullPath(plan.InstallDirectory)) ||
             Path.GetDirectoryName(Path.GetFullPath(plan.BackupDirectory)) !=
