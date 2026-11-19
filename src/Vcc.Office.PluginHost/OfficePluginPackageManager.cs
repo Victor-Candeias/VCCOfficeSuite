@@ -105,6 +105,24 @@ public sealed class OfficePluginPackageManager
         CleanPreviousStage(previous);
     }
 
+    /// <summary>Cancel one queued install/update/remove without changing loaded assemblies.</summary>
+    public bool CancelPending(string id)
+    {
+        ValidateId(id);
+        var pending = ReadQueue();
+        var queued = pending.FirstOrDefault(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        if (queued is null) return false;
+        pending.RemoveAll(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        SaveQueue(pending);
+        CleanPreviousStage(queued);
+        return true;
+    }
+
+    /// <summary>Inventory entries are bounded to the managed staging area and contain no executable paths.</summary>
+    public IReadOnlyList<PendingPluginChange> PendingChanges() =>
+        ReadQueue().Where(change => change.Action is "install" or "update" or "remove")
+            .OrderBy(change => change.Id, StringComparer.OrdinalIgnoreCase).ToArray();
+
     /// <summary>Called before OfficePluginHost loads any assembly; failures stay queued for retry.</summary>
     public IReadOnlyList<string> ApplyPending()
     {
