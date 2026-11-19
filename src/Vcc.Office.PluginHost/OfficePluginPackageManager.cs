@@ -42,9 +42,8 @@ public sealed class OfficePluginPackageManager
         {
             if (!File.Exists(signaturePath))
                 throw new InvalidDataException("É obrigatória a assinatura RSA-PSS do pacote.");
-            PluginPackageSignature.Verify(archivePath, signaturePath, TrustedKeysDirectory);
-            using var signedStream = File.OpenRead(archivePath);
-            signedArchiveHash = System.Security.Cryptography.SHA256.HashData(signedStream);
+            signedArchiveHash = PluginPackageSignature.Verify(
+                archivePath, signaturePath, TrustedKeysDirectory);
         }
         if (string.IsNullOrWhiteSpace(archivePath) || !File.Exists(archivePath))
             throw new FileNotFoundException("Pacote ZIP não encontrado.", archivePath);
