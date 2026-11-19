@@ -8,12 +8,16 @@ namespace Vcc.Office.PluginHost;
 
 /// <summary>Describes a loaded plugin and its direct managed assembly references.</summary>
 public sealed record OfficePluginInventoryItem(string Id, string Name, string Version,
-    bool Enabled, IReadOnlyList<string> Dependencies);
+    bool Enabled, IReadOnlyList<string> Dependencies)
+{
+    public IReadOnlyList<string> RequiredPlugins { get; init; } = [];
+}
 
 /// <summary>Loads trusted, separately compiled modules from Plugins/<id>/plugin.json.</summary>
 public sealed class OfficePluginHost
 {
     private readonly Dictionary<string, IOfficePlugin> _plugins = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, PluginPackageMetadata> _manifests = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<string> _errors = [];
 
     private readonly HashSet<string> _disabled = new(StringComparer.OrdinalIgnoreCase);
@@ -47,7 +51,12 @@ public sealed class OfficePluginHost
                 p.GetType().Assembly.GetReferencedAssemblies()
                     .Select(reference => reference.Name ?? "")
                     .Where(name => !string.IsNullOrWhiteSpace(name))
-                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray()))
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray())
+            {
+                RequiredPlugins = _manifests.TryGetValue(p.Id, out var manifest)
+                    ? (manifest.Requires ?? []).Select(dep => dep.Id).ToArray()
+                    : []
+            })
             .ToArray();
 
     public bool IsEnabled(string id) => _plugins.ContainsKey(id) && !_disabled.Contains(id);
@@ -56,6 +65,14 @@ public sealed class OfficePluginHost
     public void SetEnabled(string id, bool enabled)
     {
         if (!_plugins.ContainsKey(id)) throw new ArgumentException("Plugin não instalado.", nameof(id));
+        if (!enabled)
+        {
+            var dependent = _manifests.Values.FirstOrDefault(manifest =>
+                !_disabled.Contains(manifest.Id) &&
+                (manifest.Requires ?? []).Any(dep => dep.Id.Equals(id, StringComparison.OrdinalIgnoreCase)));
+            if (dependent is not null)
+                throw new InvalidOperationException("O plugin " + dependent.Id + " depende de " + id + ".");
+        }
         var next = new HashSet<string>(_disabled, StringComparer.OrdinalIgnoreCase);
         if (enabled) next.Remove(id);
         else next.Add(id);
@@ -198,6 +215,7 @@ public sealed class OfficePluginHost
             !string.Equals(plugin.Id, manifest.Id, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Implementação IOfficePlugin incompatível com manifesto.");
         _plugins.Add(plugin.Id, plugin);
+        _manifests.Add(plugin.Id, manifest);
     }
 
     private sealed class OfficePluginLoadContext(string pluginDllPath) : AssemblyLoadContext(isCollectible: false)
