@@ -177,13 +177,41 @@ public sealed class OfficePluginPackageManager
         ValidateId(change.Id);
         var destination = PluginFolder(change.Id);
         var backup = Path.Combine(UpdatesRoot, "backup-" + Guid.NewGuid().ToString("N"));
+        if (change.Action == "rollback")
+        {
+            var point = ReadHistory().FirstOrDefault(x => x.Id.Equals(change.Id, StringComparison.OrdinalIgnoreCase))
+                ?? throw new InvalidDataException("Versão anterior indisponível.");
+            var source = Path.Combine(UpdatesRoot, point.BackupName);
+            if (!Directory.Exists(source)) throw new DirectoryNotFoundException("Backup do plugin em falta.");
+            if (Directory.Exists(destination)) Directory.Move(destination, backup);
+            try
+            {
+                Directory.Move(source, destination);
+                var history = ReadHistory();
+                history.RemoveAll(x => x.Id.Equals(change.Id, StringComparison.OrdinalIgnoreCase));
+                if (Directory.Exists(backup))
+                    history.Add(new PluginRollbackPoint(change.Id, Path.GetFileName(backup)));
+                SaveHistory(history);
+            }
+            catch
+            {
+                if (Directory.Exists(destination)) Directory.Move(destination, source);
+                if (Directory.Exists(backup)) Directory.Move(backup, destination);
+                throw;
+            }
+            return;
+        }
         if (change.Action == "remove")
         {
             if (Directory.Exists(destination))
             {
                 Directory.Move(destination, backup);
-                try { Directory.Delete(backup, recursive: true); }
-                catch { Directory.Move(backup, destination); throw; }
+                try { RetainBackup(change.Id, backup); }
+                catch
+                {
+                    if (Directory.Exists(backup)) Directory.Move(backup, destination);
+                    throw;
+                }
             }
             return;
         }
@@ -196,13 +224,30 @@ public sealed class OfficePluginPackageManager
         try
         {
             Directory.Move(stagedPath, destination);
-            if (Directory.Exists(backup)) Directory.Delete(backup, recursive: true);
+            if (Directory.Exists(backup)) RetainBackup(change.Id, backup);
         }
         catch
         {
             if (Directory.Exists(destination)) Directory.Delete(destination, recursive: true);
             if (Directory.Exists(backup)) Directory.Move(backup, destination);
             throw;
+        }
+    }
+
+    private void RetainBackup(string id, string backup)
+    {
+        var history = ReadHistory();
+        var previous = history.FirstOrDefault(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        history.RemoveAll(x => x.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        history.Add(new PluginRollbackPoint(id, Path.GetFileName(backup)));
+        SaveHistory(history);
+        if (previous is not null && previous.BackupName != Path.GetFileName(backup))
+        {
+            var old = Path.Combine(UpdatesRoot, previous.BackupName);
+            if (old.StartsWith(UpdatesRoot + Path.DirectorySeparatorChar,
+                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
+                Directory.Exists(old))
+                Directory.Delete(old, recursive: true);
         }
     }
 
