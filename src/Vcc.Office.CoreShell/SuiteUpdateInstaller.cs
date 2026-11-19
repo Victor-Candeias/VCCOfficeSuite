@@ -36,7 +36,7 @@ public sealed class SuiteUpdateInstaller
         if (!Directory.Exists(root) || Path.GetPathRoot(root) == root)
             throw new InvalidOperationException("Diretório de instalação inválido.");
         var parent = Directory.GetParent(root)!.FullName;
-        var exe = Path.GetFileName(Environment.ProcessPath ?? "");
+        var exe = OperatingSystem.IsWindows() ? "VCC Office Suite.exe" : "VCC Office Suite.dll";
         if (string.IsNullOrWhiteSpace(exe))
             throw new InvalidOperationException("Executável da suite indisponível.");
         var archivePath = Path.GetFullPath(verifiedArchive);
@@ -197,10 +197,14 @@ public sealed class SuiteUpdateInstaller
     {
         try
         {
-            using var process = Process.Start(new ProcessStartInfo(executable, ["--vcc-update-health-check"])
+            var dotnetDll = executable.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+            var info = new ProcessStartInfo(dotnetDll ? "dotnet" : executable)
             {
                 UseShellExecute = false, CreateNoWindow = true
-            });
+            };
+            if (dotnetDll) info.ArgumentList.Add(executable);
+            info.ArgumentList.Add("--vcc-update-health-check");
+            using var process = Process.Start(info);
             if (process is null) return false;
             if (!process.WaitForExit(25000))
             {
