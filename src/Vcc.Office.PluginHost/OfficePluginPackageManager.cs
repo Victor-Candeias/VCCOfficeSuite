@@ -110,6 +110,7 @@ public sealed class OfficePluginPackageManager
         catch
         {
             if (Directory.Exists(stagedPath)) Directory.Delete(stagedPath, recursive: true);
+            RemoveStageSeal(token);
             throw;
         }
     }
@@ -162,7 +163,7 @@ public sealed class OfficePluginPackageManager
 
     /// <summary>Inventory entries are bounded to the managed staging area and contain no executable paths.</summary>
     public IReadOnlyList<PendingPluginChange> PendingChanges() =>
-        ReadQueue().Where(change => change.Action is "install" or "update" or "remove")
+        ReadQueue().Where(change => change.Action is "install" or "update" or "remove" or "rollback")
             .OrderBy(change => change.Id, StringComparer.OrdinalIgnoreCase).ToArray();
 
     /// <summary>Called before OfficePluginHost loads any assembly; failures stay queued for retry.</summary>
@@ -260,12 +261,13 @@ public sealed class OfficePluginPackageManager
         try
         {
             Directory.Move(stagedPath, destination);
-            RemoveStageSeal(change.StagedName!);
             if (Directory.Exists(backup)) RetainBackup(change.Id, backup);
+            RemoveStageSeal(change.StagedName!);
         }
         catch
         {
-            if (Directory.Exists(destination)) Directory.Delete(destination, recursive: true);
+            if (Directory.Exists(destination) && !Directory.Exists(stagedPath))
+                Directory.Move(destination, stagedPath);
             if (Directory.Exists(backup)) Directory.Move(backup, destination);
             throw;
         }
@@ -342,7 +344,11 @@ public sealed class OfficePluginPackageManager
             if (old.StartsWith(UpdatesRoot + Path.DirectorySeparatorChar,
                 OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
                 Directory.Exists(old))
-                Directory.Delete(old, recursive: true);
+            {
+                try { Directory.Delete(old, recursive: true); }
+                catch (IOException) { /* Orphaned old backup can be cleaned later. */ }
+                catch (UnauthorizedAccessException) { /* Do not fail a successful update. */ }
+            }
         }
     }
 
