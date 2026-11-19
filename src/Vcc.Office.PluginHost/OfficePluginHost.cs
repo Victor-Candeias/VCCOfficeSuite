@@ -99,23 +99,39 @@ public sealed class OfficePluginHost
         if (!Directory.Exists(directory))
             return host;
 
-        foreach (var manifestPath in Directory.EnumerateFiles(directory, "plugin.json", SearchOption.AllDirectories)
-                     .Where(path => !Path.GetRelativePath(directory, path).Split(Path.DirectorySeparatorChar)
-                         .Contains(".vcc-updates", StringComparer.OrdinalIgnoreCase))
-                     .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+        var pending = Directory.EnumerateFiles(directory, "plugin.json", SearchOption.AllDirectories)
+            .Where(path => !Path.GetRelativePath(directory, path).Split(Path.DirectorySeparatorChar)
+                .Contains(".vcc-updates", StringComparer.OrdinalIgnoreCase))
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToList();
+
+        // Resolve dependencies before loading their dependants, independent of folder name.
+        while (pending.Count > 0)
         {
-            try
+            var progressed = false;
+            foreach (var manifestPath in pending.ToArray())
             {
-                host.Register(manifestPath);
+                try
+                {
+                    var manifest = PluginCompatibilityPolicy.Read(File.ReadAllText(manifestPath));
+                    if ((manifest.Requires ?? []).Any(dep => !host._plugins.ContainsKey(dep.Id)))
+                        continue;
+                    host.Register(manifestPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
+                                           JsonException or InvalidDataException or InvalidOperationException or
+                                           ArgumentException or FileLoadException or BadImageFormatException or
+                                           TypeLoadException or TargetInvocationException)
+                {
+                    host._errors.Add(Path.GetFileName(Path.GetDirectoryName(manifestPath)) + ": " + ex.Message);
+                }
+                pending.Remove(manifestPath);
+                progressed = true;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-                                       JsonException or InvalidDataException or InvalidOperationException or
-                                       ArgumentException or FileLoadException or
-                                       BadImageFormatException or TypeLoadException or
-                                       TargetInvocationException)
-            {
-                host._errors.Add(Path.GetFileName(Path.GetDirectoryName(manifestPath)) + ": " + ex.Message);
-            }
+            if (progressed) continue;
+            foreach (var remaining in pending)
+                host._errors.Add(Path.GetFileName(Path.GetDirectoryName(remaining)) +
+                    ": dependências de plugin ausentes, desativadas ou circulares.");
+            break;
         }
         return host;
     }
