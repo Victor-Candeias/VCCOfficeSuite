@@ -245,6 +245,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("⚕   Diagnóstico", ShowDiagnosticsPage));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(Nav("↻   Atualizações", ShowSuiteUpdates));
+        navigation.Children.Add(Nav("☁   Cloud", ShowCloudFolder));
         navigation.Children.Add(Nav("◫   Plugins", ShowPluginManager));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
