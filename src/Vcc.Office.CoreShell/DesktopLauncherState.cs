@@ -15,6 +15,8 @@ public sealed record DesktopLauncherState(
 {
     public string PreferredDashboardId { get; init; } = DashboardIds.Modern;
     public DashboardStartupMode StartupMode { get; init; } = DashboardStartupMode.Last;
+    public bool CompactNavigation { get; init; }
+    public bool ShowWelcomeBanner { get; init; } = true;
 
     public static DesktopLauncherState Default { get; } =
         new(DashboardIds.Modern, ThemeMode.System, null, null);
@@ -45,7 +47,9 @@ public static class DesktopLauncherStatePolicy
         {
             PreferredDashboardId = dashboards.Contains(state.PreferredDashboardId)
                 ? state.PreferredDashboardId : DashboardIds.Modern,
-            StartupMode = Enum.IsDefined(state.StartupMode) ? state.StartupMode : DashboardStartupMode.Last
+            StartupMode = Enum.IsDefined(state.StartupMode) ? state.StartupMode : DashboardStartupMode.Last,
+            CompactNavigation = state.CompactNavigation,
+            ShowWelcomeBanner = state.ShowWelcomeBanner
         };
     }
 }

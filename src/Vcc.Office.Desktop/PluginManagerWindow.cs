@@ -119,9 +119,32 @@ public sealed class PluginManagerWindow : Window
                 BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(9),
                 Padding = new Thickness(12), Child = details });
         }
-        foreach (var pending in _packages.Pending)
-            _items.Children.Add(new TextBlock { Text = "Pendente: " + pending.Id + " · " + pending.Action + " (próximo arranque)",
-                TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.SemiBold });
+        foreach (var pending in _packages.PendingChanges())
+        {
+            var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            line.Children.Add(new TextBlock { Text = "Pendente: " + pending.Id + " · " + pending.Action,
+                TextWrapping = TextWrapping.Wrap, FontWeight = FontWeight.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center });
+            var cancel = new Button { Content = "Cancelar operação", MinWidth = 140 };
+            cancel.Click += (_, _) =>
+            {
+                try
+                {
+                    if (_packages.CancelPending(pending.Id))
+                    {
+                        _message.Text = "Operação pendente cancelada: " + pending.Id;
+                        _onOperation?.Invoke("Operação de plugin cancelada", _message.Text, true);
+                        Refresh();
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                    _message.Text = "Não foi possível cancelar: " + ex.Message;
+                }
+            };
+            line.Children.Add(cancel);
+            _items.Children.Add(line);
+        }
         if (_host.Errors.Count > 0)
         {
             _items.Children.Add(new TextBlock { Text = "Problemas de carregamento",

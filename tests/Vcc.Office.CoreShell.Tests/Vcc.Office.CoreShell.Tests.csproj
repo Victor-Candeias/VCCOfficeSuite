@@ -15,5 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vcc.Office.CoreShell\Vcc.Office.CoreShell.csproj" />
     <ProjectReference Include="../../src/Vcc.Office.Writer/Vcc.Office.Writer.csproj" />
+    <ProjectReference Include="../../src/Vcc.Office.PluginHost/Vcc.Office.PluginHost.csproj" />
   </ItemGroup>
 </Project>

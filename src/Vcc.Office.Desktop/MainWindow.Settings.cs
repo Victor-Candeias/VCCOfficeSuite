@@ -20,7 +20,7 @@ public sealed partial class MainWindow
             Title = "VCC Office — Aparência e dashboard",
             Icon = AppBranding.LoadWindowIcon(),
             Width = 475,
-            Height = 530,
+            Height = 630,
             MinWidth = 400,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner
@@ -79,6 +79,19 @@ public sealed partial class MainWindow
         };
         panel.Children.Add(themeChoice);
 
+        var compactNavigation = new CheckBox
+        {
+            Content = "Menu lateral compacto",
+            IsChecked = _launcherState.CompactNavigation
+        };
+        panel.Children.Add(compactNavigation);
+        var welcomeBanner = new CheckBox
+        {
+            Content = "Mostrar mensagem de boas-vindas",
+            IsChecked = _launcherState.ShowWelcomeBanner
+        };
+        panel.Children.Add(welcomeBanner);
+
         panel.Children.Add(new TextBlock
         {
             Text = "As preferências são guardadas e recuperadas no próximo arranque.",
@@ -110,7 +123,9 @@ public sealed partial class MainWindow
             _launcherState = _launcherState with { DashboardId = dashboard,
                 PreferredDashboardId = dashboards[preferredChoice.SelectedIndex].Id,
                 StartupMode = startupChoice.SelectedIndex == 1 ? DashboardStartupMode.Preferred : DashboardStartupMode.Last,
-                Theme = theme };
+                Theme = theme,
+                CompactNavigation = compactNavigation.IsChecked == true,
+                ShowWelcomeBanner = welcomeBanner.IsChecked == true };
             _activeDashboard = dashboard;
             _favoritesOnly = false;
             _search.Text = string.Empty;

@@ -58,6 +58,8 @@ jobs:
           version = os.environ["GITHUB_REF_NAME"][1:]
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
               output.write("VCC_RELEASE_VERSION=" + version + chr(10))
+      - name: Verify final release prerequisites
+        run: python scripts/check-final-release-readiness.py
       - name: Verify host/plugin boundaries
         run: python scripts/check-host-plugin-boundaries.py
       - name: Verify retired WPF
@@ -131,6 +133,7 @@ jobs:
         shell: bash
         run: |
           python scripts/release_security.py pack --source artifacts/release --output "dist/VCCOfficeSuite-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}-${{ matrix.name }}.zip"
+          python scripts/check-final-release-readiness.py --archive "dist/VCCOfficeSuite-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}-${{ matrix.name }}.zip"
       - name: Upload verified release package
         uses: actions/upload-artifact@v7
         with:

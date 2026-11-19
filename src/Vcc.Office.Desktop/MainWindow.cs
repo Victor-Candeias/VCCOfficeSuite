@@ -112,9 +112,9 @@ public sealed partial class MainWindow : Window
             CornerRadius = new CornerRadius(ControlCornerRadius),
             HorizontalContentAlignment = HorizontalAlignment.Left,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Height = 40,
-            Margin = new Thickness(0, 3),
-            Padding = new Thickness(14, 8),
+            Height = _launcherState.CompactNavigation ? 33 : 40,
+            Margin = new Thickness(0, _launcherState.CompactNavigation ? 1 : 3),
+            Padding = new Thickness(14, _launcherState.CompactNavigation ? 5 : 8),
             Foreground = selected ? Brushes.White : ForegroundBrush,
             Background = selected ? Brush.Parse(HighContrast ? "#003399" : "#2158AD") : Brush.Parse(HighContrast ? "#000000" : Dark ? "#172439" : "#EEF3FA"),
             BorderThickness = new Thickness(0)
@@ -245,6 +245,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("⚕   Diagnóstico", ShowDiagnosticsPage));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(Nav("↻   Atualizações", ShowSuiteUpdates));
+        navigation.Children.Add(Nav("☁   Cloud", ShowCloudFolder));
         navigation.Children.Add(Nav("◫   Plugins", ShowPluginManager));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
@@ -331,6 +332,8 @@ public sealed partial class MainWindow : Window
 
     private void BuildModern(StackPanel root)
     {
+        if (_launcherState.ShowWelcomeBanner)
+        {
         var bannerContent = new StackPanel { Spacing = 5, Margin = new Thickness(25, 12) };
         var hour = DateTime.Now.Hour;
         bannerContent.Children.Add(Text(hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite",
@@ -353,6 +356,8 @@ public sealed partial class MainWindow : Window
             MinHeight = 106,
             Child = bannerContent
         });
+
+        }
 
         var shortcuts = new WrapPanel { Orientation = Orientation.Horizontal };
         shortcuts.Children.Add(Nav("＋  Novo documento", () => OpenDefaultDocumentEditor()));

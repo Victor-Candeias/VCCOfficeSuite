@@ -17,6 +17,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0833 notificações: persistência, filtros e estados", TestsNotificationCenter),
     ("VCC-0834 diagnóstico read-only e recuperação explícita", TestsDiagnosticsAndRecovery),
     ("VCC-0835 release estável, checksum e staging seguro", TestsSuiteUpdates),
+    ("VCC-0836 plugin queue cancellation", TestsAdvancedPluginQueue),
+    ("VCC-0837 launcher personalized preferences", TestsLauncherPersonalization),
+    ("VCC-0838 cloud synced-folder safe copies", TestsCloudSyncedFolders),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
     ("dashboards resolvem arranque e validação", ValidatesDashboardPreferences),
@@ -1569,4 +1572,59 @@ sealed class SuiteUpdateTestHandler(string? release, string checksums, byte[] pa
         return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
         { Content = new ByteArrayContent(payload) });
     }
+}
+
+static Task TestsAdvancedPluginQueue()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var manager = new Vcc.Office.PluginHost.OfficePluginPackageManager(root);
+        if (manager.PendingChanges().Count != 0 || manager.CancelPending("writer"))
+            throw new Exception("Uma operação inexistente não deve ser cancelada.");
+        try { manager.CancelPending("../writer"); }
+        catch (InvalidDataException) { return Task.CompletedTask; }
+        throw new Exception("ID inseguro de plugin aceite.");
+    }
+    finally { Directory.Delete(root, recursive: true); }
+}
+
+static Task TestsLauncherPersonalization()
+{
+    var dashboards = new DashboardRegistry();
+    var registry = new OfficeApplicationRegistry();
+    var customized = DesktopLauncherState.Default with
+    {
+        CompactNavigation = true, ShowWelcomeBanner = false
+    };
+    var normalized = DesktopLauncherStatePolicy.Normalize(customized, dashboards, registry);
+    if (!normalized.CompactNavigation || normalized.ShowWelcomeBanner)
+        throw new Exception("Personalização do Launcher não foi preservada.");
+    return Task.CompletedTask;
+}
+
+static async Task TestsCloudSyncedFolders()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var sync = Path.Combine(root, "sync");
+        Directory.CreateDirectory(sync);
+        var file = Path.Combine(root, "document.txt");
+        File.WriteAllText(file, "VCC cloud test");
+        var cloud = new CloudSyncFolderService(sync);
+        var first = await cloud.ExportCopyAsync(file);
+        var second = await cloud.ExportCopyAsync(file);
+        if (first == second || cloud.ListLocalFiles().Count != 2 ||
+            File.ReadAllText(first) != "VCC cloud test" ||
+            File.ReadAllText(file) != "VCC cloud test")
+            throw new Exception("Cópia cloud substituiu um ficheiro ou alterou a origem.");
+        try
+        {
+            await cloud.ExportCopyAsync(first);
+            throw new Exception("A cópia do próprio diretório deveria ser recusada.");
+        }
+        catch (InvalidOperationException) { }
+    }
+    finally { Directory.Delete(root, recursive: true); }
 }
