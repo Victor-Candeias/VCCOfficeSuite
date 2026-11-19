@@ -52,7 +52,7 @@ public sealed class PluginManagerWindow : Window
                 _onOperation?.Invoke("Instalação/atualização preparada", _message.Text ?? "", true);
                 Refresh();
             }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or System.Security.Cryptography.CryptographicException)
+            catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or System.Security.Cryptography.CryptographicException)
             {
                 _message.Text = "Não foi possível preparar o plugin: " + ex.Message;
                 _onOperation?.Invoke("Falha na instalação de plugin", ex.Message, false);
@@ -105,7 +105,7 @@ public sealed class PluginManagerWindow : Window
                     _message.Text = "Estado atualizado: " + entry.Name;
                     Refresh();
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
                 {
                     _message.Text = "Não foi possível alterar o plugin: " + ex.Message;
                     _onOperation?.Invoke("Falha ao alterar plugin", ex.Message, false);
@@ -127,7 +127,7 @@ public sealed class PluginManagerWindow : Window
                     _onOperation?.Invoke("Remoção de plugin agendada", _message.Text, true);
                     Refresh();
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível remover o plugin: " + ex.Message;
                     _onOperation?.Invoke("Falha ao remover plugin", ex.Message, false);
@@ -154,7 +154,7 @@ public sealed class PluginManagerWindow : Window
                     _onOperation?.Invoke("Rollback de plugin preparado", _message.Text, true);
                     Refresh();
                 }
-                catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível recuperar: " + ex.Message;
                     _onOperation?.Invoke("Falha no rollback de plugin", ex.Message, false);
@@ -180,7 +180,7 @@ public sealed class PluginManagerWindow : Window
                         Refresh();
                     }
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
                 {
                     _message.Text = "Não foi possível cancelar: " + ex.Message;
                 }
