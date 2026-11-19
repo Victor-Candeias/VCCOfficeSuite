@@ -14,7 +14,7 @@ public sealed partial class MainWindow
 
     private void ShowSuiteUpdates()
     {
-        _updatesService ??= new SuiteUpdateService(_updatesHttp,
+        var service = _updatesService ??= new SuiteUpdateService(_updatesHttp,
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "VCCOffice", "updates"));
         var currentVersion = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
@@ -47,7 +47,7 @@ public sealed partial class MainWindow
             status.Text = "A verificar releases oficiais...";
             try
             {
-                var result = await _updatesService.CheckAsync(currentVersion);
+                var result = await service.CheckAsync(currentVersion);
                 available = result.Available;
                 status.Text = result.Message;
                 download.IsEnabled = available is not null;
@@ -67,7 +67,7 @@ public sealed partial class MainWindow
             status.Text = "A descarregar e verificar a integridade do pacote...";
             try
             {
-                var path = await _updatesService.StageAsync(available);
+                var path = await service.StageAsync(available);
                 status.Text = "Download validado e guardado em: " + path +
                     "\nFeche a aplicação antes de efetuar a atualização manual. " +
                     "O ZIP não é executado automaticamente.";
