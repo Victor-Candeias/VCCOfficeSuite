@@ -582,6 +582,49 @@ try
 }
 catch (InvalidDataException) { }
 
+// VCC-0842: removal keeps one recoverable plugin version.
+if (lifecycle.RollbackPoints.Count != 1 || lifecycle.RollbackPoints[0].Id != "writer")
+    throw new Exception("A versão anterior não foi preservada após remover o plugin.");
+lifecycle.StageRollback("writer");
+if (lifecycle.PendingChanges().Single().Action != "rollback" ||
+    lifecycle.ApplyPending().Count != 0 ||
+    OfficePluginHost.Discover(lifecycleRoot).InstalledPlugins.Count != 1)
+    throw new Exception("O rollback do plugin não restaurou a versão anterior.");
+
+// VCC-0842: externally signed plugin bundles must match a configured RSA-PSS publisher.
+var signingRoot = Path.Combine(packageRoot, "signed");
+var trustedSigners = Path.Combine(signingRoot, ".vcc-updates", "trusted-signers");
+Directory.CreateDirectory(trustedSigners);
+using (var rsa = System.Security.Cryptography.RSA.Create(2048))
+{
+    File.WriteAllText(Path.Combine(trustedSigners, "publisher.pem"), rsa.ExportSubjectPublicKeyInfoPem());
+    var hash = System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(zipPath));
+    var signature = rsa.SignHash(hash, System.Security.Cryptography.HashAlgorithmName.SHA256,
+        System.Security.Cryptography.RSASignaturePadding.Pss);
+    File.WriteAllText(zipPath + ".sig", Convert.ToBase64String(signature));
+    if (new OfficePluginPackageManager(signingRoot).StageInstall(zipPath, requireSignature: true).Action != "install")
+        throw new Exception("Pacote com assinatura válida foi rejeitado.");
+    File.WriteAllText(zipPath + ".sig", Convert.ToBase64String(new byte[signature.Length]));
+    try
+    {
+        new OfficePluginPackageManager(Path.Combine(packageRoot, "signed-invalid")).StageInstall(
+            zipPath, requireSignature: true);
+        throw new Exception("Assinatura inválida foi aceite.");
+    }
+    catch (InvalidDataException) { }
+}
+
+// Declared plugin dependencies and host compatibility must be enforced.
+var incompatible = PluginCompatibilityPolicy.Read(
+    "{\"id\":\"example\",\"assembly\":\"example.dll\",\"entryType\":\"Example.Plugin\",\"apiVersion\":1,\"minHostVersion\":\"99.0\",\"requires\":[{\"id\":\"writer\",\"minVersion\":\"1.0\"}]}");
+try
+{
+    PluginCompatibilityPolicy.EnsureCompatible(incompatible, new Version(1, 0),
+        new Dictionary<string, Version> { ["writer"] = new Version(1, 0) });
+    throw new Exception("Host antigo foi aceite.");
+}
+catch (InvalidDataException) { }
+
 var managerWindow = new PluginManagerWindow(managedHost, (_, _) => { });
 if (managerWindow.Title?.Contains("Gestão de plugins", StringComparison.Ordinal) != true)
     throw new Exception("A interface de gestão de plugins não abre.");
