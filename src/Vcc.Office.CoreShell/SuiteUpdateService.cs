@@ -163,8 +163,11 @@ public sealed class SuiteUpdateService
                 FileShare.None, 81920, useAsync: true))
             await using (var source = await response.Content.ReadAsStreamAsync(ct))
                 await CopyLimitedAsync(source, file, MaximumPackageBytes, ct);
-            await using var verifyStream = File.OpenRead(temporary);
-            var actual = Convert.ToHexString(await SHA256.HashDataAsync(verifyStream, ct));
+            string actual;
+            await using (var verifyStream = File.OpenRead(temporary))
+            {
+                actual = Convert.ToHexString(await SHA256.HashDataAsync(verifyStream, ct));
+            }
             if (!string.Equals(actual, update.ExpectedSha256, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("A integridade SHA-256 do pacote não foi confirmada.");
             File.Move(temporary, destination, true);
