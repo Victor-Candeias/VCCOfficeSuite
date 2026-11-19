@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -174,7 +175,8 @@ public sealed class OfficePluginPackageManager
                 SaveQueue(pending);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-                                       ArgumentException or InvalidDataException)
+                                       ArgumentException or InvalidDataException or InvalidOperationException or
+                                       BadImageFormatException)
             {
                 errors.Add(change.Id + ": " + ex.Message);
             }
@@ -231,6 +233,24 @@ public sealed class OfficePluginPackageManager
             throw new InvalidDataException("Operação pendente inválida.");
         var stagedPath = Path.Combine(StagingRoot, change.StagedName!);
         if (!Directory.Exists(stagedPath)) throw new DirectoryNotFoundException("Pacote preparado inexistente.");
+        var manifestPath = Path.Combine(stagedPath, "plugin.json");
+        if (!File.Exists(manifestPath)) throw new InvalidDataException("Manifesto do plugin preparado em falta.");
+        var metadata = PluginCompatibilityPolicy.Read(File.ReadAllText(manifestPath));
+        if (!metadata.Id.Equals(change.Id, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("O pacote preparado mudou de identificador.");
+        var dependencies = new Dictionary<string, Version>(StringComparer.OrdinalIgnoreCase);
+        foreach (var folder in Directory.EnumerateDirectories(_root))
+        {
+            var otherManifest = Path.Combine(folder, "plugin.json");
+            if (!File.Exists(otherManifest)) continue;
+            var other = PluginCompatibilityPolicy.Read(File.ReadAllText(otherManifest));
+            var path = Path.Combine(folder, other.Assembly);
+            if (File.Exists(path))
+                dependencies[other.Id] = AssemblyName.GetAssemblyName(path).Version ?? new Version(0, 0);
+        }
+        PluginCompatibilityPolicy.EnsureCompatible(metadata,
+            typeof(OfficePluginPackageManager).Assembly.GetName().Version ?? new Version(1, 0),
+            dependencies);
         if (Directory.Exists(destination)) Directory.Move(destination, backup);
         try
         {
