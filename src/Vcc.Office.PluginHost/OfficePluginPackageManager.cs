@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -54,11 +55,13 @@ public sealed class OfficePluginPackageManager
             if (archive.Entries.Count is 0 or > 256)
                 throw new InvalidDataException("Quantidade de ficheiros do pacote inválida.");
             long total = 0;
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var entry in archive.Entries)
             {
                 var name = entry.FullName.Replace('\\', '/');
                 if (name.StartsWith("/", StringComparison.Ordinal) || name.Contains(':') ||
-                    name.Split('/').Any(segment => segment is "." or ".."))
+                    name.Split('/').Any(segment => segment is "." or "..") ||
+                    !seen.Add(name.TrimEnd('/')))
                     throw new InvalidDataException("Caminho inseguro no pacote: " + name);
                 var unixType = (entry.ExternalAttributes >> 16) & 0xF000;
                 if (unixType == 0xA000)
@@ -94,6 +97,7 @@ public sealed class OfficePluginPackageManager
                 if (!System.Security.Cryptography.SHA256.HashData(after).SequenceEqual(signedArchiveHash))
                     throw new InvalidDataException("O pacote assinado foi modificado durante a instalação.");
             }
+            SealStage(stagedPath, token);
             var pending = ReadQueue().ToList();
             var previous = pending.FirstOrDefault(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
             pending.RemoveAll(change => change.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
@@ -233,6 +237,7 @@ public sealed class OfficePluginPackageManager
             throw new InvalidDataException("Operação pendente inválida.");
         var stagedPath = Path.Combine(StagingRoot, change.StagedName!);
         if (!Directory.Exists(stagedPath)) throw new DirectoryNotFoundException("Pacote preparado inexistente.");
+        VerifyStage(stagedPath, change.StagedName!);
         var manifestPath = Path.Combine(stagedPath, "plugin.json");
         if (!File.Exists(manifestPath)) throw new InvalidDataException("Manifesto do plugin preparado em falta.");
         var metadata = PluginCompatibilityPolicy.Read(File.ReadAllText(manifestPath));
@@ -255,6 +260,7 @@ public sealed class OfficePluginPackageManager
         try
         {
             Directory.Move(stagedPath, destination);
+            RemoveStageSeal(change.StagedName!);
             if (Directory.Exists(backup)) RetainBackup(change.Id, backup);
         }
         catch
@@ -262,6 +268,50 @@ public sealed class OfficePluginPackageManager
             if (Directory.Exists(destination)) Directory.Delete(destination, recursive: true);
             if (Directory.Exists(backup)) Directory.Move(backup, destination);
             throw;
+        }
+    }
+
+    private string SealPath(string token) => Path.Combine(StagingRoot, token + ".seal.json");
+
+    private static Dictionary<string, string> StageHashes(string stage)
+    {
+        var hashes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories))
+        {
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
+                throw new InvalidDataException("O staging não permite links simbólicos.");
+            var relative = Path.GetRelativePath(stage, file).Replace(Path.DirectorySeparatorChar, '/');
+            using var stream = File.OpenRead(file);
+            hashes.Add(relative, Convert.ToHexString(SHA256.HashData(stream)));
+        }
+        return hashes;
+    }
+
+    private void SealStage(string stage, string token)
+    {
+        var seal = SealPath(token);
+        File.WriteAllText(seal, JsonSerializer.Serialize(StageHashes(stage)));
+    }
+
+    private void VerifyStage(string stage, string token)
+    {
+        var seal = SealPath(token);
+        if (!File.Exists(seal)) throw new InvalidDataException("Selo de integridade do staging em falta.");
+        var expected = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(seal))
+            ?? throw new InvalidDataException("Selo de integridade vazio.");
+        var actual = StageHashes(stage);
+        if (expected.Count != actual.Count || expected.Any(item =>
+                !actual.TryGetValue(item.Key, out var hash) ||
+                !hash.Equals(item.Value, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidDataException("O plugin preparado foi alterado após a validação.");
+    }
+
+    private void RemoveStageSeal(string token)
+    {
+        if (Guid.TryParseExact(token, "N", out _))
+        {
+            var seal = SealPath(token);
+            if (File.Exists(seal)) File.Delete(seal);
         }
     }
 
@@ -334,6 +384,7 @@ public sealed class OfficePluginPackageManager
         if (previous?.StagedName is null || !Guid.TryParseExact(previous.StagedName, "N", out _)) return;
         var old = Path.Combine(StagingRoot, previous.StagedName);
         if (Directory.Exists(old)) Directory.Delete(old, recursive: true);
+        RemoveStageSeal(previous.StagedName);
     }
 
     private string PluginFolder(string id) => Path.Combine(_root,
