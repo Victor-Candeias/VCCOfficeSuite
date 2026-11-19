@@ -152,9 +152,13 @@ public sealed class OfficePluginHost
 
     private void Register(string manifestPath)
     {
-        var manifest = JsonSerializer.Deserialize<PluginManifest>(File.ReadAllText(manifestPath),
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-            ?? throw new InvalidDataException("Manifesto vazio.");
+        var manifest = PluginCompatibilityPolicy.Read(File.ReadAllText(manifestPath));
+        var installedVersions = _plugins.ToDictionary(
+            item => item.Key,
+            item => item.Value.GetType().Assembly.GetName().Version ?? new Version(0, 0),
+            StringComparer.OrdinalIgnoreCase);
+        PluginCompatibilityPolicy.EnsureCompatible(manifest,
+            typeof(OfficePluginHost).Assembly.GetName().Version ?? new Version(1, 0), installedVersions);
         if (manifest.ApiVersion != 1 ||
             string.IsNullOrWhiteSpace(manifest.Id) ||
             string.IsNullOrWhiteSpace(manifest.Assembly) ||
@@ -179,8 +183,6 @@ public sealed class OfficePluginHost
             throw new InvalidDataException("Implementação IOfficePlugin incompatível com manifesto.");
         _plugins.Add(plugin.Id, plugin);
     }
-
-    private sealed record PluginManifest(string Id, string Assembly, string EntryType, int ApiVersion);
 
     private sealed class OfficePluginLoadContext(string pluginDllPath) : AssemblyLoadContext(isCollectible: false)
     {
