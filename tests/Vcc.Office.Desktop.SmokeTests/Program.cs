@@ -81,6 +81,14 @@ switchDashboard.Invoke(window, ["modern"]);
 if (diagnosticsActive.GetValue(window) is not false)
     throw new Exception("O diagnóstico permanece selecionado ao voltar ao dashboard.");
 
+// VCC-0835: updates entry opens a dialog without replacing the Launcher.
+if (!sidebarButtons.Any(button => button.Content?.ToString()?.Contains("Atualizações",
+        StringComparison.Ordinal) == true))
+    throw new Exception("Falta a entrada Atualizações no Launcher.");
+if (typeof(MainWindow).GetMethod("ShowSuiteUpdates",
+        BindingFlags.NonPublic | BindingFlags.Instance) is null)
+    throw new Exception("A janela de atualizações não está disponível.");
+
 // Active module highlight must move to the clicked app, not stay on the saved app.
 var selectSidebarModule = typeof(MainWindow).GetMethod("SelectSidebarModule",
     BindingFlags.NonPublic | BindingFlags.Instance)
