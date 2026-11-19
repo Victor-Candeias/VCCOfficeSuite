@@ -12,8 +12,10 @@ internal static class SuiteUpdateHandoff
     public static string PrepareWorker(PreparedSuiteUpdate plan)
     {
         var installed = Path.GetFullPath(plan.InstallDirectory);
-        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "VCCOffice", "updates", "workers");
+        var root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "VCCOfficeUpdaterWorkers"));
+        if (root.StartsWith(installed.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            throw new InvalidOperationException("O auxiliar não pode residir dentro da instalação.");
         Directory.CreateDirectory(root);
         var worker = Path.Combine(root, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(worker);
@@ -21,6 +23,8 @@ internal static class SuiteUpdateHandoff
         {
             foreach (var file in Directory.EnumerateFiles(installed, "*", SearchOption.AllDirectories))
             {
+                if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
+                    throw new InvalidDataException("O auxiliar não copia links simbólicos.");
                 var relative = Path.GetRelativePath(installed, file);
                 var destination = Path.Combine(worker, relative);
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
