@@ -87,8 +87,15 @@ public sealed class PluginManagerWindow : Window
             details.Children.Add(new TextBlock { Text = "Dependências .NET: " +
                 (entry.Dependencies.Count == 0 ? "Nenhuma" : string.Join(", ", entry.Dependencies)),
                 TextWrapping = TextWrapping.Wrap, FontSize = 12 });
+            if (entry.LoadFailure is not null)
+                details.Children.Add(new TextBlock
+                {
+                    Text = "Falha de carregamento: " + entry.LoadFailure,
+                    TextWrapping = TextWrapping.Wrap,
+                    Foreground = Brush.Parse("#B64040")
+                });
             var toggle = new Button { Content = entry.Enabled ? "Desativar" : "Ativar", MinWidth = 110,
-                HorizontalAlignment = HorizontalAlignment.Right };
+                HorizontalAlignment = HorizontalAlignment.Right, IsEnabled = entry.LoadFailure is null };
             toggle.Click += (_, _) =>
             {
                 try
@@ -111,8 +118,11 @@ public sealed class PluginManagerWindow : Window
                 try
                 {
                     _packages.StageRemove(entry.Id);
-                    _host.SetEnabled(entry.Id, false);
-                    _onChanged(entry.Id, false);
+                    if (entry.LoadFailure is null)
+                    {
+                        _host.SetEnabled(entry.Id, false);
+                        _onChanged(entry.Id, false);
+                    }
                     _message.Text = entry.Name + ": remoção agendada para o próximo arranque.";
                     _onOperation?.Invoke("Remoção de plugin agendada", _message.Text, true);
                     Refresh();
