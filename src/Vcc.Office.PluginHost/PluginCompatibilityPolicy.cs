@@ -28,7 +28,7 @@ public static class PluginCompatibilityPolicy
             throw new InvalidDataException("Manifesto ou contrato API incompatível.");
         if (value.Requires is { Length: > 32 } ||
             (value.Requires ?? []).Any(dependency =>
-                dependency is null || !IdPattern.IsMatch(dependency.Id) ||
+                dependency is null || string.IsNullOrWhiteSpace(dependency.Id) || !IdPattern.IsMatch(dependency.Id) ||
                 dependency.Id.Equals(value.Id, StringComparison.OrdinalIgnoreCase) ||
                 (!string.IsNullOrWhiteSpace(dependency.MinVersion) &&
                     !Version.TryParse(dependency.MinVersion, out _))) ||
@@ -72,7 +72,9 @@ public static class PluginPackageSignature
             SearchOption.TopDirectoryOnly).ToArray();
         if (keys.Length is 0 or > 32)
             throw new InvalidDataException("Configuração de confiança do editor inválida.");
-        var signature = Convert.FromBase64String(File.ReadAllText(signatureFile).Trim());
+        byte[] signature;
+        try { signature = Convert.FromBase64String(File.ReadAllText(signatureFile).Trim()); }
+        catch (FormatException ex) { throw new InvalidDataException("Assinatura do pacote malformada.", ex); }
         using var archive = File.OpenRead(archivePath);
         var hash = SHA256.HashData(archive);
         foreach (var key in keys)
