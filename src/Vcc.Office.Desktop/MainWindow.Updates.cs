@@ -12,6 +12,29 @@ public sealed partial class MainWindow
     private readonly HttpClient _updatesHttp = new() { Timeout = TimeSpan.FromMinutes(10) };
     private SuiteUpdateService? _updatesService;
 
+    private async Task ReportPreviousInstallationAsync()
+    {
+        var statusFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "VCCOffice", "updates", "last-install-result.txt");
+        if (!File.Exists(statusFile)) return;
+        try
+        {
+            var message = await File.ReadAllTextAsync(statusFile);
+            File.Delete(statusFile);
+            if (string.IsNullOrWhiteSpace(message)) return;
+            var succeeded = message.StartsWith("Atualização instalada", StringComparison.Ordinal);
+            await RecordNotificationAsync(OfficeNotificationCategory.System,
+                succeeded ? OfficeNotificationSeverity.Success : OfficeNotificationSeverity.Warning,
+                succeeded ? "Atualização instalada" : "Resultado da atualização",
+                message, "Atualizações");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // An inaccessible status file must not prevent launcher startup.
+        }
+    }
+
     private void ShowSuiteUpdates()
     {
         var service = _updatesService ??= new SuiteUpdateService(_updatesHttp,
