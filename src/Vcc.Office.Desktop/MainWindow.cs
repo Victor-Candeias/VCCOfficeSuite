@@ -248,8 +248,21 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("☁   Cloud", ShowCloudFolder));
         navigation.Children.Add(Nav("◫   Plugins", ShowPluginManager));
         navigation.Children.Add(new Border { Height = 1, Background = LineBrush, Margin = new Thickness(0, 17, 0, 9) });
+        var favorites = OrderedApplications()
+            .Where(app => _launcherState.FavoriteApplications.Contains(app.Id,
+                StringComparer.OrdinalIgnoreCase)).ToArray();
+        if (favorites.Length > 0)
+        {
+            navigation.Children.Add(Text("FAVORITOS", 11, true, Muted));
+            foreach (var app in favorites)
+            {
+                var favorite = Nav("★  " + app.Name, () => OpenModule(app));
+                AttachApplicationMenu(favorite, app);
+                navigation.Children.Add(favorite);
+            }
+        }
         navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
-        foreach (var app in InstalledApplications)
+        foreach (var app in OrderedApplications())
         {
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
             line.Children.Add(ModuleIcon(app.Id, 25));
@@ -269,6 +282,7 @@ public sealed partial class MainWindow : Window
             AutomationProperties.SetName(item, "Abrir " + app.Name);
             ToolTip.SetTip(item, ModuleTooltip(app));
             item.Click += (_, _) => OpenModule(app);
+            AttachApplicationMenu(item, app);
             _sidebarModuleButtons[app.Id] = item;
             navigation.Children.Add(item);
         }
@@ -393,7 +407,7 @@ public sealed partial class MainWindow : Window
             root.Children.Add(Text("Último documento: " +
                 System.IO.Path.GetFileName(_launcherState.LastOpenedDocumentPath), 13, false, Muted));
         var creation = new WrapPanel { Orientation = Orientation.Horizontal };
-        foreach (var app in InstalledApplications)
+        foreach (var app in OrderedApplications())
         {
             var tile = new StackPanel { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Stretch };
             var tileIcon = ModuleIcon(app.Id, 40);
@@ -410,6 +424,7 @@ public sealed partial class MainWindow : Window
             };
             ToolTip.SetTip(action, ModuleTooltip(app));
             action.Click += (_, _) => OpenModule(app);
+            AttachApplicationMenu(action, app);
             creation.Children.Add(action);
         }
         root.Children.Add(Card(creation, new Thickness(12, 10)));
@@ -433,7 +448,7 @@ public sealed partial class MainWindow : Window
 
     private void AddApplicationCards(StackPanel root, int maximum)
     {
-        var list = InstalledApplications
+        var list = OrderedApplications(includeHidden: !string.IsNullOrWhiteSpace(_search.Text))
             .Where(module => string.IsNullOrWhiteSpace(_search.Text) ||
                 module.Name.Contains(_search.Text.Trim(), StringComparison.OrdinalIgnoreCase))
             .Take(maximum)
@@ -461,6 +476,7 @@ public sealed partial class MainWindow : Window
             };
             ToolTip.SetTip(card, ModuleTooltip(module));
             card.Click += (_, _) => OpenModule(module);
+            AttachApplicationMenu(card, module);
             cards.Children.Add(card);
         }
         if (list.Length == 0)
