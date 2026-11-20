@@ -50,39 +50,45 @@ public sealed partial class MainWindow
     private void AttachApplicationReorder(Button button, string id)
     {
         Point? start = null;
+        PointerPressedEventArgs? pressed = null;
         var dragging = false;
         button.PointerPressed += (_, e) =>
         {
             if (e.GetCurrentPoint(button).Properties.IsLeftButtonPressed)
+            {
                 start = e.GetPosition(button);
+                pressed = e;
+            }
         };
-        button.PointerReleased += (_, _) => start = null;
+        button.PointerReleased += (_, _) => { start = null; pressed = null; };
         button.PointerMoved += async (_, e) =>
         {
-            if (start is null || dragging ||
+            if (start is null || pressed is null || dragging ||
                 !e.GetCurrentPoint(button).Properties.IsLeftButtonPressed) return;
             var point = e.GetPosition(button);
             if (Math.Abs(point.X - start.Value.X) < 9 &&
                 Math.Abs(point.Y - start.Value.Y) < 9) return;
+            var originalPress = pressed;
             start = null;
+            pressed = null;
             dragging = true;
             try
             {
-                var data = new DataObject();
-                data.Set("vcc-office/application-id", id);
-                await DragDrop.DoDragDrop(e, data, DragDropEffects.Move);
+                var data = new DataTransfer();
+                data.Add(DataTransferItem.CreateText(id));
+                await DragDrop.DoDragDropAsync(originalPress, data, DragDropEffects.Move);
             }
             finally { dragging = false; }
         };
         DragDrop.SetAllowDrop(button, true);
         button.AddHandler(DragDrop.DragOverEvent, (_, e) =>
         {
-            e.DragEffects = e.Data.Contains("vcc-office/application-id")
+            e.DragEffects = e.DataTransfer.Contains(DataFormat.Text)
                 ? DragDropEffects.Move : DragDropEffects.None;
         });
         button.AddHandler(DragDrop.DropEvent, (_, e) =>
         {
-            if (e.Data.Get("vcc-office/application-id") is string source &&
+            if (e.DataTransfer.TryGetText() is string source &&
                 !source.Equals(id, StringComparison.OrdinalIgnoreCase))
                 UpdateAppOrder(source, id);
         });
