@@ -89,6 +89,31 @@ if (typeof(MainWindow).GetMethod("ShowSuiteUpdates",
         BindingFlags.NonPublic | BindingFlags.Instance) is null)
     throw new Exception("A janela de atualizações não está disponível.");
 
+// VCC-0843.1-.4: customization entry points, collapsed sidebar and normal layout recovery.
+if (!sidebarButtons.Any(button => button.Content?.ToString()?.Contains("Perfis", StringComparison.Ordinal) == true))
+    throw new Exception("A gestão de perfis não aparece no Launcher.");
+foreach (var method in new[] { "AttachApplicationReorder", "AttachApplicationMenu",
+    "UpdateAppOrder", "ToggleAppFavorite", "ToggleAppHidden", "ShowLauncherProfiles" })
+    if (typeof(MainWindow).GetMethod(method, BindingFlags.NonPublic | BindingFlags.Instance) is null)
+        throw new Exception("Personalização indisponível: " + method);
+var launcherField = typeof(MainWindow).GetField("_launcherState",
+    BindingFlags.NonPublic | BindingFlags.Instance)
+    ?? throw new Exception("Estado do Launcher não encontrado.");
+var originalLayout = (Vcc.Office.CoreShell.DesktopLauncherState)launcherField.GetValue(window)!;
+launcherField.SetValue(window, originalLayout with
+{
+    SidebarCollapsed = true, CardSize = "large",
+    VisualDensity = "compact", DashboardStyle = "minimal"
+});
+render.Invoke(window, null);
+var compactGrid = (Grid)window.Content!;
+if (compactGrid.ColumnDefinitions[0].Width.Value != 68 ||
+    !((Border)compactGrid.Children.OfType<Border>().First(border =>
+        Grid.GetRow(border) == 1)).Child!.GetType().IsAssignableTo(typeof(ScrollViewer)))
+    throw new Exception("Menu recolhível não preserva a navegação.");
+launcherField.SetValue(window, originalLayout);
+render.Invoke(window, null);
+
 // Active module highlight must move to the clicked app, not stay on the saved app.
 var selectSidebarModule = typeof(MainWindow).GetMethod("SelectSidebarModule",
     BindingFlags.NonPublic | BindingFlags.Instance)
