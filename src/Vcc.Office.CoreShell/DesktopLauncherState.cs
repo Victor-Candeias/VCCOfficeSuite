@@ -17,6 +17,14 @@ public sealed record DesktopLauncherState(
     public DashboardStartupMode StartupMode { get; init; } = DashboardStartupMode.Last;
     public bool CompactNavigation { get; init; }
     public bool ShowWelcomeBanner { get; init; } = true;
+    public string[] ApplicationOrder { get; init; } = [];
+    public string[] FavoriteApplications { get; init; } = [];
+    public string[] HiddenApplications { get; init; } = [];
+    public string CardSize { get; init; } = "medium";
+    public string VisualDensity { get; init; } = "comfortable";
+    public bool SidebarCollapsed { get; init; }
+    public string DashboardStyle { get; init; } = "standard";
+    public string? ActiveProfileName { get; init; }
 
     public static DesktopLauncherState Default { get; } =
         new(DashboardIds.Modern, ThemeMode.System, null, null);
@@ -49,7 +57,15 @@ public static class DesktopLauncherStatePolicy
                 ? state.PreferredDashboardId : DashboardIds.Modern,
             StartupMode = Enum.IsDefined(state.StartupMode) ? state.StartupMode : DashboardStartupMode.Last,
             CompactNavigation = state.CompactNavigation,
-            ShowWelcomeBanner = state.ShowWelcomeBanner
+            ShowWelcomeBanner = state.ShowWelcomeBanner,
+            ApplicationOrder = LauncherCustomizationPolicy.NormalizeIds(state.ApplicationOrder),
+            FavoriteApplications = LauncherCustomizationPolicy.NormalizeIds(state.FavoriteApplications),
+            HiddenApplications = LauncherCustomizationPolicy.NormalizeIds(state.HiddenApplications),
+            CardSize = state.CardSize is "small" or "medium" or "large" ? state.CardSize : "medium",
+            VisualDensity = state.VisualDensity is "comfortable" or "compact" ? state.VisualDensity : "comfortable",
+            SidebarCollapsed = state.SidebarCollapsed,
+            DashboardStyle = state.DashboardStyle is "standard" or "minimal" ? state.DashboardStyle : "standard",
+            ActiveProfileName = LauncherProfilePolicy.IsValidName(state.ActiveProfileName) ? state.ActiveProfileName : null
         };
     }
 }
@@ -61,6 +77,7 @@ public static class DesktopLauncherStatePolicy
 public sealed class DesktopLauncherStateStore
 {
     private const string SettingsKey = "avalonia.launcher.session.v1";
+    private const string RecoveryKey = "avalonia.launcher.session.backup.v1";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly CoreDatabase _database;
     private readonly IDashboardRegistry _dashboards;
@@ -100,6 +117,16 @@ public sealed class DesktopLauncherStateStore
         }
         catch (JsonException)
         {
+            var backup = await _database.GetSettingAsync(RecoveryKey, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(backup))
+            {
+                try
+                {
+                    return DesktopLauncherStatePolicy.Normalize(
+                        JsonSerializer.Deserialize<DesktopLauncherState>(backup, JsonOptions), _dashboards, _modules);
+                }
+                catch (JsonException) { /* The backup is corrupt too; continue with defaults. */ }
+            }
             return DesktopLauncherState.Default;
         }
     }
@@ -111,6 +138,17 @@ public sealed class DesktopLauncherStateStore
         await _gate.WaitAsync(cancellationToken);
         try
         {
+            var current = await _database.GetSettingAsync(SettingsKey, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(current))
+            {
+                try
+                {
+                    _ = JsonSerializer.Deserialize<DesktopLauncherState>(current, JsonOptions)
+                        ?? throw new JsonException("Empty launcher state.");
+                    await _database.SetSettingAsync(RecoveryKey, current, cancellationToken);
+                }
+                catch (JsonException) { /* Never replace valid backup with corrupt state. */ }
+            }
             await _database.SetSettingAsync(
                 SettingsKey, JsonSerializer.Serialize(normalized, JsonOptions), cancellationToken);
         }

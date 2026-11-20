@@ -20,6 +20,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("VCC-0841 instalador offline, integridade e rollback", TestsOfflineSuiteInstaller),
     ("VCC-0836 plugin queue cancellation", TestsAdvancedPluginQueue),
     ("VCC-0837 launcher personalized preferences", TestsLauncherPersonalization),
+    ("VCC-0843 launcher order, visual state, profiles and recovery", TestsLauncherProfiles),
     ("VCC-0838 cloud synced-folder safe copies", TestsCloudSyncedFolders),
     ("VCC-0818 sessão do Launcher Avalonia: persistência e recuperação", TestsDesktopLauncherState),
     ("VCC-0820 importa preferências WPF de dashboard sem alterar a origem", TestsLegacyDashboardPreferences),
@@ -1102,8 +1103,12 @@ static async Task TestsDesktopLauncherState()
             throw new Exception("O estado inválido do Launcher deve ser normalizado.");
 
         await database.SetSettingAsync("avalonia.launcher.session.v1", "{corrompido");
-        if (await store.LoadAsync() != DesktopLauncherState.Default)
-            throw new Exception("Um JSON de sessão corrompido deve recuperar valores predefinidos.");
+        var backupRecovered = await store.LoadAsync();
+        if (backupRecovered.DashboardId != DashboardIds.Grid ||
+            backupRecovered.Theme != ThemeMode.Dark ||
+            backupRecovered.LastSelectedModuleId != "data" ||
+            backupRecovered.LastOpenedDocumentPath != path)
+            throw new Exception("Um JSON de sessão corrompido deve recuperar a última cópia válida.");
 
         // Sessões e documentos partilham CoreDatabase sem alterar documentos locais.
         var docs = new RecentDocumentsService(database);
@@ -1676,6 +1681,83 @@ static async Task TestsOfflineSuiteInstaller()
             throw new Exception("O instalador aceitou path traversal.");
         }
         catch (InvalidDataException) { }
+    }
+    finally { Directory.Delete(root, recursive: true); }
+}
+
+
+static async Task TestsLauncherProfiles()
+{
+    var root = CreateTestDirectory();
+    try
+    {
+        var ids = LauncherCustomizationPolicy.NormalizeIds(["writer", "sheets", "writer", "../bad", "slides"]);
+        if (!ids.SequenceEqual(["writer", "sheets", "slides"]))
+            throw new Exception("IDs de aplicações não foram normalizados.");
+        var reordered = LauncherCustomizationPolicy.Move(["writer", "sheets", "slides"],
+            ["writer", "sheets", "slides"], "slides", "writer");
+        if (!reordered.SequenceEqual(["slides", "writer", "sheets"]))
+            throw new Exception("O drag & drop não preservou a ordem.");
+        if (!LauncherCustomizationPolicy.Toggle(["writer"], "WRITER").SequenceEqual(Array.Empty<string>()))
+            throw new Exception("Favoritos não são tratados sem distinção de maiúsculas.");
+        var database = new CoreDatabase(new StoragePaths(root));
+        var dashboards = new DashboardRegistry();
+        var registry = new OfficeApplicationRegistry();
+        var store = new DesktopLauncherStateStore(database, dashboards, registry,
+            legacyPath: Path.Combine(root, "legacy-missing.sqlite"));
+        var profileStore = new LauncherProfileStore(database, dashboards);
+        var customized = DesktopLauncherState.Default with
+        {
+            ApplicationOrder = ["slides", "writer", "sheets"],
+            FavoriteApplications = ["writer"],
+            HiddenApplications = ["sheets"],
+            CardSize = "large", VisualDensity = "compact",
+            DashboardStyle = "minimal", SidebarCollapsed = true,
+            ActiveProfileName = "Trabalho"
+        };
+        await store.SaveAsync(customized);
+        await store.SaveAsync(customized with { CardSize = "small" });
+        var restored = await store.LoadAsync();
+        if (restored.CardSize != "small" || !restored.HiddenApplications.SequenceEqual(["sheets"]) ||
+            !restored.SidebarCollapsed || restored.ActiveProfileName != "Trabalho")
+            throw new Exception("As opções visuais não persistiram em SQLite.");
+
+        var saved = LauncherProfilePolicy.Capture("Trabalho", customized);
+        await profileStore.SaveAsync(saved);
+        var imported = profileStore.Import(profileStore.Export(saved));
+        if (imported.ApplicationOrder.Length != 3 || imported.CardSize != "large")
+            throw new Exception("O perfil JSON não fez round-trip.");
+        var profile = (await profileStore.LoadAsync()).Single();
+        var applied = LauncherProfilePolicy.Apply(profile,
+            DesktopLauncherState.Default with { LastOpenedDocumentPath = "private-document.docx" }, dashboards);
+        if (applied.LastOpenedDocumentPath != "private-document.docx" ||
+            applied.HiddenApplications.Single() != "sheets")
+            throw new Exception("O perfil alterou informações de documentos ou perdeu preferências.");
+        if (profileStore.Export(profile).Contains("private-document", StringComparison.Ordinal))
+            throw new Exception("A exportação de perfis contém dados privados.");
+        try
+        {
+            profileStore.Import("{\"name\":\"Bad\",\"dashboardId\":\"unknown\",\"theme\":0," +
+                "\"applicationOrder\":[],\"favorites\":[],\"hidden\":[],\"cardSize\":\"large\"," +
+                "\"visualDensity\":\"compact\",\"sidebarCollapsed\":false," +
+                "\"dashboardStyle\":\"standard\",\"showWelcomeBanner\":true,\"compactNavigation\":false}");
+            throw new Exception("Importação incompatível aceite.");
+        }
+        catch (InvalidDataException) { }
+
+        // Corrupted current preferences must recover from the last valid SQLite snapshot.
+        await database.SetSettingAsync("avalonia.launcher.session.v1", "{bad");
+        var recovered = await store.LoadAsync();
+        if (recovered.CardSize != "large" || recovered.ActiveProfileName != "Trabalho")
+            throw new Exception("Estado inválido não recuperou a cópia anterior.");
+
+        await profileStore.SaveAsync(LauncherProfilePolicy.Capture("Pessoal", customized));
+        await database.SetSettingAsync("avalonia.launcher.profiles.v1", "[broken");
+        if ((await profileStore.LoadAsync()).Single().Name != "Trabalho")
+            throw new Exception("Perfis corrompidos não recuperaram o último conjunto válido.");
+        await profileStore.RemoveAsync("Trabalho");
+        if ((await profileStore.LoadAsync()).Count != 0)
+            throw new Exception("A remoção do perfil persistido falhou.");
     }
     finally { Directory.Delete(root, recursive: true); }
 }
