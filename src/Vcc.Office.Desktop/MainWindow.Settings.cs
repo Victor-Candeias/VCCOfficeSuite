@@ -176,8 +176,8 @@ public sealed partial class MainWindow
             Render();
             dialog.Close();
         };
+        panel.Children.Add(resetOrder);
         footer.Children.Add(profilesButton);
-        footer.Children.Add(resetOrder);
         footer.Children.Add(cancel);
         footer.Children.Add(save);
         panel.Children.Add(footer);
