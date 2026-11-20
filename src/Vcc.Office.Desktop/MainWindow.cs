@@ -251,6 +251,7 @@ public sealed partial class MainWindow : Window
         navigation.Children.Add(Nav("▦   Modelos", ShowTemplatesCatalog));
         navigation.Children.Add(Nav("♧   Notificações", ShowNotificationsPage));
         navigation.Children.Add(Nav("⚕   Diagnóstico", ShowDiagnosticsPage));
+        navigation.Children.Add(Nav("♙   Perfis do Launcher", ShowLauncherProfiles));
         navigation.Children.Add(Nav("⚙   Definições", ShowLauncherSettings));
         navigation.Children.Add(Nav("↻   Atualizações", ShowSuiteUpdates));
         navigation.Children.Add(Nav("☁   Cloud", ShowCloudFolder));
