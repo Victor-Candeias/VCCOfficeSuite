@@ -77,6 +77,7 @@ public static class DesktopLauncherStatePolicy
 public sealed class DesktopLauncherStateStore
 {
     private const string SettingsKey = "avalonia.launcher.session.v1";
+    private const string RecoveryKey = "avalonia.launcher.session.backup.v1";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly CoreDatabase _database;
     private readonly IDashboardRegistry _dashboards;
@@ -116,6 +117,16 @@ public sealed class DesktopLauncherStateStore
         }
         catch (JsonException)
         {
+            var backup = await _database.GetSettingAsync(RecoveryKey, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(backup))
+            {
+                try
+                {
+                    return DesktopLauncherStatePolicy.Normalize(
+                        JsonSerializer.Deserialize<DesktopLauncherState>(backup, JsonOptions), _dashboards, _modules);
+                }
+                catch (JsonException) { /* The backup is corrupt too; continue with defaults. */ }
+            }
             return DesktopLauncherState.Default;
         }
     }
@@ -127,6 +138,17 @@ public sealed class DesktopLauncherStateStore
         await _gate.WaitAsync(cancellationToken);
         try
         {
+            var current = await _database.GetSettingAsync(SettingsKey, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(current))
+            {
+                try
+                {
+                    _ = JsonSerializer.Deserialize<DesktopLauncherState>(current, JsonOptions)
+                        ?? throw new JsonException("Empty launcher state.");
+                    await _database.SetSettingAsync(RecoveryKey, current, cancellationToken);
+                }
+                catch (JsonException) { /* Never replace valid backup with corrupt state. */ }
+            }
             await _database.SetSettingAsync(
                 SettingsKey, JsonSerializer.Serialize(normalized, JsonOptions), cancellationToken);
         }
