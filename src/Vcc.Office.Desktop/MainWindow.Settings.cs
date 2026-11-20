@@ -20,7 +20,8 @@ public sealed partial class MainWindow
             Title = "VCC Office — Aparência e dashboard",
             Icon = AppBranding.LoadWindowIcon(),
             Width = 475,
-            Height = 630,
+            Height = 740,
+            MinHeight = 500,
             MinWidth = 400,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner
@@ -92,6 +93,21 @@ public sealed partial class MainWindow
         };
         panel.Children.Add(welcomeBanner);
 
+        panel.Children.Add(new TextBlock { Text = "Tamanho dos cartões", FontWeight = FontWeight.SemiBold });
+        var cardSize = new ComboBox { ItemsSource = new[] { "Pequenos", "Médios", "Grandes" },
+            SelectedIndex = _launcherState.CardSize switch { "small" => 0, "large" => 2, _ => 1 } };
+        panel.Children.Add(cardSize);
+        panel.Children.Add(new TextBlock { Text = "Densidade visual", FontWeight = FontWeight.SemiBold });
+        var density = new ComboBox { ItemsSource = new[] { "Confortável", "Compacta" },
+            SelectedIndex = _launcherState.VisualDensity == "compact" ? 1 : 0 };
+        panel.Children.Add(density);
+        panel.Children.Add(new TextBlock { Text = "Estilo do dashboard", FontWeight = FontWeight.SemiBold });
+        var dashboardStyle = new ComboBox { ItemsSource = new[] { "Padrão", "Minimalista" },
+            SelectedIndex = _launcherState.DashboardStyle == "minimal" ? 1 : 0 };
+        panel.Children.Add(dashboardStyle);
+        var collapsedSidebar = new CheckBox { Content = "Menu lateral recolhido",
+            IsChecked = _launcherState.SidebarCollapsed };
+        panel.Children.Add(collapsedSidebar);
         panel.Children.Add(new TextBlock
         {
             Text = "As preferências são guardadas e recuperadas no próximo arranque.",
@@ -125,7 +141,11 @@ public sealed partial class MainWindow
                 StartupMode = startupChoice.SelectedIndex == 1 ? DashboardStartupMode.Preferred : DashboardStartupMode.Last,
                 Theme = theme,
                 CompactNavigation = compactNavigation.IsChecked == true,
-                ShowWelcomeBanner = welcomeBanner.IsChecked == true };
+                ShowWelcomeBanner = welcomeBanner.IsChecked == true,
+                CardSize = cardSize.SelectedIndex switch { 0 => "small", 2 => "large", _ => "medium" },
+                VisualDensity = density.SelectedIndex == 1 ? "compact" : "comfortable",
+                DashboardStyle = dashboardStyle.SelectedIndex == 1 ? "minimal" : "standard",
+                SidebarCollapsed = collapsedSidebar.IsChecked == true };
             _activeDashboard = dashboard;
             _favoritesOnly = false;
             _search.Text = string.Empty;
@@ -143,7 +163,7 @@ public sealed partial class MainWindow
         footer.Children.Add(cancel);
         footer.Children.Add(save);
         panel.Children.Add(footer);
-        dialog.Content = panel;
+        dialog.Content = new ScrollViewer { Content = panel };
         _ = dialog.ShowDialog(this);
     }
 }
