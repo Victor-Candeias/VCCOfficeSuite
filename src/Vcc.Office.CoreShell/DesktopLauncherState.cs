@@ -22,7 +22,7 @@ public sealed record DesktopLauncherState(
     public string[] HiddenApplications { get; init; } = [];
     public string CardSize { get; init; } = "medium";
     public string VisualDensity { get; init; } = "comfortable";
-    public bool SidebarCollapsed { get; init; };
+    public bool SidebarCollapsed { get; init; }
     public string DashboardStyle { get; init; } = "standard";
     public string? ActiveProfileName { get; init; }
 
