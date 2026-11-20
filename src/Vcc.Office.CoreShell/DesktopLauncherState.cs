@@ -24,6 +24,7 @@ public sealed record DesktopLauncherState(
     public string VisualDensity { get; init; } = "comfortable";
     public bool SidebarCollapsed { get; init; };
     public string DashboardStyle { get; init; } = "standard";
+    public string? ActiveProfileName { get; init; }
 
     public static DesktopLauncherState Default { get; } =
         new(DashboardIds.Modern, ThemeMode.System, null, null);
@@ -63,7 +64,8 @@ public static class DesktopLauncherStatePolicy
             CardSize = state.CardSize is "small" or "medium" or "large" ? state.CardSize : "medium",
             VisualDensity = state.VisualDensity is "comfortable" or "compact" ? state.VisualDensity : "comfortable",
             SidebarCollapsed = state.SidebarCollapsed,
-            DashboardStyle = state.DashboardStyle is "standard" or "minimal" ? state.DashboardStyle : "standard"
+            DashboardStyle = state.DashboardStyle is "standard" or "minimal" ? state.DashboardStyle : "standard",
+            ActiveProfileName = LauncherProfilePolicy.IsValidName(state.ActiveProfileName) ? state.ActiveProfileName : null
         };
     }
 }
