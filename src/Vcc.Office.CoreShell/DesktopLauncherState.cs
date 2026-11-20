@@ -20,6 +20,10 @@ public sealed record DesktopLauncherState(
     public string[] ApplicationOrder { get; init; } = [];
     public string[] FavoriteApplications { get; init; } = [];
     public string[] HiddenApplications { get; init; } = [];
+    public string CardSize { get; init; } = "medium";
+    public string VisualDensity { get; init; } = "comfortable";
+    public bool SidebarCollapsed { get; init; };
+    public string DashboardStyle { get; init; } = "standard";
 
     public static DesktopLauncherState Default { get; } =
         new(DashboardIds.Modern, ThemeMode.System, null, null);
@@ -55,7 +59,11 @@ public static class DesktopLauncherStatePolicy
             ShowWelcomeBanner = state.ShowWelcomeBanner,
             ApplicationOrder = LauncherCustomizationPolicy.NormalizeIds(state.ApplicationOrder),
             FavoriteApplications = LauncherCustomizationPolicy.NormalizeIds(state.FavoriteApplications),
-            HiddenApplications = LauncherCustomizationPolicy.NormalizeIds(state.HiddenApplications)
+            HiddenApplications = LauncherCustomizationPolicy.NormalizeIds(state.HiddenApplications),
+            CardSize = state.CardSize is "small" or "medium" or "large" ? state.CardSize : "medium",
+            VisualDensity = state.VisualDensity is "comfortable" or "compact" ? state.VisualDensity : "comfortable",
+            SidebarCollapsed = state.SidebarCollapsed,
+            DashboardStyle = state.DashboardStyle is "standard" or "minimal" ? state.DashboardStyle : "standard"
         };
     }
 }
