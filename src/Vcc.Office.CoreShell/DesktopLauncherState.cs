@@ -17,6 +17,9 @@ public sealed record DesktopLauncherState(
     public DashboardStartupMode StartupMode { get; init; } = DashboardStartupMode.Last;
     public bool CompactNavigation { get; init; }
     public bool ShowWelcomeBanner { get; init; } = true;
+    public string[] ApplicationOrder { get; init; } = [];
+    public string[] FavoriteApplications { get; init; } = [];
+    public string[] HiddenApplications { get; init; } = [];
 
     public static DesktopLauncherState Default { get; } =
         new(DashboardIds.Modern, ThemeMode.System, null, null);
@@ -49,7 +52,10 @@ public static class DesktopLauncherStatePolicy
                 ? state.PreferredDashboardId : DashboardIds.Modern,
             StartupMode = Enum.IsDefined(state.StartupMode) ? state.StartupMode : DashboardStartupMode.Last,
             CompactNavigation = state.CompactNavigation,
-            ShowWelcomeBanner = state.ShowWelcomeBanner
+            ShowWelcomeBanner = state.ShowWelcomeBanner,
+            ApplicationOrder = LauncherCustomizationPolicy.NormalizeIds(state.ApplicationOrder),
+            FavoriteApplications = LauncherCustomizationPolicy.NormalizeIds(state.FavoriteApplications),
+            HiddenApplications = LauncherCustomizationPolicy.NormalizeIds(state.HiddenApplications)
         };
     }
 }
