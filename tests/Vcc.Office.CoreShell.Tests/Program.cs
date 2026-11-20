@@ -1103,8 +1103,12 @@ static async Task TestsDesktopLauncherState()
             throw new Exception("O estado inválido do Launcher deve ser normalizado.");
 
         await database.SetSettingAsync("avalonia.launcher.session.v1", "{corrompido");
-        if (await store.LoadAsync() != DesktopLauncherState.Default)
-            throw new Exception("Um JSON de sessão corrompido deve recuperar valores predefinidos.");
+        var backupRecovered = await store.LoadAsync();
+        if (backupRecovered.DashboardId != DashboardIds.Grid ||
+            backupRecovered.Theme != ThemeMode.Dark ||
+            backupRecovered.LastSelectedModuleId != "data" ||
+            backupRecovered.LastOpenedDocumentPath != path)
+            throw new Exception("Um JSON de sessão corrompido deve recuperar a última cópia válida.");
 
         // Sessões e documentos partilham CoreDatabase sem alterar documentos locais.
         var docs = new RecentDocumentsService(database);
