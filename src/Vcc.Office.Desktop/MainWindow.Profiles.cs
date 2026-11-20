@@ -44,7 +44,7 @@ public sealed partial class MainWindow
         panel.Children.Add(new TextBlock { Text = "Guarde layouts diferentes para trabalho, projetos ou documentos. " +
             "A exportação contém apenas preferências visuais e organização de aplicações.",
             TextWrapping = Avalonia.Media.TextWrapping.Wrap });
-        var name = new TextBox { Watermark = "Nome do perfil (até 48 caracteres)" };
+        var name = new TextBox { PlaceholderText = "Nome do perfil (até 48 caracteres)" };
         panel.Children.Add(name);
         var profiles = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
         panel.Children.Add(profiles);
