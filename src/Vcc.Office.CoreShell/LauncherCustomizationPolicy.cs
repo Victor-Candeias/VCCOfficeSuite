@@ -4,8 +4,10 @@ namespace Vcc.Office.CoreShell;
 public static class LauncherCustomizationPolicy
 {
     public static string[] NormalizeIds(IEnumerable<string>? ids) =>
-        (ids ?? []).Where(id => !string.IsNullOrWhiteSpace(id) && id.Length <= 64 &&
-            id.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-'))
+        (ids ?? []).Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim().ToLowerInvariant())
+            .Where(id => id.Length <= 64 &&
+                id.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-'))
             .Distinct(StringComparer.OrdinalIgnoreCase).Take(256).ToArray();
 
     public static IReadOnlyList<T> Sort<T>(IEnumerable<T> modules, string[]? order,
