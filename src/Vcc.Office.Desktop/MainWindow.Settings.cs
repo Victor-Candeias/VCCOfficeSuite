@@ -162,7 +162,22 @@ public sealed partial class MainWindow
         };
         var profilesButton = new Button { Content = "Gerir perfis" };
         profilesButton.Click += (_, _) => { dialog.Close(); ShowLauncherProfiles(); };
+        var resetOrder = new Button { Content = "Repor organização" };
+        resetOrder.Click += async (_, _) =>
+        {
+            _launcherState = _launcherState with
+            {
+                ApplicationOrder = [],
+                FavoriteApplications = [],
+                HiddenApplications = [],
+                ActiveProfileName = null
+            };
+            await SaveLauncherAsync();
+            Render();
+            dialog.Close();
+        };
         footer.Children.Add(profilesButton);
+        footer.Children.Add(resetOrder);
         footer.Children.Add(cancel);
         footer.Children.Add(save);
         panel.Children.Add(footer);
