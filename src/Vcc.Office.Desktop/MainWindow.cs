@@ -108,11 +108,11 @@ public sealed partial class MainWindow : Window
     {
         var button = new Button
         {
-            Content = label,
+            Content = _launcherState.SidebarCollapsed ? label.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? label : label,
             CornerRadius = new CornerRadius(ControlCornerRadius),
-            HorizontalContentAlignment = HorizontalAlignment.Left,
+            HorizontalContentAlignment = _launcherState.SidebarCollapsed ? HorizontalAlignment.Center : HorizontalAlignment.Left,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Height = _launcherState.CompactNavigation ? 33 : 40,
+            Height = _launcherState.VisualDensity == "compact" || _launcherState.CompactNavigation ? 33 : 40,
             Margin = new Thickness(0, _launcherState.CompactNavigation ? 1 : 3),
             Padding = new Thickness(14, _launcherState.CompactNavigation ? 5 : 8),
             Foreground = selected ? Brushes.White : ForegroundBrush,
@@ -120,6 +120,7 @@ public sealed partial class MainWindow : Window
             BorderThickness = new Thickness(0)
         };
         AutomationProperties.SetName(button, label);
+        ToolTip.SetTip(button, label);
         button.Click += (_, _) => action();
         return button;
     }
@@ -159,7 +160,7 @@ public sealed partial class MainWindow : Window
 
         _layout.Children.Clear();
         _layout.RowDefinitions = new RowDefinitions("68,*");
-        _layout.ColumnDefinitions = new ColumnDefinitions(_compactLayout ? "175,*" : "228,*");
+        _layout.ColumnDefinitions = new ColumnDefinitions(_launcherState.SidebarCollapsed ? "68,*" : _compactLayout ? "175,*" : "228,*");
         _layout.Background = Page;
 
         var header = new Border
@@ -216,7 +217,7 @@ public sealed partial class MainWindow : Window
             Background = Brush.Parse(HighContrast ? "#000000" : Dark ? "#101B2D" : "#EEF3FA"),
             BorderBrush = LineBrush,
             BorderThickness = new Thickness(0, 0, 1, 0),
-            Padding = new Thickness(13)
+            Padding = new Thickness(_launcherState.SidebarCollapsed ? 5 : 13)
         };
         _sidebarDashboardButtons.Clear();
         _sidebarModuleButtons.Clear();
@@ -225,8 +226,15 @@ public sealed partial class MainWindow : Window
             Spacing = 3,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             // Keep every menu entry inside the usable width, clear of the vertical scrollbar.
-            Margin = new Thickness(0, 0, 12, 0)
+            Margin = new Thickness(0, 0, _launcherState.SidebarCollapsed ? 4 : 12, 0)
         };
+        var collapse = Nav(_launcherState.SidebarCollapsed ? "»   Expandir menu" : "«   Recolher menu", () =>
+        {
+            _launcherState = _launcherState with { SidebarCollapsed = !_launcherState.SidebarCollapsed };
+            _ = SaveLauncherAsync();
+            Render();
+        });
+        navigation.Children.Add(collapse);
         var homeButton = Nav("⌂   Início", () => Switch(DashboardIds.Modern));
         _sidebarDashboardButtons[DashboardIds.Modern] = homeButton;
         navigation.Children.Add(homeButton);
@@ -253,7 +261,8 @@ public sealed partial class MainWindow : Window
                 StringComparer.OrdinalIgnoreCase)).ToArray();
         if (favorites.Length > 0)
         {
-            navigation.Children.Add(Text("FAVORITOS", 11, true, Muted));
+            if (!_launcherState.SidebarCollapsed)
+                navigation.Children.Add(Text("FAVORITOS", 11, true, Muted));
             foreach (var app in favorites)
             {
                 var favorite = Nav("★  " + app.Name, () => OpenModule(app));
@@ -261,12 +270,13 @@ public sealed partial class MainWindow : Window
                 navigation.Children.Add(favorite);
             }
         }
-        navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
+        if (!_launcherState.SidebarCollapsed)
+            navigation.Children.Add(Text("APLICAÇÕES", 11, true, Muted));
         foreach (var app in OrderedApplications())
         {
             var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
             line.Children.Add(ModuleIcon(app.Id, 25));
-            line.Children.Add(Text(app.Name, 13));
+            if (!_launcherState.SidebarCollapsed) line.Children.Add(Text(app.Name, 13));
             var selected = app.Id == _selectedSidebarModuleId;
             var item = new Button
             {
@@ -276,7 +286,7 @@ public sealed partial class MainWindow : Window
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 Background = selected ? Brush.Parse(Dark ? "#263C62" : "#DCE9FC") : Brushes.Transparent,
                 BorderThickness = new Thickness(0),
-                Padding = new Thickness(7, 5),
+                Padding = new Thickness(_launcherState.SidebarCollapsed ? 4 : 7, 5),
                 Margin = new Thickness(0, 2)
             };
             AutomationProperties.SetName(item, "Abrir " + app.Name);
@@ -297,7 +307,8 @@ public sealed partial class MainWindow : Window
         Grid.SetRow(sidebar, 1);
         _layout.Children.Add(sidebar);
 
-        _body = new StackPanel { Spacing = 20, Margin = new Thickness(25, 22, 25, 28) };
+        _body = new StackPanel { Spacing = _launcherState.VisualDensity == "compact" ? 12 : 20,
+            Margin = _launcherState.VisualDensity == "compact" ? new Thickness(14) : new Thickness(25, 22, 25, 28) };
         RefreshBody();
         var scroll = new ScrollViewer { Content = _body };
         Grid.SetRow(scroll, 1);
@@ -346,7 +357,7 @@ public sealed partial class MainWindow : Window
 
     private void BuildModern(StackPanel root)
     {
-        if (_launcherState.ShowWelcomeBanner)
+        if (_launcherState.ShowWelcomeBanner && _launcherState.DashboardStyle != "minimal")
         {
         var bannerContent = new StackPanel { Spacing = 5, Margin = new Thickness(25, 12) };
         var hour = DateTime.Now.Hour;
@@ -390,7 +401,7 @@ public sealed partial class MainWindow : Window
             panel.Margin = new Thickness(0, 0, 14, 10);
             panels.Children.Add(panel);
         }
-        root.Children.Add(panels);
+        if (_launcherState.DashboardStyle != "minimal") root.Children.Add(panels);
         if (InstalledApplications.FirstOrDefault(m => m.Id == _launcherState.LastSelectedModuleId) is { } previous)
             root.Children.Add(Text("Última aplicação selecionada: " + previous.Name, 13, false, Muted));
         root.Children.Add(Text("Aplicações", 20, true));
@@ -461,14 +472,25 @@ public sealed partial class MainWindow : Window
             moduleIcon.HorizontalAlignment = HorizontalAlignment.Center;
             box.Children.Add(moduleIcon);
             box.Children.Add(CenteredText(module.Name, 16, true));
-            box.Children.Add(CenteredText(module.IsAvailable ? "Disponível · offline" : "Em migração", 12, false, Muted));
+            if (_launcherState.DashboardStyle != "minimal")
+                box.Children.Add(CenteredText(module.IsAvailable ? "Disponível · offline" : "Em migração", 12, false, Muted));
             var card = new Button
             {
                 Content = Card(box, new Thickness(12)),
                 CornerRadius = new CornerRadius(ControlCornerRadius),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Width = _compactLayout ? 168 : _activeDashboard == DashboardIds.Classic ? 218 : 190,
-                Height = _activeDashboard == DashboardIds.Grid ? 132 : 120,
+                Width = _launcherState.CardSize switch
+                {
+                    "small" => 146,
+                    "large" => _compactLayout ? 212 : 252,
+                    _ => _compactLayout ? 168 : _activeDashboard == DashboardIds.Classic ? 218 : 190
+                },
+                Height = _launcherState.CardSize switch
+                {
+                    "small" => 105,
+                    "large" => 166,
+                    _ => _activeDashboard == DashboardIds.Grid ? 132 : 120
+                },
                 Margin = new Thickness(0, 0, 10, 10),
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
