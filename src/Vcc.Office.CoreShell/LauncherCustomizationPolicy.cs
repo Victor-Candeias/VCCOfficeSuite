@@ -34,7 +34,8 @@ public static class LauncherCustomizationPolicy
     {
         var current = NormalizeIds(ids).ToList();
         if (!NormalizeIds([id]).Any()) return current.ToArray();
-        if (!current.Remove(id)) current.Add(id);
+        var removed = current.RemoveAll(item => item.Equals(id, StringComparison.OrdinalIgnoreCase));
+        if (removed == 0) current.Add(id);
         return current.ToArray();
     }
 }
