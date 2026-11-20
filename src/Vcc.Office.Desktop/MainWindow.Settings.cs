@@ -160,6 +160,9 @@ public sealed partial class MainWindow
             Render();
             dialog.Close();
         };
+        var profilesButton = new Button { Content = "Gerir perfis" };
+        profilesButton.Click += (_, _) => { dialog.Close(); ShowLauncherProfiles(); };
+        footer.Children.Add(profilesButton);
         footer.Children.Add(cancel);
         footer.Children.Add(save);
         panel.Children.Add(footer);
