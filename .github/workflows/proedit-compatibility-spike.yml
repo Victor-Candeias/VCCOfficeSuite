@@ -1,0 +1,27 @@
+name: ProEdit compatibility spike
+on:
+  push:
+    branches:
+      - feature/vcc-writer-proedit-spike
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    name: Compatibility probe
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore isolated probe
+        run: dotnet restore tests/ProEdit.Compatibility.Probe/ProEdit.Compatibility.Probe.csproj
+      - name: Compile isolated probe with VCC Writer
+        run: dotnet build tests/ProEdit.Compatibility.Probe/ProEdit.Compatibility.Probe.csproj --configuration Release --no-restore
+      - name: Run assembly compatibility probe
+        run: dotnet run --project tests/ProEdit.Compatibility.Probe/ProEdit.Compatibility.Probe.csproj --configuration Release --no-build
