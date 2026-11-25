@@ -56,3 +56,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Never commit Android signing credentials
+*.keystore
+*.jks
+*.p12
+*.pfx
