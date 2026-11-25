@@ -60,6 +60,20 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Install Android workload
         run: dotnet workload install android
+      - name: Enforce trusted main release ref
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            [[ "$REF" == "refs/heads/main" ]] || { echo "Signed releases must be dispatched from main"; exit 1; }
+          else
+            [[ "$REF" == refs/tags/android-v* ]] || exit 1
+            git fetch --no-tags origin main
+            git merge-base --is-ancestor HEAD origin/main || { echo "Release tag must point to a commit on main"; exit 1; }
+          fi
       - name: Resolve release version
         id: version
         shell: bash
