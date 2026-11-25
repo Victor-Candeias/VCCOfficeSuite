@@ -1,0 +1,31 @@
+name: Android Launcher bootstrap
+
+on:
+  pull_request:
+    paths:
+      - 'src/Vcc.Office.Android/**'
+      - 'src/Vcc.Office.CoreShell/**'
+      - '.github/workflows/android-launcher-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-build:
+    name: Android restore and build (no signing)
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install Android workload
+        run: dotnet workload install android
+      - name: Restore Android project
+        run: dotnet restore src/Vcc.Office.Android/Vcc.Office.Android.csproj
+      - name: Build Android project
+        run: dotnet build src/Vcc.Office.Android/Vcc.Office.Android.csproj --configuration Debug --no-restore
