@@ -1,0 +1,128 @@
+name: Android Release
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/android-release.yml'
+      - 'src/Vcc.Office.Android/**'
+      - 'src/Vcc.Office.CoreShell/**'
+      - 'scripts/android-release/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version (for example 0.1.0); must be greater than previous distributed version'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'android-v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-preflight:
+    name: Android Release build without signing secrets
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install Android workload
+        run: dotnet workload install android
+      - name: Restore Android project
+        run: dotnet restore src/Vcc.Office.Android/Vcc.Office.Android.csproj
+      - name: Build Release without signing secrets
+        run: dotnet build src/Vcc.Office.Android/Vcc.Office.Android.csproj --configuration Release --no-restore -p:AndroidPackageFormats=apk
+
+  signed-release:
+    name: Versioned and signed Android APK
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/android-v')
+    needs: release-preflight
+    runs-on: macos-15
+    timeout-minutes: 50
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install Android workload
+        run: dotnet workload install android
+      - name: Resolve release version
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            VERSION="${REF_NAME#android-v}"
+          else
+            VERSION="$INPUT_VERSION"
+          fi
+          python3 scripts/android-release/version.py "$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Validate signing configuration and restore keystore
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          python3 scripts/android-release/prepare_keystore.py "$RUNNER_TEMP/vcc-office-android.keystore"
+      - name: Publish Release APK with Android v1/v2 signing
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          dotnet publish src/Vcc.Office.Android/Vcc.Office.Android.csproj \
+            --framework net10.0-android --configuration Release \
+            -p:AndroidPackageFormats=apk \
+            -p:ApplicationDisplayVersion="$APP_VERSION" \
+            -p:ApplicationVersion="$APP_VERSION_CODE" \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="$RUNNER_TEMP/vcc-office-android.keystore" \
+            -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
+            -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASSWORD \
+            -p:AndroidSigningKeyPass=env:ANDROID_KEY_PASSWORD
+      - name: Verify signed APK and version, stage release artifact
+        shell: bash
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          python3 scripts/android-release/verify_apk.py \
+            "src/Vcc.Office.Android/bin/Release/net10.0-android/publish" \
+            "artifacts/android-release" "$APP_VERSION" "$APP_VERSION_CODE"
+      - name: Upload versioned signed APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: VCCOfficeSuite-Android-v${{ steps.version.outputs.version }}-Release
+          path: artifacts/android-release/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Delete signing keystore
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/vcc-office-android.keystore"
